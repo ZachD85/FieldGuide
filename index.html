@@ -16,6 +16,15 @@
         
         /* Smooth transition for mobile drawer */
         .sidebar-transition { transition: transform 0.3s ease-in-out; }
+
+        /* Smooth fading placeholder transitions */
+        #copilotQueryInput::placeholder {
+            transition: opacity 0.5s ease-in-out;
+            opacity: 1;
+        }
+        #copilotQueryInput.placeholder-fade-out::placeholder {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
@@ -62,6 +71,7 @@
                 <div class="text-xs font-bold text-slate-400 tracking-wider uppercase pt-2 mb-1">Resource Hub</div>
                 
                 <nav class="space-y-2" id="navCategories">
+                    <!-- MAZE Topics -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('mazeMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -71,51 +81,45 @@
                             <i data-lucide="chevron-down" id="mazeMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="mazeMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
+                            <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="heart" class="w-4 h-4"></i>
                                     <span>Survival Benefits</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'Lesion Durability')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-Lesion Durability">
+                            <button onclick="selectSubCategory('MAZE', 'Lesion Durability')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Lesion Durability">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="git-commit" class="w-4 h-4"></i>
                                     <span>Lesion Durability</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-durability">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'Procedure Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-Procedure Safety">
+                            <button onclick="selectSubCategory('MAZE', 'Procedure Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Procedure Safety">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="shield-check" class="w-4 h-4"></i>
                                     <span>Procedure Safety</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-safety">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'EnCompass Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-EnCompass Data">
+                            <button onclick="selectSubCategory('MAZE', 'EnCompass Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-EnCompass Data">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="layers" class="w-4 h-4"></i>
                                     <span>EnCompass Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-encompass">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-Prophylactic Data">
+                            <button onclick="selectSubCategory('MAZE', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Prophylactic Data">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="help-circle" class="w-4 h-4"></i>
                                     <span>Prophylactic Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-prophylactic">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'Devices')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MAZE-Devices">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="cpu" class="w-4 h-4"></i>
-                                    <span>Devices & Systems</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-devices">0</span>
-                            </button>
                         </div>
                     </div>
 
+                    <!-- LAA Topics -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('laaMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -125,51 +129,132 @@
                             <i data-lucide="chevron-down" id="laaMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="laaMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('LAA', 'Stroke Reduction')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Stroke Reduction">
+                            <button onclick="selectSubCategory('LAA', 'Stroke Reduction')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Stroke Reduction">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="trending-down" class="w-4 h-4"></i>
                                     <span>Stroke Reduction</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-stroke">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Closure Success Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Closure Success Rates">
+                            <button onclick="selectSubCategory('LAA', 'Closure Success Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Closure Success Rates">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                                     <span>Closure Success Rates</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-success">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Complication Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Complication Rates">
+                            <button onclick="selectSubCategory('LAA', 'Complication Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Complication Rates">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="alert-octagon" class="w-4 h-4"></i>
                                     <span>Complication Rates</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-complication">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Device Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Device Safety">
+                            <button onclick="selectSubCategory('LAA', 'Device Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Device Safety">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="shield-alert" class="w-4 h-4"></i>
                                     <span>Device Safety</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-safety">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Prophylactic Data">
+                            <button onclick="selectSubCategory('LAA', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Prophylactic Data">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="heart-pulse" class="w-4 h-4"></i>
                                     <span>Prophylactic Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-prophylactic">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Devices')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="LAA-Devices">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="cpu" class="w-4 h-4"></i>
-                                    <span>Devices & Systems</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-devices">0</span>
-                            </button>
                         </div>
                     </div>
 
+                    <!-- Device Resources Accordion -->
+                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
+                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('deviceResourcesMenu')">
+                            <div class="flex items-center space-x-2.5">
+                                <i data-lucide="wrench" class="w-4 h-4 text-slate-500 group-hover:text-orange-500"></i>
+                                <span>Device Resources</span>
+                            </div>
+                            <i data-lucide="chevron-down" id="deviceResourcesMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
+                        </button>
+                        <div id="deviceResourcesMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
+                            <!-- RF Ablation -->
+                            <div class="border-b border-slate-50 pb-1">
+                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('rfAblationSubMenu')">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="zap" class="w-3.5 h-3.5 text-orange-500"></i>
+                                        <span>RF Ablation</span>
+                                    </span>
+                                    <i data-lucide="chevron-down" id="rfAblationSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
+                                </button>
+                                <div id="rfAblationSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
+                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - IFUs">
+                                        <span>IFUs</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-ifus">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - Product Brochures">
+                                        <span>Product Brochures</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-brochures">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - Other Media">
+                                        <span>Other Media</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-media">0</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Cryoablation -->
+                            <div class="border-b border-slate-50 pb-1">
+                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('cryoablationSubMenu')">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="snowflake" class="w-3.5 h-3.5 text-sky-500"></i>
+                                        <span>Cryoablation</span>
+                                    </span>
+                                    <i data-lucide="chevron-down" id="cryoablationSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
+                                </button>
+                                <div id="cryoablationSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
+                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - IFUs">
+                                        <span>IFUs</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-ifus">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
+                                        <span>Product Brochures</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-brochures">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Other Media">
+                                        <span>Other Media</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-media">0</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- LAA Clips -->
+                            <div class="border-b border-slate-50 pb-1">
+                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('laaClipsSubMenu')">
+                                    <span class="flex items-center gap-1.5">
+                                        <i data-lucide="paperclip" class="w-3.5 h-3.5 text-emerald-500"></i>
+                                        <span>LAA Clips</span>
+                                    </span>
+                                    <i data-lucide="chevron-down" id="laaClipsSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
+                                </button>
+                                <div id="laaClipsSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
+                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - IFUs">
+                                        <span>IFUs</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-ifus">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
+                                        <span>Product Brochures</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-brochures">0</span>
+                                    </button>
+                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Other Media">
+                                        <span>Other Media</span>
+                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-media">0</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MISC Resources -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group" onclick="toggleCategory('miscMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -179,28 +264,28 @@
                             <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MISC', 'Training Courses')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MISC-Training Courses">
+                            <button onclick="selectSubCategory('MISC', 'Training Courses')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Training Courses">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="graduation-cap" class="w-4 h-4"></i>
                                     <span>Training Courses</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-training">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MISC', 'Misc Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MISC-Misc Research">
+                            <button onclick="selectSubCategory('MISC', 'Misc Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Misc Research">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="microscope" class="w-4 h-4"></i>
                                     <span>Misc Research</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MISC', 'Guidelines')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MISC-Guidelines">
+                            <button onclick="selectSubCategory('MISC', 'Guidelines')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Guidelines">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="bookmark" class="w-4 h-4"></i>
                                     <span>Guidelines</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-guidelines">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MISC', 'Common Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="MISC-Common Documents">
+                            <button onclick="selectSubCategory('MISC', 'Common Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Common Documents">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="file-text" class="w-4 h-4"></i>
                                     <span>Common Documents</span>
@@ -301,10 +386,17 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Add/Edit Form Panel -->
                         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center space-x-2">
-                                <i data-lucide="file-plus" class="w-4 h-4 text-orange-500"></i>
-                                <h3 class="font-bold text-slate-800">Upload New Clinical Resource</h3>
+                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="file-plus" class="w-4 h-4 text-orange-500" id="formHeaderIcon"></i>
+                                    <h3 class="font-bold text-slate-800" id="formPanelTitle">Upload New Clinical Resource</h3>
+                                </div>
+                                <button onclick="cancelEditingSession()" id="cancelEditBtn" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-2.5 py-1 rounded transition-all flex items-center gap-1 cursor-pointer">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                    <span>Cancel Edit</span>
+                                </button>
                             </div>
                             <form id="uploadForm" class="p-5 space-y-4 flex-1">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -324,6 +416,7 @@
                                         <select id="formMainCat" required onchange="updateFormSubCategories()" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
                                             <option value="MAZE">MAZE</option>
                                             <option value="LAA">LAA</option>
+                                            <option value="Device Resources">Device Resources</option>
                                             <option value="MISC">MISC</option>
                                         </select>
                                     </div>
@@ -365,9 +458,9 @@
                                     <textarea id="formSummary" required rows="5" placeholder="Enter bulleted clinical arguments. Place a dash or bullet symbol before structural elements..." class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50 font-sans"></textarea>
                                 </div>
 
-                                <button type="submit" class="w-full bg-[#00205B] hover:bg-orange-600 text-white font-bold text-sm p-3 rounded-md transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow active:scale-[0.99] cursor-pointer">
-                                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                                    <span>Publish to Database Records</span>
+                                <button type="submit" id="submitFormBtn" class="w-full bg-[#00205B] hover:bg-orange-600 text-white font-bold text-sm p-3 rounded-md transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow active:scale-[0.99] cursor-pointer">
+                                    <i data-lucide="upload-cloud" class="w-4 h-4" id="submitButtonIcon"></i>
+                                    <span id="submitButtonText">Publish to Database Records</span>
                                 </button>
                             </form>
                         </div>
@@ -393,60 +486,6 @@
 
             </div>
         </main>
-    </div>
-
-    <div id="studyAssistantModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
-            <div class="bg-[#00205B] text-white p-4 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-2.5">
-                    <div class="p-2 bg-orange-500 rounded-lg text-white">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-orange-500"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-sm tracking-tight" id="studyAssistantTitle">Study AI Assistant</h4>
-                        <p class="text-[10px] text-slate-300 truncate max-w-xs" id="studyAssistantAuthor">Damiano et al.</p>
-                    </div>
-                </div>
-                <button onclick="closeStudyAssistantModal()" class="text-slate-300 hover:text-white transition-colors cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-5 flex-1 overflow-y-auto space-y-4">
-                <div>
-                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Suggested Clinical Queries</span>
-                    <div class="flex flex-col gap-2">
-                        <button onclick="askStudyAssistantPreset('What was the primary clinical objective and procedural structure described?')" class="text-xs text-left border border-slate-200 hover:border-orange-300 hover:bg-orange-50 p-2.5 rounded-lg transition-all text-slate-600 font-medium flex items-center justify-between group cursor-pointer">
-                            <span>What was the primary clinical objective?</span>
-                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-500"></i>
-                        </button>
-                        <button onclick="askStudyAssistantPreset('Summarize the primary statistical patient outcomes, pacemaker placements, or success rates.')" class="text-xs text-left border border-slate-200 hover:border-orange-300 hover:bg-orange-50 p-2.5 rounded-lg transition-all text-slate-600 font-medium flex items-center justify-between group cursor-pointer">
-                            <span>Key efficacy data and procedural success rates?</span>
-                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-500"></i>
-                        </button>
-                        <button onclick="askStudyAssistantPreset('Are there any notable procedural limitations, risk flags, or exclusion metrics mentioned?')" class="text-xs text-left border border-slate-200 hover:border-orange-300 hover:bg-orange-50 p-2.5 rounded-lg transition-all text-slate-600 font-medium flex items-center justify-between group cursor-pointer">
-                            <span>Are there notable trial or procedural limitations?</span>
-                            <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-orange-500"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ask a Custom Question</label>
-                    <div class="relative">
-                        <textarea id="studyAssistantQueryInput" rows="2" placeholder="Ask specific questions about this study context..." class="w-full text-sm border border-slate-200 rounded-md p-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50"></textarea>
-                        <button onclick="submitStudyAssistantQuery()" id="studyAssistantSubmitBtn" class="absolute right-2 bottom-3.5 p-1.5 bg-[#00205B] text-white rounded-md hover:bg-orange-500 transition-colors cursor-pointer">
-                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="studyAssistantResponseArea" class="hidden bg-slate-50 border border-slate-100 rounded-lg p-4 text-sm text-slate-600 leading-relaxed whitespace-pre-line animate-fade-in">
-                    </div>
-            </div>
-            <div class="bg-slate-50 p-3 text-center border-t border-slate-100 text-[10px] text-slate-400 shrink-0">
-                Responses are synthesized based on study context using Gemini 2.5 Flash.
-            </div>
-        </div>
     </div>
 
     <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
@@ -492,7 +531,7 @@
                     You are attempting to purge <strong id="deleteTargetTitle" class="text-slate-800">this entry</strong> from index registers. This operation cannot be reversed.
                 </p>
                 <div class="flex space-x-2 pt-1">
-                    <button onclick="closeDeleteConfirmModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-all cursor-pointer">Cancel Action</button>
+                    <button onclick="closeDeleteConfirmModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-colors cursor-pointer">Cancel Action</button>
                     <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow cursor-pointer">Erase Permanently</button>
                 </div>
             </div>
@@ -502,14 +541,10 @@
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
     <script type="module">
-        // Firebase Core & Firestore Framework Hooks (Imports)
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // =========================================================================
-        //   STEP 1: FIREBASE CONFIG CREDENTIALS PRESERVED
-        // =========================================================================
         const myPrivateFirebaseConfig = {
             apiKey: "AIzaSyDmLx4dkZHzUGjc0BGMmBzUmh9Nm0EbJYg",
             authDomain: "atricure-app.firebaseapp.com",
@@ -520,15 +555,13 @@
             measurementId: "G-S8Y8SL6MTB"
         };
 
-        // Automatic config setup
-        const apiKey = ""; // Runtime automatically provisions this key for Gemini
+        const apiKey = ""; 
         let db = null;
         let auth = null;
         let activeUser = null;
         let isFirebaseActive = false;
         let appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
 
-        // Core Static Reference Catalog System
         const fallbackDatabase = [
             {
                 id: "seed-1",
@@ -578,8 +611,8 @@
                 id: "seed-5",
                 title: "AtriClip Device Sizing and Complete Occlusion Verification Guidelines",
                 author: "AtriCure Clinical Support Team",
-                mainCategory: "LAA",
-                subCategory: "Device Safety",
+                mainCategory: "Device Resources",
+                subCategory: "LAA Clips - IFUs",
                 headerGroup: "",
                 url: "https://www.atricure.com",
                 linkType: "pdf",
@@ -620,35 +653,66 @@
             }
         ];
 
-        // Central Application Reactivity State
         let clinicalDatabase = [];
         let currentMainCategory = "Welcome";
         let currentSubCategory = "Home";
         let bookmarkedResourceIds = [];
         let isStarredFilterActive = false;
         let activeDeletionTargetId = null;
-        let activeStudyContext = null; 
+        let editingResourceId = null; 
 
-        // BOOTSTRAP INITIALIZATION ENGINE
+        const placeholderPhrases = [
+            "Ask anything... or search by author, trial name, or keyword.",
+            "\'Show me 10-year success rates for Cox-MAZE IV\'",
+            "\'Show the data on prophylactic clipping\'",
+            "\'List the papers by Dr. McCarthy\'",
+            "\'IFU for the Cryo3\'",
+            "\'I need the EnCompass video by Dr Kiankhooy\'"
+        ];
+        let currentPlaceholderIndex = 0;
+        let placeholderTimer = null;
+
+        function startPlaceholderRotation() {
+            if (placeholderTimer) clearInterval(placeholderTimer);
+            
+            const input = document.getElementById("copilotQueryInput");
+            if (input) input.placeholder = placeholderPhrases[0];
+
+            setTimeout(() => {
+                const liveInput = document.getElementById("copilotQueryInput");
+                if (!liveInput) return;
+
+                executePlaceholderTransitionStep();
+                placeholderTimer = setInterval(executePlaceholderTransitionStep, 6000);
+            }, 8000);
+        }
+
+        function executePlaceholderTransitionStep() {
+            const input = document.getElementById("copilotQueryInput");
+            if (!input) return;
+
+            input.classList.add("placeholder-fade-out");
+
+            setTimeout(() => {
+                currentPlaceholderIndex = (currentPlaceholderIndex + 1) % placeholderPhrases.length;
+                if (currentPlaceholderIndex === 0) currentPlaceholderIndex = 1; 
+                input.placeholder = placeholderPhrases[currentPlaceholderIndex];
+                input.classList.remove("placeholder-fade-out");
+            }, 500); 
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             loadStarredCache();
-            
-            // Initiate Cloud sync protocols or fallback automatically
             await attemptInitializeFirebase();
-            
-            // Set initial state view
             updateSidebarActiveStates();
             renderAppViewboard();
             setupLocalEventListeners();
-            
             lucide.createIcons();
         });
 
-        // Safe Firebase Instantiation with Custom/Anonymous Authentication Fallbacks
         async function attemptInitializeFirebase() {
             const syncIndicator = document.getElementById("syncStatus");
             try {
-                // Check if user set credentials or if environment config is present
                 const hasValidPrivateConfig = myPrivateFirebaseConfig && myPrivateFirebaseConfig.apiKey !== "YOUR_API_KEY";
                 const hasEnvConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
 
@@ -687,7 +751,6 @@
             }
         }
 
-        // Real-Time Firebase Subscription Handling
         function subscribeToDatabaseStreams() {
             if (!isFirebaseActive || !activeUser) return;
 
@@ -705,6 +768,7 @@
                     clinicalDatabase = cloudDocs;
                     updateSidebarActiveStates();
                     renderAppViewboard();
+                    if (editingResourceId) renderAdminInventory();
                 }
             }, (error) => {
                 console.error("Firestore synchronizer failure: ", error);
@@ -721,11 +785,10 @@
                     await addDoc(publicDataCollection, item);
                 }
             } catch (err) {
-                // Fail silently across configurations
+                // Fail silently
             }
         }
 
-        // Backup Local Storage Operations
         function loadLocalFallbackData() {
             const cached = localStorage.getItem("atricure_local_resources");
             if (cached) {
@@ -738,13 +801,12 @@
             renderAppViewboard();
         }
 
-        // UNIFIED GEMINI API CALL HANDLER WITH EXPONENTIAL BACKOFF RETRIES
         async function callGeminiAPI(systemPrompt, userQuery) {
             const maxRetries = 5;
             for (let i = 0; i < maxRetries; i++) {
                 const delay = Math.pow(2, i) * 1000;
                 try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=" + apiKey, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -758,7 +820,7 @@
                         if (text) return text;
                     }
                 } catch (err) {
-                    // Silently fail over to execute clean loop indexes
+                    // Backoff loops safely
                 }
                 if (i < maxRetries - 1) {
                     await new Promise(res => setTimeout(res, delay));
@@ -773,7 +835,6 @@
             }
         }
 
-        // Starred/Bookmarks Local Tracker Caches (Private Favorites)
         function loadStarredCache() {
             const stars = localStorage.getItem("atricure_starred_resources");
             if (stars) {
@@ -804,9 +865,7 @@
             }
         }
 
-        // Active UI Global Interaction Listeners
         function setupLocalEventListeners() {
-            // Category specific search controls
             const categorySearchInput = document.getElementById("categorySearchInput");
             const clearCategorySearchBtn = document.getElementById("clearCategorySearchBtn");
 
@@ -826,7 +885,6 @@
                 renderAppViewboard();
             });
 
-            // Handle Mobile Side Drawer Interactivity
             const mobileMenuBtn = document.getElementById("mobileMenuBtn");
             const sidebarMenu = document.getElementById("sidebarMenu");
             const overlay = document.getElementById("sidebarOverlay");
@@ -847,7 +905,6 @@
             mobileMenuBtn.addEventListener("click", toggleMobileSidebar);
             overlay.addEventListener("click", toggleMobileSidebar);
 
-            // Admin Actions Navigation Controls
             document.getElementById("adminPortalBtn").addEventListener("click", () => {
                 openAdminAuthModal();
             });
@@ -856,13 +913,11 @@
                 switchToView("user");
             });
 
-            // Upload Submission Form Integrator
             document.getElementById("uploadForm").addEventListener("submit", (e) => {
                 e.preventDefault();
                 processFormSubmission();
             });
             
-            // Password verification enter key listener
             document.getElementById("adminPasswordInput").addEventListener("keypress", (e) => {
                 if (e.key === 'Enter') {
                     verifyAdminAuthPassword();
@@ -870,7 +925,6 @@
             });
         }
 
-        // View Switch Panel Coordination Logic
         function switchToView(viewMode) {
             const userView = document.getElementById("userDashboardView");
             const adminView = document.getElementById("adminPortalView");
@@ -886,6 +940,7 @@
                 adminView.classList.add("hidden");
                 userView.classList.remove("hidden");
                 contextHeader.classList.remove("invisible");
+                cancelEditingSession();
                 renderAppViewboard();
             }
             
@@ -893,7 +948,6 @@
             document.getElementById("sidebarOverlay").classList.add("hidden");
         }
 
-        // Home Guide Splash Page Navigator
         window.navigateToHome = function() {
             currentMainCategory = "Welcome";
             currentSubCategory = "Home";
@@ -911,20 +965,17 @@
             document.getElementById("sidebarOverlay").classList.add("hidden");
         };
 
-        // Navigation Controller Actions
         window.selectSubCategory = function(mainCat, subCat) {
             currentMainCategory = mainCat;
             currentSubCategory = subCat;
             isStarredFilterActive = false;
             document.getElementById("starredFilterIndicator").classList.add("hidden");
 
-            // Reset category-specific search whenever we jump pages
             document.getElementById("categorySearchInput").value = "";
             document.getElementById("clearCategorySearchBtn").classList.add("hidden");
 
             updateSidebarActiveStates();
             
-            // Make display breadcrumbs slightly shorter if long string selected
             const shortSubCat = subCat.length > 25 ? subCat.split(" (")[0] : subCat;
             document.getElementById("breadcrumbMain").innerText = mainCat;
             document.getElementById("breadcrumbSub").innerText = shortSubCat;
@@ -949,13 +1000,11 @@
         };
 
         function updateSidebarActiveStates() {
-            // Remove previous active classes everywhere
             document.querySelectorAll(".subcat-btn").forEach(btn => {
                 btn.classList.remove("bg-orange-50", "text-orange-600", "font-bold", "border-r-4", "border-orange-500");
                 btn.classList.add("text-slate-600", "font-medium");
             });
 
-            // Adjust Welcome / Home active border
             const homeBtn = document.getElementById("homeGuideBtn");
             if (currentMainCategory === "Welcome") {
                 homeBtn.classList.add("bg-orange-50", "text-orange-600", "font-bold", "border-r-4", "border-orange-500");
@@ -972,12 +1021,12 @@
                 targetBtn.classList.add("bg-orange-50", "text-orange-600", "font-bold", "border-r-4", "border-orange-500");
             }
 
-            // Map counter configurations
             const counts = {
                 "maze-survival": 0, "maze-durability": 0, "maze-safety": 0, "maze-encompass": 0, "maze-prophylactic": 0,
-                "maze-devices": 0,
                 "laa-stroke": 0, "laa-success": 0, "laa-complication": 0, "laa-safety": 0, "laa-prophylactic": 0,
-                "laa-devices": 0,
+                "rf-ifus": 0, "rf-brochures": 0, "rf-media": 0,
+                "cryo-ifus": 0, "cryo-brochures": 0, "cryo-media": 0,
+                "laac-ifus": 0, "laac-brochures": 0, "laac-media": 0,
                 "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
             };
 
@@ -991,14 +1040,22 @@
                     else if (sCat.includes("safety")) counts["maze-safety"]++;
                     else if (sCat.includes("encompass")) counts["maze-encompass"]++;
                     else if (sCat.includes("prophylactic")) counts["maze-prophylactic"]++;
-                    else if (sCat === "devices") counts["maze-devices"]++;
                 } else if (mCat === "laa") {
                     if (sCat.includes("stroke")) counts["laa-stroke"]++;
                     else if (sCat.includes("success")) counts["laa-success"]++;
                     else if (sCat.includes("complication")) counts["laa-complication"]++;
                     else if (sCat.includes("safety")) counts["laa-safety"]++;
                     else if (sCat.includes("prophylactic")) counts["laa-prophylactic"]++;
-                    else if (sCat === "devices") counts["laa-devices"]++;
+                } else if (mCat === "device resources") {
+                    if (sCat === "rf ablation - ifus") counts["rf-ifus"]++;
+                    else if (sCat === "rf ablation - product brochures") counts["rf-brochures"]++;
+                    else if (sCat === "rf ablation - other media") counts["rf-media"]++;
+                    else if (sCat === "cryoablation - ifus") counts["cryo-ifus"]++;
+                    else if (sCat === "cryoablation - product brochures") counts["cryo-brochures"]++;
+                    else if (sCat === "cryoablation - other media") counts["cryo-media"]++;
+                    else if (sCat === "laa clips - ifus") counts["laac-ifus"]++;
+                    else if (sCat === "laa clips - product brochures") counts["laac-brochures"]++;
+                    else if (sCat === "laa clips - other media") counts["laac-media"]++;
                 } else if (mCat === "misc") {
                     if (sCat === "training courses") counts["misc-training"]++;
                     else if (sCat === "misc research") counts["misc-research"]++;
@@ -1038,7 +1095,6 @@
             renderAppViewboard();
         };
 
-        // RENDER CENTRAL PORTAL PLATFORM
         function renderAppViewboard() {
             const container = document.getElementById("userDashboardView");
             const categorySearchVal = document.getElementById("categorySearchInput").value.toLowerCase().trim();
@@ -1046,19 +1102,16 @@
             const queryLabel = document.getElementById("searchQueryLabel");
             const categorySearchContainer = document.getElementById("categorySearchContainer");
 
-            // IF HOME SCREEN IS ACTIVE AND NO ACTIVE SEARCH QUERY
             if (currentMainCategory === "Welcome") {
                 categorySearchContainer.classList.add("hidden");
                 renderWelcomeScreen(container);
+                startPlaceholderRotation();
                 return;
             }
 
-            // Show context filter input when in specific folders
             categorySearchContainer.classList.remove("hidden");
-
             let workingDataSet = clinicalDatabase;
 
-            // Handle Global Filter queries
             if (categorySearchVal !== "") {
                 searchIndicator.classList.remove("hidden");
                 searchIndicator.classList.add("flex");
@@ -1086,7 +1139,6 @@
                 }
             }
 
-            // Manage Empty States
             if (workingDataSet.length === 0) {
                 container.innerHTML = `
                     <div class="bg-white border border-slate-200 rounded-xl p-12 text-center max-w-lg mx-auto shadow-sm mt-8">
@@ -1109,8 +1161,7 @@
             lucide.createIcons();
         }
 
-        // CLINICAL COPILOT SEARCH AND SYNTHESIS ACTION (CROSS-DATABASE)
-        window.askClinicalCopilot = async function() {
+        window.askAtriGuide = async function() {
             const queryArea = document.getElementById("copilotQueryInput");
             const answerArea = document.getElementById("copilotAnswerArea");
             const answerText = document.getElementById("copilotAnswerText");
@@ -1118,7 +1169,7 @@
 
             const query = queryArea.value.trim();
             if (!query) {
-                showToast("Please enter a question or topic for the Copilot to analyze.", "warning");
+                showToast("Please enter a question or topic for AtriGuide to analyze.", "warning");
                 return;
             }
 
@@ -1129,6 +1180,16 @@
 
             answerArea.classList.remove("hidden");
             answerText.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 font-medium py-3"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping"></span><span>Gemini is reading, comparing, and synthesizing clinical guidelines across your database...</span></div>`;
+
+            let localMatches = clinicalDatabase.filter(d => 
+                query.toLowerCase().split(' ').some(word => 
+                    word.length > 2 && (
+                        d.title.toLowerCase().includes(word) || 
+                        d.author.toLowerCase().includes(word) || 
+                        d.summary.toLowerCase().includes(word)
+                    )
+                )
+            );
 
             const systemPrompt = `You are a helpful senior clinical field specialist at AtriCure. Synthesize an answer to the clinical specialist's question using only the verified papers in the provided AtriCure Clinical Database context. Be incredibly precise, concise, and professional. 
             Formatting Rules:
@@ -1144,172 +1205,140 @@
                 answerText.innerHTML = formatMarkdownToHTML(synthesizedAnswer);
                 showToast("Clinical synthesis completed.", "success");
             } catch (err) {
-                answerText.innerHTML = `<span class="text-red-600 font-semibold flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> Gemini Synthesis failed. ${err.message}</span>`;
-                showToast("Copilot synthesis failed. Please try again.", "warning");
-                lucide.createIcons();
+                if (localMatches.length > 0) {
+                    let fallbackHtml = `<div class="text-xs bg-orange-50 text-orange-800 p-2.5 rounded-lg mb-3 border border-orange-200/60 font-semibold flex items-center gap-2"><i data-lucide="wifi-off" class="w-4 h-4"></i><span>Hospital Network Offline Fallboard: Instantly matching your pre-verified catalog entries locally.</span></div><div class="space-y-3">`;
+                    localMatches.forEach(match => {
+                        fallbackHtml += `
+                            <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                <div class="font-bold text-xs text-[#00205B]">${match.title}</div>
+                                <div class="text-[10px] text-slate-400 font-medium mt-0.5">${match.author}</div>
+                                <div class="text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded whitespace-pre-line">${match.summary}</div>
+                            </div>`;
+                    });
+                    fallbackHtml += `</div>`;
+                    answerText.innerHTML = fallbackHtml;
+                    showToast("Network busy. Dispatched verified offline guide assets.", "info");
+                } else {
+                    answerText.innerHTML = `<span class="text-red-600 font-semibold flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> AtriGuide Synthesis failed. ${err.message}</span>`;
+                    showToast("AtriGuide connection busy. Please try again.", "warning");
+                }
             } finally {
                 btn.disabled = false;
                 btn.classList.remove("opacity-60", "cursor-not-allowed");
-                btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span>✨ Ask Copilot</span>`;
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i><span>✨ Ask AtriGuide</span>`;
                 lucide.createIcons();
             }
         };
 
-        window.clearCopilotAnswer = function() {
+        window.clearAtriGuideAnswer = function() {
             document.getElementById("copilotQueryInput").value = "";
             document.getElementById("copilotAnswerArea").classList.add("hidden");
             document.getElementById("copilotAnswerText").innerText = "";
         };
 
-        // INDIVIDUAL STUDY AI CO-PILOT ASSISTANT ACTIONS
-        window.openStudyAssistant = function(studyId) {
-            const study = clinicalDatabase.find(d => d.id === studyId);
-            if (!study) {
-                showToast("Requested study context was not found in active indices.", "warning");
-                return;
-            }
-
-            activeStudyContext = study;
-            document.getElementById("studyAssistantTitle").innerText = study.title;
-            document.getElementById("studyAssistantAuthor").innerText = study.author;
-            document.getElementById("studyAssistantQueryInput").value = "";
-            
-            const responseArea = document.getElementById("studyAssistantResponseArea");
-            responseArea.classList.add("hidden");
-            responseArea.innerText = "";
-
-            const modal = document.getElementById("studyAssistantModal");
-            modal.classList.remove("hidden");
-            lucide.createIcons();
-        };
-
-        window.closeStudyAssistantModal = function() {
-            document.getElementById("studyAssistantModal").classList.add("hidden");
-            activeStudyContext = null;
-        };
-
-        window.askStudyAssistantPreset = function(question) {
-            document.getElementById("studyAssistantQueryInput").value = question;
-            submitStudyAssistantQuery();
-        };
-
-        window.submitStudyAssistantQuery = async function() {
-            const queryInput = document.getElementById("studyAssistantQueryInput");
-            const responseArea = document.getElementById("studyAssistantResponseArea");
-            const btn = document.getElementById("studyAssistantSubmitBtn");
-
-            const question = queryInput.value.trim();
-            if (!question || !activeStudyContext) return;
-
-            btn.disabled = true;
-            btn.classList.add("opacity-60", "cursor-not-allowed");
-            btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i>`;
-            lucide.createIcons();
-
-            responseArea.classList.remove("hidden");
-            responseArea.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 font-medium"><span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping"></span><span>Gemini is analyzing this study parameters...</span></div>`;
-
-            const systemPrompt = `You are a clinical AI research assistant at AtriCure. Analyze the provided clinical paper context and answer the user's specific question about it. Be precise, highly professional, and factual. Only use the provided study details to formulate your response. If the details cannot answer the user's question, let them know. Do not make up outside metrics.`;
-            const userQuery = `Study details:\nTitle: ${activeStudyContext.title}\nAuthor/Source: ${activeStudyContext.author}\nMain Category: ${activeStudyContext.mainCategory}\nAI Takeaways Summary:\n${activeStudyContext.summary}\n\nUser Question: ${question}`;
-
-            try {
-                const answer = await callGeminiAPI(systemPrompt, userQuery);
-                responseArea.innerHTML = formatMarkdownToHTML(answer);
-                showToast("Insights retrieved.", "success");
-            } catch (err) {
-                responseArea.innerHTML = `<span class="text-red-600 font-semibold flex items-center gap-1.5"><i data-lucide="alert-circle" class="w-4 h-4"></i> Analysis interrupted. ${err.message}</span>`;
-                showToast("Assistant failed to retrieve response.", "warning");
-                lucide.createIcons();
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove("opacity-60", "cursor-not-allowed");
-                btn.innerHTML = `<i data-lucide="arrow-right" class="w-4 h-4"></i>`;
-                lucide.createIcons();
-            }
-        };
-
-        // Beautiful Clinical Launchpad (Home Screen) Renderer
         function renderWelcomeScreen(container) {
             container.innerHTML = `
                 <div class="space-y-8 animate-fade-in pb-12">
-                    <div class="bg-gradient-to-r from-[#00205B] to-[#0A3D91] text-white p-6 md:p-8 rounded-2xl shadow-md border-b-4 border-orange-500 relative overflow-hidden">
-                        <div class="absolute right-0 bottom-0 translate-x-12 translate-y-12 opacity-10">
-                            <i data-lucide="activity" class="w-64 h-64"></i>
-                        </div>
-                        <div class="relative z-10 max-w-3xl">
-                            <div class="flex items-center space-x-2 text-xs font-bold text-orange-400 uppercase tracking-widest mb-2">
-                                <i data-lucide="sparkles" class="w-4 h-4"></i>
-                                <span>Welcome to the hub</span>
-                            </div>
-                            <h1 class="text-3xl md:text-4.5xl font-extrabold tracking-tight">AtriCure Field Guide</h1>
-                            <p class="text-sm md:text-base text-slate-200 mt-2.5 leading-relaxed font-medium">
+                    
+                    <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                        <div class="relative z-10">
+                            <h1 class="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">AtriCure Field Guide</h1>
+                            <p class="text-xs text-slate-500 mt-1 font-medium tracking-wide">
                                 Unlocking peer-reviewed data at the scrub sink.
                             </p>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-                        <div class="flex items-center space-x-2">
-                            <div class="p-2 bg-orange-50 text-orange-600 rounded-lg">
-                                <i data-lucide="sparkles" class="w-5 h-5 text-orange-500"></i>
+                    <div class="bg-[#00205B] border-l-[6px] border-orange-500 rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
+                        
+                        <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
+                            <i data-lucide="sparkles" class="w-48 h-48"></i>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 relative z-10">
+                            <div class="p-2 bg-white/10 text-orange-500 rounded-lg">
+                                <i data-lucide="sparkles" class="w-6 h-6 text-orange-500"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800 text-sm md:text-base">Clinical Copilot</h3>
-                                <p class="text-[11px] text-slate-400 font-medium">Ask questions across your entire indexed clinical database</p>
+                                <h3 class="font-extrabold text-white text-lg md:text-xl tracking-tight">AtriGuide</h3>
+                                <p class="text-[11px] text-orange-400 font-semibold uppercase tracking-wider">AI Clinical Intelligence</p>
                             </div>
                         </div>
-                        <div class="space-y-3">
-                            <textarea id="copilotQueryInput" rows="2" placeholder="Ask anything... 'Show me 10-year success rates for Cox-MAZE IV' or search by author, trial name, or keyword." class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50"></textarea>
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] text-slate-400 font-medium">Powered by Gemini 2.5 Flash</span>
-                                <button onclick="askClinicalCopilot()" id="copilotSubmitBtn" class="bg-[#00205B] hover:bg-orange-600 text-white font-bold text-xs px-4 py-2 rounded-md transition-all flex items-center space-x-1.5 cursor-pointer">
-                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                                    <span>✨ Ask Copilot</span>
+
+                        <p class="text-white/95 text-xs md:text-sm leading-relaxed max-w-2xl relative z-10 font-medium">
+                            An AI-powered engine that instantly reads and answers questions across your entire database of research articles, IFUs, and media.
+                        </p>
+
+                        <!-- Added instruction subtitle above query workspace textarea input -->
+                        <p class="text-orange-400 text-xs font-semibold relative z-10 -mt-3 tracking-wide">
+                            Ask a question below to get started.
+                        </p>
+
+                        <div class="space-y-4 pt-1 relative z-10">
+                            <textarea 
+                                id="copilotQueryInput" 
+                                rows="2" 
+                                placeholder="'Show me 10-year success rates for Cox-MAZE IV'" 
+                                class="w-full text-slate-900 placeholder-slate-500 text-sm bg-white rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-medium border-0 shadow-inner resize-none"
+                            ></textarea>
+                            
+                            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <span class="text-[11px] text-slate-300 font-medium order-2 sm:order-1">Powered by Gemini 2.5 Flash</span>
+                                <button 
+                                    onclick="askAtriGuide()" 
+                                    id="copilotSubmitBtn" 
+                                    class="w-full sm:w-auto order-1 sm:order-2 bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-sm px-6 py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2 cursor-pointer"
+                                >
+                                    <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+                                    <span>✨ Ask AtriGuide</span>
                                 </button>
                             </div>
                         </div>
-                        <div id="copilotAnswerArea" class="hidden bg-slate-50 border border-slate-100 rounded-lg p-4 animate-fade-in text-sm text-slate-600 leading-relaxed space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-200 pb-1.5 mb-2">
-                                <span class="text-xs font-bold text-[#00205B] uppercase tracking-wider">Copilot Synthesis</span>
-                                <button onclick="clearCopilotAnswer()" class="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">Clear</button>
+
+                        <div id="copilotAnswerArea" class="hidden bg-white/5 border border-white/10 rounded-xl p-4 animate-fade-in text-sm text-slate-100 leading-relaxed space-y-2 relative z-10">
+                            <div class="flex items-center justify-between border-b border-white/10 pb-1.5 mb-2">
+                                <span class="text-xs font-bold text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> AtriGuide Synthesis
+                                </span>
+                                <button onclick="clearAtriGuideAnswer()" class="text-xs text-slate-300 hover:text-white transition-colors cursor-pointer">Clear</button>
                             </div>
-                            <div id="copilotAnswerText" class="whitespace-pre-line font-medium leading-relaxed"></div>
+                            <div id="copilotAnswerText" class="whitespace-pre-line font-medium leading-relaxed text-slate-200"></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
                                 <div class="p-3 bg-blue-50 text-[#00205B] rounded-lg w-fit">
                                     <i data-lucide="search" class="w-5 h-5 text-[#00205B]"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Instant Search</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    Type what you need directly into the Clinical Copilot. You can search by author, pull up a specific trial, or type in a clinical topic like "prophylactic clip data" or "maze durability papers" to instantly pull up all relevant peer-reviewed articles.
+                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                    Type directly into AtriGuide. Search by author, specific trial, or type a clinical phrase like 'prophylactic clip data' or 'maze durability papers' to pull up relevant peer-reviewed articles instantly.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
                                 <div class="p-3 bg-orange-50 text-orange-600 rounded-lg w-fit">
                                     <i data-lucide="menu" class="w-5 h-5 text-orange-500"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Browse the Database</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">
+                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
                                     Tap the menu icon (☰) at the top left to browse our hand-curated research categories manually, sorted directly by MAZE and LAA clinical topics.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
                                 <div class="p-3 bg-amber-50 text-amber-500 rounded-lg w-fit">
                                     <i data-lucide="star" class="w-5 h-5 text-amber-500"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Quick Access</h3>
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    Bookmark your most frequently referenced trials to save them directly to your personal dashboard.
+                                <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                                    Bookmark your most frequently referenced trials and device materials to save them directly to your personal dashboard.
                                 </p>
                             </div>
                         </div>
@@ -1318,7 +1347,6 @@
             lucide.createIcons();
         }
 
-        // Standard Literature Grid Render template blocks
         function renderHeaderBlockSection(title, cards) {
             let cardsGridHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-5">`;
             
@@ -1334,7 +1362,6 @@
                     })
                     .join('');
 
-                // Custom classification action button
                 let actionButtonHtml = "";
                 const linkType = card.linkType || "journal";
                 
@@ -1347,7 +1374,7 @@
                             </a>`;
                     } else {
                         actionButtonHtml = `
-                            <a href="${card.url}" target="_blank" class="px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="Open External Journal">
+                            <a href="${card.url}" target="_blank" class="px-3 py-1.5 bg-[#00205B] hover:bg-blue-800 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="Open External Journal">
                                 <i data-lucide="globe" class="w-3.5 h-3.5"></i>
                                 <span>Open Journal</span>
                             </a>`;
@@ -1378,10 +1405,6 @@
                                 </div>
                                 
                                 <div class="flex items-center space-x-1.5">
-                                    <button onclick="openStudyAssistant('${card.id}')" class="px-3 py-1.5 border border-orange-200 hover:border-orange-500 text-orange-600 hover:text-white hover:bg-orange-500 rounded text-xs font-bold flex items-center space-x-1 transition-all cursor-pointer" title="✨ Ask Assistant">
-                                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                                        <span>✨ Ask AI</span>
-                                    </button>
                                     ${actionButtonHtml}
                                 </div>
                             </div>
@@ -1416,7 +1439,6 @@
                 </div>`;
         }
 
-        // Bookmark action mechanism (Private local bookmarks only, never synced)
         window.toggleStarItem = function(id) {
             const idx = bookmarkedResourceIds.indexOf(id);
             if (idx === -1) {
@@ -1430,7 +1452,6 @@
             renderAppViewboard();
         };
 
-        // Clipboard operations 
         window.copyInsightsToClipboard = function(text) {
             const temp = document.createElement("textarea");
             temp.value = text;
@@ -1447,7 +1468,6 @@
             document.body.removeChild(temp);
         };
 
-        // DYNAMIC ADMIN CONTROL MATRIX DROPDOWN UPDATES
         window.updateFormSubCategories = function() {
             const mainCat = document.getElementById("formMainCat").value;
             const subCatSelect = document.getElementById("formSubCat");
@@ -1459,8 +1479,7 @@
                     "Lesion Durability",
                     "Procedure Safety",
                     "EnCompass Data",
-                    "Prophylactic Data",
-                    "Devices"
+                    "Prophylactic Data"
                 ];
             } else if(mainCat === "LAA") {
                 options = [
@@ -1468,8 +1487,19 @@
                     "Closure Success Rates",
                     "Complication Rates",
                     "Device Safety",
-                    "Prophylactic Data",
-                    "Devices"
+                    "Prophylactic Data"
+                ];
+            } else if(mainCat === "Device Resources") {
+                options = [
+                    "RF Ablation - IFUs",
+                    "RF Ablation - Product Brochures",
+                    "RF Ablation - Other Media",
+                    "Cryoablation - IFUs",
+                    "Cryoablation - Product Brochures",
+                    "Cryoablation - Other Media",
+                    "LAA Clips - IFUs",
+                    "LAA Clips - Product Brochures",
+                    "LAA Clips - Other Media"
                 ];
             } else if(mainCat === "MISC") {
                 options = ["Training Courses", "Misc Research", "Guidelines", "Common Documents"];
@@ -1484,7 +1514,6 @@
             headerSelect.innerHTML = '<option value="">None / Standalone Listing</option>';
         };
 
-        // GEMINI REAL-TIME SUMMARY GENERATION FOR NEW PUBLISHED UPLOADS
         window.generateLiveAISummary = async function() {
             const title = document.getElementById("formTitle").value.trim();
             const author = document.getElementById("formAuthor").value.trim();
@@ -1521,7 +1550,6 @@
             }
         };
 
-        // EXPORT DATABASE UTILITY
         window.exportDatabaseAsJSON = function() {
             const serializedData = JSON.stringify(clinicalDatabase, null, 4);
             const blob = new Blob([serializedData], { type: "application/json" });
@@ -1538,7 +1566,48 @@
             showToast("Database exported! Copy the contents into fallbackDatabase inside your HTML file.", "success");
         };
 
-        // PUBLISH TO DATABASE SYSTEM
+        window.startEditingResource = function(id) {
+            const item = clinicalDatabase.find(d => d.id === id);
+            if (!item) {
+                showToast("Target modification file record missing.", "warning");
+                return;
+            }
+
+            editingResourceId = id;
+
+            document.getElementById("formTitle").value = item.title || "";
+            document.getElementById("formAuthor").value = item.author || "";
+            document.getElementById("formMainCat").value = item.mainCategory || "MAZE";
+            
+            updateFormSubCategories();
+            document.getElementById("formSubCat").value = item.subCategory || "";
+            document.getElementById("formUrl").value = item.url || "";
+            document.getElementById("formLinkType").value = item.linkType || "journal";
+            document.getElementById("formSummary").value = item.summary || "";
+
+            document.getElementById("formPanelTitle").innerText = "Edit Existing Clinical Resource";
+            document.getElementById("formHeaderIcon").setAttribute("data-lucide", "edit");
+            document.getElementById("submitFormBtn").innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Save and Update Resource changes</span>`;
+            document.getElementById("cancelEditBtn").classList.remove("hidden");
+
+            document.getElementById("formTitle").scrollIntoView({ behavior: 'smooth' });
+            lucide.createIcons();
+            showToast("Clinical card loaded into workspace editor fields.", "info");
+        };
+
+        window.cancelEditingSession = function() {
+            editingResourceId = null;
+
+            document.getElementById("uploadForm").reset();
+
+            document.getElementById("formPanelTitle").innerText = "Upload New Clinical Resource";
+            document.getElementById("formHeaderIcon").setAttribute("data-lucide", "file-plus");
+            document.getElementById("submitFormBtn").innerHTML = `<i data-lucide="upload-cloud" class="w-4 h-4"></i><span>Publish to Database Records</span>`;
+            document.getElementById("cancelEditBtn").classList.add("hidden");
+
+            lucide.createIcons();
+        };
+
         async function processFormSubmission() {
             const title = document.getElementById("formTitle").value;
             const author = document.getElementById("formAuthor").value;
@@ -1551,36 +1620,45 @@
 
             const resourceObject = {
                 title, author, mainCategory, subCategory, headerGroup, url, linkType, summary,
-                createdTimestamp: Date.now()
+                lastModifiedTimestamp: Date.now()
             };
 
             try {
                 if (isFirebaseActive && db) {
-                    const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
-                    await addDoc(collectionRef, resourceObject);
+                    if (editingResourceId) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', editingResourceId);
+                        await updateDoc(docRef, resourceObject);
+                    } else {
+                        resourceObject.createdTimestamp = Date.now();
+                        const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+                        await addDoc(collectionRef, resourceObject);
+                    }
                 } else {
-                    resourceObject.id = "doc-" + Date.now();
-                    clinicalDatabase.unshift(resourceObject);
+                    if (editingResourceId) {
+                        const targetIdx = clinicalDatabase.findIndex(d => d.id === editingResourceId);
+                        if (targetIdx !== -1) {
+                            resourceObject.id = editingResourceId;
+                            clinicalDatabase[targetIdx] = resourceObject;
+                        }
+                    } else {
+                        resourceObject.id = "doc-" + Date.now();
+                        resourceObject.createdTimestamp = Date.now();
+                        clinicalDatabase.unshift(resourceObject);
+                    }
                     saveLocalFallbackData();
                     updateSidebarActiveStates();
                     renderAppViewboard();
                 }
 
-                document.getElementById("formTitle").value = "";
-                document.getElementById("formAuthor").value = "";
-                document.getElementById("formUrl").value = "";
-                document.getElementById("formSummary").value = "";
-                document.getElementById("formLinkType").value = "journal";
-
-                showToast("Clinical Resource published to indexing directories.", "success");
+                cancelEditingSession();
+                showToast(editingResourceId ? "Resource record modified successfully." : "Clinical Resource published to indexing directories.", "success");
                 renderAdminInventory();
             } catch (err) {
                 console.error("Publishing operations halted unexpected failure: ", err);
-                showToast("System error. Document indexing aborted.", "warning");
+                showToast("System error. Document index modification aborted.", "warning");
             }
         }
 
-        // MANAGE INVENTORY GRID ACTIONS
         window.renderAdminInventory = function() {
             const listContainer = document.getElementById("adminInventoryList");
             const filterVal = document.getElementById("adminInventorySearch").value.toLowerCase().trim();
@@ -1596,18 +1674,23 @@
             }
 
             listContainer.innerHTML = items.map(item => `
-                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row" data-title="${item.title.toLowerCase()}" data-author="${item.author.toLowerCase()}">
-                    <div class="min-w-0">
+                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row ${editingResourceId === item.id ? 'border-l-4 border-orange-500 bg-orange-50/20' : ''}" data-title="${item.title.toLowerCase()}" data-author="${item.author.toLowerCase()}">
+                    <div class="min-w-0 flex-1">
                         <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${item.title}</h5>
                         <div class="flex items-center space-x-2 text-[10px] font-semibold text-slate-400 mt-1">
-                            <span class="text-[#00205B]">${item.author}</span>
+                            <span class="text-[#00205B] truncate max-w-[120px]">${item.author}</span>
                             <span>•</span>
                             <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold">${item.mainCategory} &gt; ${item.subCategory}</span>
                         </div>
                     </div>
-                    <button onclick="triggerDeleteConfirmModal('${item.id}', \`${item.title.replace(/'/g, "\\'")}\`)" class="shrink-0 p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all cursor-pointer" title="Delete Resource">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center space-x-1 shrink-0">
+                        <button onclick="startEditingResource('${item.id}')" class="p-1.5 text-slate-400 hover:text-[#00205B] hover:bg-slate-100 rounded transition-all cursor-pointer" title="Edit text configurations">
+                            <i data-lucide="pencil" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="triggerDeleteConfirmModal('${item.id}', \`${item.title.replace(/'/g, "\\'")}\`)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all cursor-pointer" title="Delete Resource">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
             `).join('');
             
@@ -1627,7 +1710,6 @@
             });
         };
 
-        // ADMIN ACCESS AUTHORIZATION MANAGEMENT
         window.openAdminAuthModal = function() {
             const modal = document.getElementById("adminAuthModal");
             const input = document.getElementById("adminPasswordInput");
@@ -1657,7 +1739,6 @@
             }
         };
 
-        // CONSOLIDATED DELETE MODAL MANAGER
         window.triggerDeleteConfirmModal = function(id, title) {
             activeDeletionTargetId = id;
             document.getElementById("deleteTargetTitle").innerText = `"${title}"`;
@@ -1691,16 +1772,25 @@
                         renderAppViewboard();
                     }
                 }
+                if (editingResourceId === activeDeletionTargetId) cancelEditingSession();
                 showToast("Resource index removed from records.", "info");
                 renderAdminInventory();
                 closeDeleteConfirmModal();
             } catch (err) {
-                console.error("Purge failure encountered: ", err);
+                console.error("Purge failure: ", err);
                 showToast("Purging operation halted.", "warning");
             }
         }
 
-        // NOTIFICATION TOAST ENGINE
+        function formatMarkdownToHTML(text) {
+            let processed = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            processed = processed.replace(/^\s*•\s*(.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
+            processed = processed.replace(/^\s*-\s*(.*?)$/gm, '<li class="ml-4 list-disc">$1</li>');
+            processed = processed.replace(/\n/g, '<br>');
+            return processed;
+        }
+
         window.showToast = function(message, type = "info") {
             const container = document.getElementById("toastContainer");
             const toast = document.createElement("div");
