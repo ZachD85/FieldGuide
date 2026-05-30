@@ -657,31 +657,54 @@
             let sCat = String(doc.subCategory || "").trim();
             let normalizedMain = "MAZE";
             let mCatLower = mCat.toLowerCase();
-            if (mCatLower.includes("maze")) normalizedMain = "MAZE";
-            else if (mCatLower.includes("laa") || mCatLower.includes("appendage")) normalizedMain = "LAA";
-            else if (mCatLower.includes("device") || mCatLower.includes("resource") || mCatLower.includes("ablation") || mCatLower.includes("cryo") || mCatLower.includes("clips")) normalizedMain = "Device Resources";
-            else if (mCatLower.includes("misc") || mCatLower.includes("guideline") || mCatLower.includes("training") || mCatLower.includes("common")) normalizedMain = "MISC";
+            
+            if (mCatLower.includes("maze")) {
+                normalizedMain = "MAZE";
+            } else if (mCatLower.includes("laa") || mCatLower.includes("appendage")) {
+                normalizedMain = "LAA";
+            } else if (mCatLower.includes("device") || mCatLower.includes("resource") || mCatLower.includes("ablation") || mCatLower.includes("cryo") || mCatLower.includes("clips")) {
+                normalizedMain = "Device Resources";
+            } else if (mCatLower.includes("misc") || mCatLower.includes("guideline") || mCatLower.includes("training") || mCatLower.includes("common")) {
+                normalizedMain = "MISC";
+            }
 
             let normalizedSub = "General"; 
             let sCatLower = sCat.toLowerCase();
+
             if (normalizedMain === "MAZE") {
-                if (sCatLower.includes("survival")) normalizedSub = "Survival Benefits";
-                else if (sCatLower.includes("durability")) normalizedSub = "Lesion Durability";
-                else if (sCatLower.includes("safety")) normalizedSub = "Procedure Safety";
-                else if (sCatLower.includes("encompass")) normalizedSub = "EnCompass Data";
-                else if (sCatLower.includes("prophylactic")) normalizedSub = "Prophylactic Data";
+                if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("data") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
+                    normalizedSub = "Survival Benefits";
+                } else if (sCatLower.includes("durability") || sCatLower.includes("lesion") || sCatLower.includes("outcome") || sCatLower.includes("pattern") || sCatLower.includes("concomitant") || sCatLower.includes("persistent") || sCatLower.includes("atrial")) {
+                    normalizedSub = "Lesion Durability";
+                } else if (sCatLower.includes("safety") || sCatLower.includes("complication") || sCatLower.includes("rate") || sCatLower.includes("pacemaker")) {
+                    normalizedSub = "Procedure Safety";
+                } else if (sCatLower.includes("encompass") || sCatLower.includes("clamp")) {
+                    normalizedSub = "EnCompass Data";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
+                    normalizedSub = "Prophylactic Data";
+                } else {
+                    normalizedSub = "Survival Benefits"; // Safe fallback!
+                }
             } else if (normalizedMain === "LAA") {
-                if (sCatLower.includes("stroke")) normalizedSub = "Stroke Reduction";
-                else if (sCatLower.includes("closure") || sCatLower.includes("success")) normalizedSub = "Closure Success Rates";
-                else if (sCatLower.includes("complication")) normalizedSub = "Complication Rates";
-                else if (sCatLower.includes("safety")) normalizedSub = "Device Safety";
-                else if (sCatLower.includes("prophylactic")) normalizedSub = "Prophylactic Data";
+                if (sCatLower.includes("stroke") || sCatLower.includes("reduction") || sCatLower.includes("ischemic") || sCatLower.includes("exclusion") || sCatLower.includes("benefit")) {
+                    normalizedSub = "Stroke Reduction";
+                } else if (sCatLower.includes("closure") || sCatLower.includes("success") || sCatLower.includes("complete")) {
+                    normalizedSub = "Closure Success Rates";
+                } else if (sCatLower.includes("complication") || sCatLower.includes("bleeding")) {
+                    normalizedSub = "Complication Rates";
+                } else if (sCatLower.includes("safety") || sCatLower.includes("device")) {
+                    normalizedSub = "Device Safety";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
+                    normalizedSub = "Prophylactic Data";
+                } else {
+                    normalizedSub = "Stroke Reduction"; // Safe fallback!
+                }
             } else if (normalizedMain === "Device Resources") {
-                if (sCatLower.includes("clip")) {
+                if (sCatLower.includes("clip") || sCatLower.includes("atriclip")) {
                     if (sCatLower.includes("ifu")) normalizedSub = "LAA Clips - IFUs";
                     else if (sCatLower.includes("brochure")) normalizedSub = "LAA Clips - Product Brochures";
                     else normalizedSub = "LAA Clips - Other Media";
-                } else if (sCatLower.includes("cryo")) {
+                } else if (sCatLower.includes("cryo") || sCatLower.includes("snowflake") || sCatLower.includes("balloon")) {
                     if (sCatLower.includes("ifu")) normalizedSub = "Cryoablation - IFUs";
                     else if (sCatLower.includes("brochure")) normalizedSub = "Cryoablation - Product Brochures";
                     else normalizedSub = "Cryoablation - Other Media";
@@ -691,10 +714,15 @@
                     else normalizedSub = "RF Ablation - Other Media";
                 }
             } else if (normalizedMain === "MISC") {
-                if (sCatLower.includes("course") || sCatLower.includes("training")) normalizedSub = "Training Courses";
-                else if (sCatLower.includes("guideline")) normalizedSub = "Guidelines";
-                else if (sCatLower.includes("document")) normalizedSub = "Common Documents";
-                else normalizedSub = "Misc Research";
+                if (sCatLower.includes("course") || sCatLower.includes("training") || sCatLower.includes("education")) {
+                    normalizedSub = "Training Courses";
+                } else if (sCatLower.includes("guideline") || sCatLower.includes("recommendation") || sCatLower.includes("sts")) {
+                    normalizedSub = "Guidelines";
+                } else if (sCatLower.includes("document") || sCatLower.includes("common")) {
+                    normalizedSub = "Common Documents";
+                } else {
+                    normalizedSub = "Misc Research";
+                }
             }
             return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
         }
@@ -826,6 +854,8 @@
                     renderAppViewboard();
                     renderAdminInventory();
                 }
+            }, (error) => {
+                console.error("Firestore onSnapshot subscription failed:", error);
             });
         }
 
@@ -1042,6 +1072,7 @@
                 document.getElementById("sidebarOverlay").classList.add("hidden");
             });
 
+            // FIXED: Re-enabled the auth modal password gate instead of direct bypass
             document.getElementById("adminPortalBtn").addEventListener("click", () => { openAdminAuthModal(); });
             document.getElementById("exitAdminBtn").addEventListener("click", () => { switchToView("user"); });
             document.getElementById("uploadForm").addEventListener("submit", (e) => { e.preventDefault(); processFormSubmission(); });
@@ -1277,7 +1308,7 @@
                 .join('');
 
             return `
-                <div class="bg-white border border-slate-200 rounded-lg p-3.5 flex flex-col justify-between shadow-sm relative group">
+                <div class="bg-white border border-slate-200 rounded-lg p-3.5 flex flex-col justify-between shadow-sm relative group animate-fade-in">
                     <div>
                         <div class="flex items-start justify-between gap-2 mb-2">
                             <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${escapeHtml(card.title)}</h4>
