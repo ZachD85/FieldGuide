@@ -211,7 +211,7 @@
                                         <span>IFUs</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-ifus">0</span>
                                     </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
+                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
                                         <span>Product Brochures</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-brochures">0</span>
                                     </button>
@@ -235,7 +235,7 @@
                                         <span>IFUs</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-ifus">0</span>
                                     </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
+                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
                                         <span>Product Brochures</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-brochures">0</span>
                                     </button>
@@ -664,10 +664,21 @@
         let currentPlaceholderIndex = 0;
         let placeholderTimer = null;
 
+        // Custom HTML escaping function to prevent double quote attributes breaking parsing
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         // Custom UI Categorization Normalizer (On-The-Fly Alignment)
         function normalizeDocument(doc) {
-            let mCat = (doc.mainCategory || "").trim();
-            let sCat = (doc.subCategory || "").trim();
+            let mCat = String(doc.mainCategory || "").trim();
+            let sCat = String(doc.subCategory || "").trim();
 
             let normalizedMain = "MAZE";
             let mCatLower = mCat.toLowerCase();
@@ -1099,8 +1110,8 @@
             };
 
             clinicalDatabase.forEach(d => {
-                const mCat = d.mainCategory ? d.mainCategory.toLowerCase() : "";
-                const sCat = d.subCategory ? d.subCategory.toLowerCase() : "";
+                const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
+                const sCat = d.subCategory ? String(d.subCategory).toLowerCase() : "";
                 
                 if (mCat === "maze") {
                     if (sCat.includes("survival")) counts["maze-survival"]++;
@@ -1171,9 +1182,9 @@
                     doc.mainCategory === currentMainCategory && 
                     doc.subCategory === currentSubCategory
                 ).filter(doc => 
-                    doc.title.toLowerCase().includes(categorySearchVal) || 
-                    doc.author.toLowerCase().includes(categorySearchVal) || 
-                    doc.summary.toLowerCase().includes(categorySearchVal)
+                    String(doc.title || "").toLowerCase().includes(categorySearchVal) || 
+                    String(doc.author || "").toLowerCase().includes(categorySearchVal) || 
+                    String(doc.summary || "").toLowerCase().includes(categorySearchVal)
                 );
             } else {
                 searchIndicator.classList.add("hidden");
@@ -1214,13 +1225,13 @@
         // Ultra-compact card layout with minimal spaces optimized for quick reference glances & explicit document counter badges
         function renderAtriGuideCard(card, index) {
             const isStarred = bookmarkedResourceIds.includes(card.id);
-            const cleanSummaryHtml = card.summary
+            const cleanSummaryHtml = String(card.summary || "")
                 .split('\n')
                 .map(line => line.trim())
                 .filter(line => line.length > 0)
                 .map(line => {
                     const pureText = line.replace(/^[•\-\*]\s*/, '');
-                    return `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold mt-0.5 shrink-0">•</span><span class="text-slate-600 text-xs leading-normal font-medium">${pureText}</span></li>`;
+                    return `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold mt-0.5 shrink-0">•</span><span class="text-slate-600 text-xs leading-normal font-medium">${escapeHtml(pureText)}</span></li>`;
                 })
                 .join('');
 
@@ -1230,18 +1241,21 @@
             if (card.url && linkType !== "none") {
                 if (linkType === "pdf") {
                     actionButtonHtml = `
-                        <a href="${card.url}" target="_blank" class="px-2.5 py-1 bg-[#FF6B00] hover:bg-orange-600 text-white rounded text-[11px] font-bold flex items-center space-x-1 transition-all" title="View PDF Document">
+                        <a href="${escapeHtml(card.url)}" target="_blank" class="px-2.5 py-1 bg-[#FF6B00] hover:bg-orange-600 text-white rounded text-[11px] font-bold flex items-center space-x-1 transition-all" title="View PDF Document">
                             <i data-lucide="file-text" class="w-3 h-3"></i>
                             <span>PDF</span>
                         </a>`;
                 } else {
                     actionButtonHtml = `
-                        <a href="${card.url}" target="_blank" class="px-2.5 py-1 bg-[#00205B] hover:bg-blue-800 text-white rounded text-[11px] font-bold flex items-center space-x-1 transition-all" title="Open External Journal">
+                        <a href="${escapeHtml(card.url)}" target="_blank" class="px-2.5 py-1 bg-[#00205B] hover:bg-blue-800 text-white rounded text-[11px] font-bold flex items-center space-x-1 transition-all" title="Open External Journal">
                             <i data-lucide="globe" class="w-3 h-3"></i>
                             <span>Journal</span>
                         </a>`;
                 }
             }
+
+            const escapedTitle = String(card.title || "").replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '\\"');
+            const escapedSummary = String(card.summary || "").replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '\\"').replace(/\n/g, '\\n');
 
             return `
                 <div class="bg-white border border-slate-200 rounded-lg p-3 flex flex-col justify-between group relative overflow-hidden text-slate-800 shadow-sm">
@@ -1249,7 +1263,7 @@
                         <div class="flex items-start justify-between gap-2 mb-1.5">
                             <div class="flex items-start gap-1.5 min-w-0">
                                 <span class="bg-[#FF6B00] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded mt-0.5 shrink-0 uppercase tracking-wider shadow-sm">Doc ${index}</span>
-                                <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug group-hover:text-[#00205B] transition-colors break-words">${card.title}</h4>
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug group-hover:text-[#00205B] transition-colors break-words">${escapeHtml(card.title)}</h4>
                             </div>
                             <div class="flex items-center space-x-1 shrink-0">
                                 <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-1 hover:bg-slate-50 rounded transition-all focus:outline-none cursor-pointer" title="Star Resource">
@@ -1262,10 +1276,10 @@
                             <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium min-w-0">
                                 <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded flex items-center space-x-0.5 truncate">
                                     <i data-lucide="user" class="w-2.5 h-2.5"></i>
-                                    <span class="truncate max-w-[120px] md:max-w-none">${card.author}</span>
+                                    <span class="truncate max-w-[120px] md:max-w-none">${escapeHtml(card.author)}</span>
                                 </span>
                                 <span class="border border-slate-200 px-1.5 py-0.2 rounded bg-slate-50 truncate hidden sm:inline-block">
-                                    ${card.mainCategory} &gt; ${card.subCategory}
+                                    ${escapeHtml(card.mainCategory)} &gt; ${escapeHtml(card.subCategory)}
                                 </span>
                             </div>
                             <div class="flex items-center space-x-1 shrink-0">
@@ -1279,7 +1293,7 @@
                                     <i data-lucide="sparkles" class="w-3 h-3 text-[#FF6B00]"></i>
                                     <span>Clinical Takeaways</span>
                                 </div>
-                                <button onclick="copyInsightsToClipboard(\`${card.title}\\n\\n${card.summary.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)" class="text-slate-400 hover:text-orange-500 p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer" title="Copy Insights">
+                                <button onclick="copyInsightsToClipboard(\`${escapedTitle}\\n\\n${escapedSummary}\`)" class="text-slate-400 hover:text-orange-500 p-0.5 rounded hover:bg-slate-100 transition-colors cursor-pointer" title="Copy Insights">
                                     <i data-lucide="copy" class="w-2.5 h-2.5"></i>
                                 </button>
                             </div>
@@ -1320,11 +1334,11 @@
             let matchedCards = [];
             clinicalDatabase.forEach(card => {
                 let score = 0;
-                const titleLower = card.title.toLowerCase();
-                const authorLower = card.author.toLowerCase();
-                const summaryLower = card.summary.toLowerCase();
-                const mCatLower = card.mainCategory.toLowerCase();
-                const sCatLower = card.subCategory.toLowerCase();
+                const titleLower = String(card.title || "").toLowerCase();
+                const authorLower = String(card.author || "").toLowerCase();
+                const summaryLower = String(card.summary || "").toLowerCase();
+                const mCatLower = String(card.mainCategory || "").toLowerCase();
+                const sCatLower = String(card.subCategory || "").toLowerCase();
 
                 keywords.forEach(word => {
                     if (titleLower.includes(word)) score += 15;
@@ -1503,13 +1517,13 @@
             
             cards.forEach((card, index) => {
                 const isStarred = bookmarkedResourceIds.includes(card.id);
-                const cleanSummaryHtml = card.summary
+                const cleanSummaryHtml = String(card.summary || "")
                     .split('\n')
                     .map(line => line.trim())
                     .filter(line => line.length > 0)
                     .map(line => {
                         const pureText = line.replace(/^[•\-\*]\s*/, '');
-                        return `<li class="flex items-start space-x-2"><span class="text-[#FF6B00] font-bold mt-0.5 shrink-0">•</span><span class="text-slate-600 text-sm leading-relaxed">${pureText}</span></li>`;
+                        return `<li class="flex items-start space-x-2"><span class="text-[#FF6B00] font-bold mt-0.5 shrink-0">•</span><span class="text-slate-600 text-sm leading-relaxed">${escapeHtml(pureText)}</span></li>`;
                     })
                     .join('');
 
@@ -1519,13 +1533,13 @@
                 if (card.url && linkType !== "none") {
                     if (linkType === "pdf") {
                         actionButtonHtml = `
-                            <a href="${card.url}" target="_blank" class="px-3 py-1.5 bg-[#FF6B00] hover:bg-orange-600 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="View PDF Document">
+                            <a href="${escapeHtml(card.url)}" target="_blank" class="px-3 py-1.5 bg-[#FF6B00] hover:bg-orange-600 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="View PDF Document">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                 <span>View PDF</span>
                             </a>`;
                     } else {
                         actionButtonHtml = `
-                            <a href="${card.url}" target="_blank" class="px-3 py-1.5 bg-[#00205B] hover:bg-blue-800 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="Open External Journal">
+                            <a href="${escapeHtml(card.url)}" target="_blank" class="px-3 py-1.5 bg-[#00205B] hover:bg-blue-800 text-white rounded text-xs font-bold flex items-center space-x-1 transition-all animate-fade-in" title="Open External Journal">
                                 <i data-lucide="globe" class="w-3.5 h-3.5"></i>
                                 <span>Open Journal</span>
                             </a>`;
@@ -1538,7 +1552,7 @@
                             <div class="flex items-start justify-between gap-4 mb-2">
                                 <div class="flex items-start gap-2 min-w-0">
                                     <span class="bg-[#FF6B00] text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded mt-0.5 shrink-0 uppercase tracking-wider shadow-sm">Doc ${index + 1}</span>
-                                    <h4 class="font-bold text-base text-slate-800 tracking-tight leading-snug group-hover:text-[#00205B] transition-colors break-words">${card.title}</h4>
+                                    <h4 class="font-bold text-base text-slate-800 tracking-tight leading-snug group-hover:text-[#00205B] transition-colors break-words">${escapeHtml(card.title)}</h4>
                                 </div>
                                 <div class="flex items-center space-x-1.5 shrink-0">
                                     <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-[#FF6B00] p-1.5 hover:bg-slate-50 rounded-lg transition-all focus:outline-none cursor-pointer" title="Star Resource">
@@ -1551,10 +1565,10 @@
                                 <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400 font-medium">
                                     <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded flex items-center space-x-1">
                                         <i data-lucide="user" class="w-3 h-3"></i>
-                                        <span>${card.author}</span>
+                                        <span>${escapeHtml(card.author)}</span>
                                     </span>
                                     <span class="border border-slate-200 px-2 py-0.5 rounded bg-slate-50">
-                                        ${card.mainCategory} &gt; ${card.subCategory}
+                                        ${escapeHtml(card.mainCategory)} &gt; ${escapeHtml(card.subCategory)}
                                     </span>
                                 </div>
                                 
@@ -1569,7 +1583,7 @@
                                         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-[#FF6B00]"></i>
                                         <span>AI Insights & Clinical Takeaways</span>
                                     </div>
-                                    <button onclick="copyInsightsToClipboard(\`${card.title}\\n\\n${card.summary.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)" class="text-slate-400 hover:text-orange-500 p-1 rounded hover:bg-slate-100 transition-colors cursor-pointer" title="Copy Insights">
+                                    <button onclick="copyInsightsToClipboard(\`${escapeHtml(card.title)}\\n\\n${escapeHtml(card.summary)}\`)" class="text-slate-400 hover:text-orange-500 p-1 rounded hover:bg-slate-100 transition-colors cursor-pointer" title="Copy Insights">
                                         <i data-lucide="copy" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -1587,7 +1601,7 @@
                 <div class="space-y-3.5">
                     <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest border-b border-slate-200/60 pb-1.5 flex items-center space-x-2">
                         <span class="w-1.5 h-3.5 bg-orange-500 rounded-sm"></span>
-                        <span>${title}</span>
+                        <span>${escapeHtml(title)}</span>
                     </h3>
                     ${cardsGridHtml}
                 </div>`;
@@ -1820,7 +1834,10 @@
 
             let items = clinicalDatabase;
             if(filterVal !== "") {
-                items = clinicalDatabase.filter(d => d.title.toLowerCase().includes(filterVal) || d.author.toLowerCase().includes(filterVal));
+                items = clinicalDatabase.filter(d => 
+                    String(d.title || "").toLowerCase().includes(filterVal) || 
+                    String(d.author || "").toLowerCase().includes(filterVal)
+                );
             }
 
             if(items.length === 0) {
@@ -1829,13 +1846,13 @@
             }
 
             listContainer.innerHTML = items.map(item => `
-                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row ${editingResourceId === item.id ? 'border-l-4 border-orange-500 bg-orange-50/20' : ''}" data-title="${(item.title || "").toLowerCase()}" data-author="${(item.author || "").toLowerCase()}">
+                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row ${editingResourceId === item.id ? 'border-l-4 border-orange-500 bg-orange-50/20' : ''}" data-title="${escapeHtml(String(item.title || "").toLowerCase())}" data-author="${escapeHtml(String(item.author || "").toLowerCase())}">
                     <div class="min-w-0 flex-1">
-                        <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${item.title}</h5>
+                        <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${escapeHtml(item.title)}</h5>
                         <div class="flex items-center space-x-2 text-[10px] font-semibold text-slate-400 mt-1">
-                            <span class="text-[#00205B] truncate max-w-[120px]">${item.author}</span>
+                            <span class="text-[#00205B] truncate max-w-[120px]">${escapeHtml(item.author)}</span>
                             <span>•</span>
-                            <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold">${item.mainCategory} &gt; ${item.subCategory}</span>
+                            <span class="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded font-bold">${escapeHtml(item.mainCategory)} &gt; ${escapeHtml(item.subCategory)}</span>
                         </div>
                     </div>
                     <div class="flex items-center space-x-1 shrink-0">
