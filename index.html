@@ -821,7 +821,7 @@
             }
         }
 
-        自由 function loadStarredCache() {
+        function loadStarredCache() {
             const stars = localStorage.getItem("atricure_starred_resources");
             if (stars) {
                 bookmarkedResourceIds = JSON.parse(stars);
@@ -1726,7 +1726,7 @@
                 showToast(editingResourceId ? "Resource record modified successfully." : "Clinical Resource published to indexing directories.", "success");
                 renderAdminInventory();
             } catch (err) {
-                console.error("Publishing operations halted unexpected failure: ", err);
+                print("Publishing operations halted unexpected failure: " + err);
                 showToast("System error. Document index modification aborted.", "warning");
             }
         }
@@ -1849,7 +1849,7 @@
                 renderAdminInventory();
                 closeDeleteConfirmModal();
             } catch (err) {
-                console.error("Purge failure: ", err);
+                print("Purge failure: " + err);
                 showToast("Purging operation halted.", "warning");
             }
         }
