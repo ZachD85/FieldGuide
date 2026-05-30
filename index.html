@@ -211,7 +211,7 @@
                                         <span>IFUs</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-ifus">0</span>
                                     </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
+                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
                                         <span>Product Brochures</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-brochures">0</span>
                                     </button>
@@ -235,7 +235,7 @@
                                         <span>IFUs</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-ifus">0</span>
                                     </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
+                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
                                         <span>Product Brochures</span>
                                         <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-brochures">0</span>
                                     </button>
@@ -352,10 +352,10 @@
 
             <div class="flex-1 p-4 md:p-6 overflow-y-auto">
                 
-                <div id="userDashboardView" class="space-y-8 max-w-5xl mx-auto">
+                <div id="userDashboardView" class="space-y-8 max-w-5xl mx-auto border-0">
                     </div>
 
-                <div id="adminPortalView" class="hidden max-w-5xl mx-auto space-y-8">
+                <div id="adminPortalView" class="hidden max-w-5xl mx-auto space-y-8 border-0">
                     <div class="bg-[#00205B] text-white p-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center space-x-3">
                             <div class="p-2 bg-orange-500 rounded-lg text-white">
@@ -664,13 +664,93 @@
         let currentPlaceholderIndex = 0;
         let placeholderTimer = null;
 
+        // Custom UI Categorization Normalizer (On-The-Fly Alignment)
+        function normalizeDocument(doc) {
+            let mCat = (doc.mainCategory || "").trim();
+            let sCat = (doc.subCategory || "").trim();
+
+            let normalizedMain = "MAZE";
+            let mCatLower = mCat.toLowerCase();
+            if (mCatLower.includes("maze")) {
+                normalizedMain = "MAZE";
+            } else if (mCatLower.includes("laa") || mCatLower.includes("appendage")) {
+                normalizedMain = "LAA";
+            } else if (mCatLower.includes("device") || mCatLower.includes("resource") || mCatLower.includes("ablation") || mCatLower.includes("cryo") || mCatLower.includes("clips")) {
+                normalizedMain = "Device Resources";
+            } else if (mCatLower.includes("misc") || mCatLower.includes("guideline") || mCatLower.includes("training") || mCatLower.includes("common")) {
+                normalizedMain = "MISC";
+            }
+
+            let normalizedSub = "General"; 
+            let sCatLower = sCat.toLowerCase();
+
+            if (normalizedMain === "MAZE") {
+                if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("data") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
+                    normalizedSub = "Survival Benefits";
+                } else if (sCatLower.includes("durability") || sCatLower.includes("lesion") || sCatLower.includes("outcome") || sCatLower.includes("pattern") || sCatLower.includes("concomitant") || sCatLower.includes("persistent") || sCatLower.includes("atrial")) {
+                    normalizedSub = "Lesion Durability";
+                } else if (sCatLower.includes("safety") || sCatLower.includes("complication") || sCatLower.includes("rate") || sCatLower.includes("pacemaker")) {
+                    normalizedSub = "Procedure Safety";
+                } else if (sCatLower.includes("encompass") || sCatLower.includes("clamp")) {
+                    normalizedSub = "EnCompass Data";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
+                    normalizedSub = "Prophylactic Data";
+                } else {
+                    normalizedSub = "Survival Benefits";
+                }
+            } else if (normalizedMain === "LAA") {
+                if (sCatLower.includes("stroke") || sCatLower.includes("reduction") || sCatLower.includes("ischemic") || sCatLower.includes("exclusion") || sCatLower.includes("benefit")) {
+                    normalizedSub = "Stroke Reduction";
+                } else if (sCatLower.includes("closure") || sCatLower.includes("success") || sCatLower.includes("complete")) {
+                    normalizedSub = "Closure Success Rates";
+                } else if (sCatLower.includes("complication") || sCatLower.includes("bleeding")) {
+                    normalizedSub = "Complication Rates";
+                } else if (sCatLower.includes("safety") || sCatLower.includes("device")) {
+                    normalizedSub = "Device Safety";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
+                    normalizedSub = "Prophylactic Data";
+                } else {
+                    normalizedSub = "Stroke Reduction";
+                }
+            } else if (normalizedMain === "Device Resources") {
+                if (sCatLower.includes("clip") || sCatLower.includes("atriclip")) {
+                    if (sCatLower.includes("ifu") || sCatLower.includes("instruction")) normalizedSub = "LAA Clips - IFUs";
+                    else if (sCatLower.includes("brochure") || sCatLower.includes("manual")) normalizedSub = "LAA Clips - Product Brochures";
+                    else normalizedSub = "LAA Clips - Other Media";
+                } else if (sCatLower.includes("cryo") || sCatLower.includes("snowflake") || sCatLower.includes("balloon")) {
+                    if (sCatLower.includes("ifu") || sCatLower.includes("instruction")) normalizedSub = "Cryoablation - IFUs";
+                    else if (sCatLower.includes("brochure") || sCatLower.includes("manual")) normalizedSub = "Cryoablation - Product Brochures";
+                    else normalizedSub = "Cryoablation - Other Media";
+                } else {
+                    if (sCatLower.includes("ifu") || sCatLower.includes("instruction")) normalizedSub = "RF Ablation - IFUs";
+                    else if (sCatLower.includes("brochure") || sCatLower.includes("manual")) normalizedSub = "RF Ablation - Product Brochures";
+                    else normalizedSub = "RF Ablation - Other Media";
+                }
+            } else if (normalizedMain === "MISC") {
+                if (sCatLower.includes("course") || sCatLower.includes("training") || sCatLower.includes("education")) {
+                    normalizedSub = "Training Courses";
+                } else if (sCatLower.includes("guideline") || sCatLower.includes("recommendation") || sCatLower.includes("sts")) {
+                    normalizedSub = "Guidelines";
+                } else if (sCatLower.includes("document") || sCatLower.includes("brochure") || sCatLower.includes("common")) {
+                    normalizedSub = "Common Documents";
+                } else {
+                    normalizedSub = "Misc Research";
+                }
+            }
+
+            return {
+                ...doc,
+                mainCategory: normalizedMain,
+                subCategory: normalizedSub
+            };
+        }
+
         function startPlaceholderRotation() {
             if (placeholderTimer) clearInterval(placeholderTimer);
             
             const input = document.getElementById("copilotQueryInput");
             if (input) input.placeholder = placeholderPhrases[0];
 
-            // 4-second timing interval configuration setup
             placeholderTimer = setInterval(executePlaceholderTransitionStep, 4000);
         }
 
@@ -745,7 +825,8 @@
             onSnapshot(publicDataCollection, (snapshot) => {
                 const cloudDocs = [];
                 snapshot.forEach(doc => {
-                    cloudDocs.push({ id: doc.id, ...doc.data() });
+                    // Force normalize incoming records so AI generated text perfectly maps to website categories
+                    cloudDocs.push(normalizeDocument({ id: doc.id, ...doc.data() }));
                 });
 
                 if (cloudDocs.length === 0) {
@@ -754,7 +835,8 @@
                     clinicalDatabase = cloudDocs;
                     updateSidebarActiveStates();
                     renderAppViewboard();
-                    if (editingResourceId) renderAdminInventory();
+                    // Always make sure Admin Inventory gets rendered on update
+                    renderAdminInventory();
                 }
             }, (error) => {
                 console.error("Firestore synchronizer failure: ", error);
@@ -1371,7 +1453,7 @@
                                 </span>
                                 <button onclick="clearAtriGuideAnswer()" class="text-xs text-slate-300 hover:text-white transition-colors cursor-pointer">Clear</button>
                             </div>
-                            <div id="copilotAnswerText" class="whitespace-pre-line font-medium leading-relaxed"></div>
+                            <div id="copilotAnswerText" class="whitespace-pre-line font-medium leading-relaxed col-span-12"></div>
                         </div>
                     </div>
 
@@ -1726,13 +1808,14 @@
                 showToast(editingResourceId ? "Resource record modified successfully." : "Clinical Resource published to indexing directories.", "success");
                 renderAdminInventory();
             } catch (err) {
-                print("Publishing operations halted unexpected failure: " + err);
+                console.error("Publishing operations halted unexpected failure: " + err);
                 showToast("System error. Document index modification aborted.", "warning");
             }
         }
 
         window.renderAdminInventory = function() {
             const listContainer = document.getElementById("adminInventoryList");
+            if (!listContainer) return;
             const filterVal = document.getElementById("adminInventorySearch").value.toLowerCase().trim();
 
             let items = clinicalDatabase;
@@ -1746,7 +1829,7 @@
             }
 
             listContainer.innerHTML = items.map(item => `
-                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row ${editingResourceId === item.id ? 'border-l-4 border-orange-500 bg-orange-50/20' : ''}" data-title="${item.title.toLowerCase()}" data-author="${item.author.toLowerCase()}">
+                <div class="p-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors bg-white admin-inv-row ${editingResourceId === item.id ? 'border-l-4 border-orange-500 bg-orange-50/20' : ''}" data-title="${(item.title || "").toLowerCase()}" data-author="${(item.author || "").toLowerCase()}">
                     <div class="min-w-0 flex-1">
                         <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${item.title}</h5>
                         <div class="flex items-center space-x-2 text-[10px] font-semibold text-slate-400 mt-1">
@@ -1759,7 +1842,7 @@
                         <button onclick="startEditingResource('${item.id}')" class="p-1.5 text-slate-400 hover:text-[#00205B] hover:bg-slate-100 rounded transition-all cursor-pointer" title="Edit text configurations">
                             <i data-lucide="pencil" class="w-4 h-4"></i>
                         </button>
-                        <button onclick="triggerDeleteConfirmModal('${item.id}', \`${item.title.replace(/'/g, "\\'")}\`)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all cursor-pointer" title="Delete Resource">
+                        <button onclick="triggerDeleteConfirmModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all cursor-pointer" title="Delete Resource">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -1772,8 +1855,8 @@
         window.filterAdminInventory = function() {
             const query = document.getElementById("adminInventorySearch").value.toLowerCase().trim();
             document.querySelectorAll(".admin-inv-row").forEach(row => {
-                const t = row.getAttribute("data-title");
-                const a = row.getAttribute("data-author");
+                const t = row.getAttribute("data-title") || "";
+                const a = row.getAttribute("data-author") || "";
                 if(t.includes(query) || a.includes(query)) {
                     row.classList.remove("hidden");
                 } else {
@@ -1811,8 +1894,10 @@
             }
         };
 
-        window.triggerDeleteConfirmModal = function(id, title) {
+        window.triggerDeleteConfirmModal = function(id) {
             activeDeletionTargetId = id;
+            const item = clinicalDatabase.find(d => d.id === id);
+            const title = item ? item.title : "this entry";
             document.getElementById("deleteTargetTitle").innerText = `"${title}"`;
             
             const modal = document.getElementById("deleteConfirmModal");
@@ -1849,7 +1934,7 @@
                 renderAdminInventory();
                 closeDeleteConfirmModal();
             } catch (err) {
-                print("Purge failure: " + err);
+                console.error("Purge failure: " + err);
                 showToast("Purging operation halted.", "warning");
             }
         }
