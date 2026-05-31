@@ -81,26 +81,26 @@
                             <i data-lucide="chevron-down" id="mazeMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="mazeMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MAZE', 'Outcomes and Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Outcomes and Safety">
+                            <button onclick="selectSubCategory('MAZE', 'Rhythm Outcomes')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Rhythm Outcomes">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="heart-pulse" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Outcomes and Safety</span>
+                                    <span>Rhythm Outcomes</span>
                                 </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-outcomes">0</span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-rhythm">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'EnCompass Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-EnCompass Data">
+                            <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
-                                    <span>EnCompass Data</span>
+                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Survival Benefits</span>
                                 </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-encompass">0</span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MAZE', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Prophylactic Data">
+                            <button onclick="selectSubCategory('MAZE', 'Other')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Other">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Prophylactic Data</span>
+                                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Other</span>
                                 </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-prophylactic">0</span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-other">0</span>
                             </button>
                         </div>
                     </div>
@@ -183,13 +183,6 @@
                             <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MISC', 'Training Courses')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Training Courses">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Training Courses</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-training">0</span>
-                            </button>
                             <button onclick="selectSubCategory('MISC', 'Misc Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Misc Research">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="microscope" class="w-4 h-4 text-slate-500"></i>
@@ -197,19 +190,12 @@
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
                             </button>
-                            <button onclick="selectSubCategory('MISC', 'Guidelines')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Guidelines">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="bookmark" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Guidelines</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-guidelines">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MISC', 'Common Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Common Documents">
+                            <button onclick="selectSubCategory('MISC', 'Helpful Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Helpful Documents">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Common Documents</span>
+                                    <span>Helpful Documents</span>
                                 </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-documents">0</span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-helpful">0</span>
                             </button>
                         </div>
                     </div>
@@ -625,11 +611,13 @@
             if (normalizedMain === "MAZE") {
                 // FIXED PRIORITY ORDER FOR NEW "BIG NET" MAZE SEGMENTS
                 if (sCatLower.includes("encompass") || sCatLower.includes("clamp")) {
-                    normalizedSub = "EnCompass Data";
-                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
-                    normalizedSub = "Prophylactic Data";
+                    normalizedSub = "Other";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent") || sCatLower.includes("technique")) {
+                    normalizedSub = "Other";
+                } else if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("nejm")) {
+                    normalizedSub = "Survival Benefits";
                 } else {
-                    normalizedSub = "Outcomes and Safety";
+                    normalizedSub = "Rhythm Outcomes";
                 }
             } else if (normalizedMain === "LAA") {
                 // FIXED PRIORITY ORDER FOR NEW "BIG NET" LAA SEGMENTS
@@ -649,14 +637,10 @@
                     normalizedSub = "Other Media";
                 }
             } else if (normalizedMain === "MISC") {
-                if (sCatLower.includes("course") || sCatLower.includes("training") || sCatLower.includes("education")) {
-                    normalizedSub = "Training Courses";
-                } else if (sCatLower.includes("guideline") || sCatLower.includes("recommendation") || sCatLower.includes("sts")) {
-                    normalizedSub = "Guidelines";
-                } else if (sCatLower.includes("document") || sCatLower.includes("common")) {
-                    normalizedSub = "Common Documents";
-                } else {
+                if (sCatLower.includes("research") || sCatLower.includes("misc research")) {
                     normalizedSub = "Misc Research";
+                } else {
+                    normalizedSub = "Helpful Documents";
                 }
             }
             return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
@@ -1087,18 +1071,18 @@
 
         function updateSidebarActiveStates() {
             const counts = {
-                "maze-outcomes": 0, "maze-encompass": 0, "maze-prophylactic": 0,
+                "maze-rhythm": 0, "maze-survival": 0, "maze-other": 0,
                 "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
                 "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, 
-                "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
+                "misc-research": 0, "misc-helpful": 0
             };
             clinicalDatabase.forEach(d => {
                 const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
                 const sCat = d.subCategory ? String(d.subCategory).toLowerCase() : "";
                 if (mCat === "maze") {
-                    if (sCat.includes("encompass")) counts["maze-encompass"]++;
-                    else if (sCat.includes("prophylactic")) counts["maze-prophylactic"]++;
-                    else counts["maze-outcomes"]++;
+                    if (sCat === "other") counts["maze-other"]++;
+                    else if (sCat.includes("survival")) counts["maze-survival"]++;
+                    else counts["maze-rhythm"]++;
                 } else if (mCat === "laa") {
                     if (sCat.includes("stroke")) counts["laa-stroke"]++;
                     else if (sCat.includes("prophylactic")) counts["laa-prophylactic"]++;
@@ -1108,10 +1092,8 @@
                     else if (sCat === "product brochures") counts["dev-brochures"]++;
                     else if (sCat === "other media") counts["dev-media"]++;
                 } else if (mCat === "misc") {
-                    if (sCat === "training courses") counts["misc-training"]++;
-                    else if (sCat === "misc research") counts["misc-research"]++;
-                    else if (sCat === "guidelines") counts["misc-guidelines"]++;
-                    else if (sCat === "common documents") counts["misc-documents"]++;
+                    if (sCat.includes("research")) counts["misc-research"]++;
+                    else counts["misc-helpful"]++;
                 }
             });
             for (const id in counts) {
@@ -1214,8 +1196,8 @@
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
-                                <div class="p-3 bg-[#FF6B00]/10 text-[#FF6B00] rounded-lg w-fit">
-                                    <i data-lucide="menu" class="w-5 h-5 text-[#FF6B00]"></i>
+                                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg w-fit">
+                                    <i data-lucide="menu" class="w-5 h-5 text-orange-500"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Browse the Database</h3>
                                 <p class="text-xs text-slate-500 leading-relaxed font-medium">
@@ -1249,8 +1231,7 @@
                 .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
                 .join('');
 
-            // AUTOMATIC ANONYMOUS DRIVE PREVIEW BYPASS FOR iOS & ANDROID
-            // Rewrites standard drive.google.com URLs to Google's raw CDN endpoint to prevent mobile account prompts
+            // Automatically resolve standard Google Drive /view links into lightweight /preview bypass URLs
             let actionLinkButtonHtml = "";
             if (card.url && card.url.trim() !== "" && card.linkType !== "none") {
                 const cleanDriveUrl = formatGoogleDriveLink(card.url);
@@ -1258,7 +1239,7 @@
                 const label = isMedia ? "View Media" : "View Document";
                 const iconName = isMedia ? "video" : "external-link";
                 actionLinkButtonHtml = `
-                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
+                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-sm hover:shadow-md active:scale-95 shrink-0" title="Load document resource safely without authentication checks">
                         <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
                         <span>${label}</span>
                     </a>`;
@@ -1528,13 +1509,13 @@
             let options = [];
             
             if (mainCat === "MAZE") {
-                options = ["Outcomes and Safety", "EnCompass Data", "Prophylactic Data"];
+                options = ["Rhythm Outcomes", "Survival Benefits", "Other"];
             } else if (mainCat === "LAA") {
                 options = ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"];
             } else if (mainCat === "Device Resources") {
                 options = ["IFUs", "Product Brochures", "Other Media"];
             } else if (mainCat === "MISC") {
-                options = ["Training Courses", "Misc Research", "Guidelines", "Common Documents"];
+                options = ["Misc Research", "Helpful Documents"];
             }
             
             subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
