@@ -597,7 +597,8 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ACCOUNT-BYPASS PREVIEW LINKS
+        // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ANONYMOUS DOWNLOAD BYPASS LINKS
+        // This stops Google Drive from intercepting deep links and demanding user account credentials on mobile
         function formatGoogleDriveLink(url) {
             if (!url) return "";
             let formattedUrl = url.trim();
@@ -606,14 +607,14 @@
             const fileDMatch = formattedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (fileDMatch) {
                 const fileId = fileDMatch[1];
-                return `https://drive.google.com/file/d/${fileId}/preview`;
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
             
             // Match /open?id=FILE_ID
             const openIdMatch = formattedUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             if (openIdMatch) {
                 const fileId = openIdMatch[1];
-                return `https://drive.google.com/file/d/${fileId}/preview`;
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
 
             // Match docs.google.com/document/d/FILE_ID/edit
@@ -1252,8 +1253,8 @@
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
-                                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg w-fit">
-                                    <i data-lucide="menu" class="w-5 h-5 text-orange-500"></i>
+                                <div class="p-3 bg-[#FF6B00]/10 text-[#FF6B00] rounded-lg w-fit">
+                                    <i data-lucide="menu" class="w-5 h-5 text-[#FF6B00]"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Browse the Database</h3>
                                 <p class="text-xs text-slate-500 leading-relaxed font-medium">
@@ -1287,7 +1288,8 @@
                 .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
                 .join('');
 
-            // Automatically resolve standard Google Drive /view links into lightweight /preview bypass URLs
+            // AUTOMATIC ANONYMOUS DRIVE PREVIEW BYPASS FOR iOS & ANDROID
+            // Rewrites standard drive.google.com URLs to Google's raw CDN endpoint to prevent mobile account prompts
             let actionLinkButtonHtml = "";
             if (card.url && card.url.trim() !== "" && card.linkType !== "none") {
                 const cleanDriveUrl = formatGoogleDriveLink(card.url);
@@ -1295,7 +1297,7 @@
                 const label = isMedia ? "View Media" : "View Document";
                 const iconName = isMedia ? "video" : "external-link";
                 actionLinkButtonHtml = `
-                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-sm hover:shadow-md active:scale-95 shrink-0" title="Load document resource safely without authentication checks">
+                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
                         <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
                         <span>${label}</span>
                     </a>`;
