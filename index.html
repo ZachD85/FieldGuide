@@ -597,7 +597,7 @@
                 .replace(/'/g, '&#39;');
         }
 
-        // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ANONYMOUS DOWNLOAD BYPASS LINKS
+        // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ANONYMOUS PREVIEW BYPASS LINKS
         // This stops Google Drive from intercepting deep links and demanding user account credentials on mobile
         function formatGoogleDriveLink(url) {
             if (!url) return "";
@@ -607,14 +607,14 @@
             const fileDMatch = formattedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (fileDMatch) {
                 const fileId = fileDMatch[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                return `https://drive.google.com/file/d/${fileId}/preview`;
             }
             
             // Match /open?id=FILE_ID
             const openIdMatch = formattedUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             if (openIdMatch) {
                 const fileId = openIdMatch[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                return `https://drive.google.com/file/d/${fileId}/preview`;
             }
 
             // Match docs.google.com/document/d/FILE_ID/edit
