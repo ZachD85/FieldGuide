@@ -174,77 +174,27 @@
                             <i data-lucide="chevron-down" id="deviceResourcesMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="deviceResourcesMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <div class="border-b border-slate-50 pb-1">
-                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('rfAblationSubMenu')">
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="zap" class="w-3.5 h-3.5 text-orange-500"></i>
-                                        <span>RF Ablation</span>
-                                    </span>
-                                    <i data-lucide="chevron-down" id="rfAblationSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
-                                </button>
-                                <div id="rfAblationSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
-                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - IFUs">
-                                        <span>IFUs</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-ifus">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - Product Brochures">
-                                        <span>Product Brochures</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-brochures">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'RF Ablation - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-RF Ablation - Other Media">
-                                        <span>Other Media</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-rf-media">0</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="border-b border-slate-50 pb-1">
-                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('cryoablationSubMenu')">
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="snowflake" class="w-3.5 h-3.5 text-sky-500"></i>
-                                        <span>Cryoablation</span>
-                                    </span>
-                                    <i data-lucide="chevron-down" id="cryoablationSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
-                                </button>
-                                <div id="cryoablationSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
-                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - IFUs">
-                                        <span>IFUs</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-ifus">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Product Brochures">
-                                        <span>Product Brochures</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-brochures">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'Cryoablation - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-Cryoablation - Other Media">
-                                        <span>Other Media</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-cryo-media">0</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="border-b border-slate-50 pb-1">
-                                <button class="w-full text-left px-3 py-1.5 text-xs rounded font-bold text-[#00205B] hover:text-orange-600 flex items-center justify-between transition-colors focus:outline-none" onclick="toggleCategory('laaClipsSubMenu')">
-                                    <span class="flex items-center gap-1.5">
-                                        <i data-lucide="paperclip" class="w-3.5 h-3.5 text-emerald-500"></i>
-                                        <span>LAA Clips</span>
-                                    </span>
-                                    <i data-lucide="chevron-down" id="laaClipsSubMenuArrow" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 transform"></i>
-                                </button>
-                                <div id="laaClipsSubMenu" class="hidden pl-3.5 pr-1 py-1 space-y-1">
-                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - IFUs')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - IFUs">
-                                        <span>IFUs</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-ifus">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Product Brochures')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Product Brochures">
-                                        <span>Product Brochures</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-brochures">0</span>
-                                    </button>
-                                    <button onclick="selectSubCategory('Device Resources', 'LAA Clips - Other Media')" class="w-full text-left px-2 py-1.5 text-[11px] rounded font-medium text-slate-500 hover:bg-slate-50 hover:text-orange-600 flex items-center justify-between subcat-btn" data-subcat="Device Resources-LAA Clips - Other Media">
-                                        <span>Other Media</span>
-                                        <span class="bg-slate-100 text-slate-500 text-[9px] px-1.5 py-0.5 rounded-full font-bold" id="count-laac-media">0</span>
-                                    </button>
-                                </div>
-                            </div>
+                            <button onclick="selectSubCategory('Device Resources', 'IFUs')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-IFUs">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                                    <span>IFUs</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-ifus">0</span>
+                            </button>
+                            <button onclick="selectSubCategory('Device Resources', 'Product Brochures')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Product Brochures">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Product Brochures</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-brochures">0</span>
+                            </button>
+                            <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="video" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Other Media</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-media">0</span>
+                            </button>
                         </div>
                     </div>
 
@@ -295,7 +245,7 @@
                     <span>Database Connection:</span>
                     <span id="syncStatus" class="font-semibold text-emerald-600 flex items-center gap-1">
                         <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span>Local Cache</span>
+                        <span>Cloud Synced</span>
                     </span>
                 </div>
                 <div class="flex items-center justify-between text-[10px] text-slate-400">
@@ -372,7 +322,7 @@
                         </div>
                     </div>
 
-                    <!-- SECURE API KEY MANAGER UI (Bypasses Plain-text Scanners on Github) -->
+                    <!-- SECURE API KEY MANAGER UI -->
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center space-x-3">
@@ -436,13 +386,14 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sub-Category *</label>
-                                        <select id="formSubCat" required onchange="updateFormHeaderOptions()" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
+                                        <select id="formSubCat" required class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
                                             </select>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Header Section Group</label>
                                         <select id="formHeaderGroup" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
-                                            </select>
+                                            <option value="">None / Standalone Listing</option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -469,7 +420,7 @@
                                             <span id="aiButtonText">✨ Auto-Generate Insights</span>
                                         </button>
                                     </div>
-                                    <textarea id="formSummary" required rows="5" placeholder="Enter bulleted clinical arguments. Place a dash or bullet symbol before structural elements..." class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50 font-sans"></textarea>
+                                    <textarea id="formSummary" required rows="5" placeholder="Enter bulleted clinical arguments..." class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50 font-sans"></textarea>
                                 </div>
 
                                 <button type="submit" id="submitFormBtn" class="w-full bg-[#00205B] hover:bg-orange-600 text-white font-bold text-sm p-3 rounded-md transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow active:scale-[0.99] cursor-pointer">
@@ -502,10 +453,9 @@
         </main>
     </div>
 
-    <!-- UPGRADED MOBILE SEARCH MODAL (UX ARCHITECTURE SOLUTION #2) -->
+    <!-- MOBILE SEARCH MODAL OVERLAY -->
     <div id="aiSearchOverlay" class="fixed inset-0 bg-slate-900/60 z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4 animate-fade-in">
         <div class="bg-white w-full h-[100dvh] sm:h-[85vh] sm:max-w-4xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
-            <!-- Sheet Header -->
             <div class="bg-[#00205B] text-white p-4 flex items-center justify-between shrink-0">
                 <div class="flex items-center space-x-2.5">
                     <i data-lucide="sparkles" class="w-5 h-5 text-[#FF6B00] animate-pulse"></i>
@@ -516,9 +466,7 @@
                 </button>
             </div>
             
-            <!-- Result Canvas Space -->
             <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-6">
-                <!-- Live Synthesis Insight Box -->
                 <div id="aiSynthesisBox" class="hidden bg-gradient-to-r from-blue-50 to-orange-50 border border-blue-100 rounded-xl p-4 shadow-sm">
                     <h5 class="text-xs font-bold text-[#00205B] uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
                         <i data-lucide="brain" class="w-4 h-4 text-[#FF6B00]"></i> Executive Data Synthesis
@@ -526,10 +474,8 @@
                     <p id="aiSynthesisText" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line"></p>
                 </div>
 
-                <!-- Verified Reference List -->
                 <div id="aiCardsContainer" class="space-y-4">
-                    <!-- Targeted search results parse cleanly here -->
-                </div>
+                    </div>
             </div>
         </div>
     </div>
@@ -601,7 +547,6 @@
             measurementId: "G-S8Y8SL6MTB"
         };
 
-        // Note: Gemini API key is loaded dynamically from Firestore on startup to bypass GitHub scanning
         let apiKey = ""; 
         let db = null;
         let auth = null;
@@ -631,7 +576,6 @@
         let activeDeletionTargetId = null;
         let editingResourceId = null; 
 
-        // Rotational queries array
         const placeholderPhrases = [
             "\'Show me 10-year success rates for Cox-MAZE IV\'",
             "\'Show the data on prophylactic clipping\'",
@@ -662,7 +606,7 @@
                 normalizedMain = "MAZE";
             } else if (mCatLower.includes("laa") || mCatLower.includes("appendage")) {
                 normalizedMain = "LAA";
-            } else if (mCatLower.includes("device") || mCatLower.includes("resource") || mCatLower.includes("ablation") || mCatLower.includes("cryo") || mCatLower.includes("clips")) {
+            } else if (mCatLower.includes("device") || mCatLower.includes("resource") || mCatLower.includes("ablation") || mCatLower.includes("cryo") || mCatLower.includes("clips") || mCatLower.includes("ifu")) {
                 normalizedMain = "Device Resources";
             } else if (mCatLower.includes("misc") || mCatLower.includes("guideline") || mCatLower.includes("training") || mCatLower.includes("common")) {
                 normalizedMain = "MISC";
@@ -683,7 +627,7 @@
                 } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
                     normalizedSub = "Prophylactic Data";
                 } else {
-                    normalizedSub = "Survival Benefits"; // Safe fallback!
+                    normalizedSub = "Survival Benefits";
                 }
             } else if (normalizedMain === "LAA") {
                 if (sCatLower.includes("stroke") || sCatLower.includes("reduction") || sCatLower.includes("ischemic") || sCatLower.includes("exclusion") || sCatLower.includes("benefit")) {
@@ -697,21 +641,15 @@
                 } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
                     normalizedSub = "Prophylactic Data";
                 } else {
-                    normalizedSub = "Stroke Reduction"; // Safe fallback!
+                    normalizedSub = "Stroke Reduction";
                 }
             } else if (normalizedMain === "Device Resources") {
-                if (sCatLower.includes("clip") || sCatLower.includes("atriclip")) {
-                    if (sCatLower.includes("ifu")) normalizedSub = "LAA Clips - IFUs";
-                    else if (sCatLower.includes("brochure")) normalizedSub = "LAA Clips - Product Brochures";
-                    else normalizedSub = "LAA Clips - Other Media";
-                } else if (sCatLower.includes("cryo") || sCatLower.includes("snowflake") || sCatLower.includes("balloon")) {
-                    if (sCatLower.includes("ifu")) normalizedSub = "Cryoablation - IFUs";
-                    else if (sCatLower.includes("brochure")) normalizedSub = "Cryoablation - Product Brochures";
-                    else normalizedSub = "Cryoablation - Other Media";
+                if (sCatLower.includes("ifu") || sCatLower.includes("instructions")) {
+                    normalizedSub = "IFUs";
+                } else if (sCatLower.includes("brochure") || sCatLower.includes("pamphlet") || sCatLower.includes("catalog")) {
+                    normalizedSub = "Product Brochures";
                 } else {
-                    if (sCatLower.includes("ifu")) normalizedSub = "RF Ablation - IFUs";
-                    else if (sCatLower.includes("brochure")) normalizedSub = "RF Ablation - Product Brochures";
-                    else normalizedSub = "RF Ablation - Other Media";
+                    normalizedSub = "Other Media";
                 }
             } else if (normalizedMain === "MISC") {
                 if (sCatLower.includes("course") || sCatLower.includes("training") || sCatLower.includes("education")) {
@@ -775,7 +713,7 @@
                             syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                             window.showToast("Cloud database connected successfully.", "success");
                             subscribeToDatabaseStreams();
-                            loadSecureApiKey(); // Fetches Gemini API key securely on load
+                            loadSecureApiKey();
                         } else {
                             isFirebaseActive = false;
                             loadLocalFallbackData();
@@ -789,7 +727,6 @@
             }
         }
 
-        // FETCH SECURE API KEY FROM FIRESTORE (GitHub-Safe Method)
         async function loadSecureApiKey() {
             if (!db) return;
             try {
@@ -855,7 +792,7 @@
                     window.renderAdminInventory();
                 }
             }, (error) => {
-                console.error("Firestore onSnapshot subscription failed:", error);
+                console.error("Firestore subscription snapshot breakdown:", error);
             });
         }
 
@@ -878,25 +815,21 @@
             renderAppViewboard();
         }
 
-        // DEEP SCAN JSON EXTRACTOR (Safeguards against conversational text, backticks, or headers)
         function cleanAndParseJSON(rawStr) {
             const start = rawStr.indexOf('{');
             const end = rawStr.lastIndexOf('}');
             if (start === -1 || end === -1) {
-                throw new Error("Response does not contain a valid JSON block");
+                throw new Error("Response structural anomaly detected during extraction.");
             }
             const jsonText = rawStr.substring(start, end + 1);
             return JSON.parse(jsonText);
         }
 
-        // ULTRA-ROBUST DUAL MODEL FAULT TOLERANCE MATRIX
         async function callGeminiAPI(systemPrompt, userQuery) {
             if (!apiKey) {
                 throw new Error("No Gemini API key supplied in index.html configuration.");
             }
-            
-            // Standard models allowed under the key. If preview is rate limited or restricted, fall back instantly to stable
-            const models = ["gemini-2.5-flash-preview-09-2025", "gemini-2.5-flash", "gemini-1.5-flash"];
+            const models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-09-2025", "gemini-1.5-flash"];
             let lastError = null;
 
             for (const model of models) {
@@ -914,19 +847,14 @@
                         const payload = await response.json();
                         const resultText = payload.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (resultText) return resultText;
-                    } else {
-                        const errText = await response.text();
-                        console.warn(`Model ${model} endpoint rejected key with code ${response.status}: ${errText}`);
                     }
                 } catch (err) {
-                    console.error(`Fetch sequence bypassed with model exception [${model}]:`, err);
                     lastError = err;
                 }
             }
-            throw lastError || new Error("AI Routing timed out on all model variations.");
+            throw lastError || new Error("AI Routing timed out on all system matrices.");
         }
 
-        // UPGRADED HIGH-PRECISION CLIENT-SIDE CO-ROUTING ENGINE
         window.askAtriGuide = async function() {
             const queryArea = document.getElementById("copilotQueryInput");
             const btn = document.getElementById("copilotSubmitBtn");
@@ -937,12 +865,10 @@
                 return;
             }
 
-            // Lock UI & launch loading state
             btn.disabled = true;
             btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-orange-500 animate-spin"></i><span>Analyzing...</span>`;
             lucide.createIcons();
 
-            // Open Full-Screen Canvas Overlay sheet right away
             document.getElementById("aiSearchOverlay").classList.remove("hidden");
             const syncBox = document.getElementById("aiSynthesisBox");
             const cardsContainer = document.getElementById("aiCardsContainer");
@@ -951,7 +877,6 @@
             document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against 190+ indexed documents...";
             cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
-            // Pack clean database metadata list to avoid token bloat
             const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary}`).join("\n");
 
             const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
@@ -973,17 +898,15 @@
                 
                 if (matches.length > 0) {
                     cardsContainer.innerHTML = matches.map((c, idx) => renderAtriGuideCard(c, idx + 1)).join('');
-                    window.showToast(`Retrieved ${matches.length} highly relevant clinical matches.`, "success");
+                    window.showToast("Synthesized results populated successfully.", "success");
                 } else {
                     cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
                 }
             } catch (err) {
-                console.warn("AI routing unavailable, initiating deep multi-term keyword fallback: ", err);
+                console.warn("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
                 
-                // Show a helpful offline notification in the synthesis box
                 document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
 
-                // ADVANCED MULTI-WORD LOCAL SEARCH FALLBACK ENGINE (OR/Hospital Offline Safeguard)
                 const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies', 'study', 'papers', 'paper', 'data', 'evidence', 'find', 'search', 'how', 'we', 'have'];
                 const searchWords = query.toLowerCase()
                     .replace(/[^\w\s]/g, ' ')
@@ -1094,7 +1017,6 @@
                 document.getElementById("sidebarOverlay").classList.add("hidden");
             });
 
-            // FIXED: Re-enabled the auth modal password gate instead of direct bypass
             document.getElementById("adminPortalBtn").addEventListener("click", () => { window.openAdminAuthModal(); });
             document.getElementById("exitAdminBtn").addEventListener("click", () => { switchToView("user"); });
             document.getElementById("uploadForm").addEventListener("submit", (e) => { e.preventDefault(); processFormSubmission(); });
@@ -1153,12 +1075,24 @@
             renderAppViewboard();
         };
 
+        window.toggleStarItem = function(id) {
+            const idx = bookmarkedResourceIds.indexOf(id);
+            if (idx === -1) {
+                bookmarkedResourceIds.push(id);
+                window.showToast("Added item to personal star reference library.", "success");
+            } else {
+                bookmarkedResourceIds.splice(idx, 1);
+                window.showToast("Removed item from star reference registers.", "info");
+            }
+            saveStarredCache();
+            renderAppViewboard();
+        };
+
         function updateSidebarActiveStates() {
             const counts = {
                 "maze-survival": 0, "maze-durability": 0, "maze-safety": 0, "maze-encompass": 0, "maze-prophylactic": 0,
                 "laa-stroke": 0, "laa-success": 0, "laa-complication": 0, "laa-safety": 0, "laa-prophylactic": 0,
-                "rf-ifus": 0, "rf-brochures": 0, "rf-media": 0, "cryo-ifus": 0, "cryo-brochures": 0, "cryo-media": 0,
-                "laac-ifus": 0, "laac-brochures": 0, "laac-media": 0, "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
+                "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
             };
             clinicalDatabase.forEach(d => {
                 const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
@@ -1176,15 +1110,9 @@
                     else if (sCat.includes("safety")) counts["laa-safety"]++;
                     else if (sCat.includes("prophylactic")) counts["laa-prophylactic"]++;
                 } else if (mCat === "device resources") {
-                    if (sCat === "rf ablation - ifus") counts["rf-ifus"]++;
-                    else if (sCat === "rf ablation - product brochures") counts["rf-brochures"]++;
-                    else if (sCat === "rf ablation - other media") counts["rf-media"]++;
-                    else if (sCat === "cryoablation - ifus") counts["cryo-ifus"]++;
-                    else if (sCat === "cryoablation - product brochures") counts["cryo-brochures"]++;
-                    else if (sCat === "cryoablation - other media") counts["cryo-media"]++;
-                    else if (sCat === "laa clips - ifus") counts["laac-ifus"]++;
-                    else if (sCat === "laa clips - product brochures") counts["laac-brochures"]++;
-                    else if (sCat === "laa clips - other media") counts["laac-media"]++;
+                    if (sCat === "ifus") counts["dev-ifus"]++;
+                    else if (sCat === "product brochures") counts["dev-brochures"]++;
+                    else if (sCat === "other media") counts["dev-media"]++;
                 } else if (mCat === "misc") {
                     if (sCat === "training courses") counts["misc-training"]++;
                     else if (sCat === "misc research") counts["misc-research"]++;
@@ -1205,16 +1133,31 @@
                 startPlaceholderRotation();
                 return;
             }
+            
+            const categorySearchInput = document.getElementById("categorySearchInput");
+            const filterText = categorySearchInput ? categorySearchInput.value.toLowerCase().trim() : "";
+
             let workingDataSet = clinicalDatabase;
             if (isStarredFilterActive) {
                 workingDataSet = clinicalDatabase.filter(doc => bookmarkedResourceIds.includes(doc.id));
+                document.getElementById("breadcrumbMain").innerText = "Starred";
+                document.getElementById("breadcrumbSub").innerText = "Personal Library";
             } else {
                 workingDataSet = clinicalDatabase.filter(doc => doc.mainCategory === currentMainCategory && doc.subCategory === currentSubCategory);
+                document.getElementById("breadcrumbMain").innerText = currentMainCategory;
+                document.getElementById("breadcrumbSub").innerText = currentSubCategory;
+            }
+
+            if(filterText !== "") {
+                workingDataSet = workingDataSet.filter(d => 
+                    String(d.title || "").toLowerCase().includes(filterText) ||
+                    String(d.author || "").toLowerCase().includes(filterText) ||
+                    String(d.summary || "").toLowerCase().includes(filterText)
+                );
             }
 
             container.innerHTML = `
                 <div class="space-y-4">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">${currentMainCategory} &gt; ${currentSubCategory}</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${workingDataSet.map((c, i) => renderAtriGuideCard(c, i + 1)).join('')}
                     </div>
@@ -1225,22 +1168,17 @@
         function renderWelcomeScreen(container) {
             container.innerHTML = `
                 <div class="space-y-8 animate-fade-in pb-12">
-                    
                     <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm relative overflow-hidden">
                         <div class="relative z-10">
                             <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">AtriGuide</h1>
-                            <p class="text-xs text-slate-500 mt-0.5 font-medium tracking-wide">
-                                Your clinical database, simplified.
-                            </p>
+                            <p class="text-xs text-slate-500 mt-0.5 font-medium tracking-wide">Your clinical database, simplified.</p>
                         </div>
                     </div>
 
                     <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
-                        
                         <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
                             <i data-lucide="sparkles" class="w-48 h-48"></i>
                         </div>
-                        
                         <div class="flex items-center space-x-3 relative z-10">
                             <div class="p-2 bg-white/10 text-[#FF6B00] rounded-lg">
                                 <i data-lucide="sparkles" class="w-6 h-6 text-[#FF6B00]"></i>
@@ -1255,24 +1193,11 @@
                             An AI-powered engine that instantly finds and retrieves matching research articles, IFUs, and media from a curated library of AtriCure-relevant data.
                         </p>
 
-                        <p class="text-[#FF6B00] text-xs font-semibold relative z-10 -mt-3 tracking-wide">
-                            Ask a question below to get started.
-                        </p>
-
                         <div class="space-y-4 pt-1 relative z-10">
-                            <textarea 
-                                id="copilotQueryInput" 
-                                rows="2" 
-                                class="w-full text-slate-900 placeholder-slate-500 text-sm bg-white rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-medium border-0 shadow-inner resize-none"
-                            ></textarea>
-                            
+                            <textarea id="copilotQueryInput" rows="2" class="w-full text-slate-900 placeholder-slate-500 text-sm bg-white rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-medium border-0 shadow-inner resize-none"></textarea>
                             <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
                                 <span class="text-[11px] text-slate-300 font-medium order-2 sm:order-1">Powered by Gemini 2.5 Flash</span>
-                                <button 
-                                    onclick="askAtriGuide()" 
-                                    id="copilotSubmitBtn" 
-                                    class="w-full sm:w-auto sm:px-8 order-1 sm:order-2 bg-[#FF6B00] hover:bg-orange-600 text-white font-extrabold text-sm py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2 cursor-pointer"
-                                >
+                                <button onclick="askAtriGuide()" id="copilotSubmitBtn" class="w-full sm:w-auto sm:px-8 order-1 sm:order-2 bg-[#FF6B00] hover:bg-orange-600 text-white font-extrabold text-sm py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2 cursor-pointer">
                                     <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
                                     <span>✨ Ask AtriGuide</span>
                                 </button>
@@ -1288,7 +1213,7 @@
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Instant Search</h3>
                                 <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                                    Type directly into AtriGuide. Search by author, specific trial, or type a clinical phrase like 'prophylactic clip data' or 'maze durability papers' to pull up relevant peer-reviewed articles instantly.
+                                    Type directly into AtriGuide. Search by author, specific trial, or type a clinical phrase to pull up relevant peer-reviewed articles instantly.
                                 </p>
                             </div>
                         </div>
@@ -1321,6 +1246,7 @@
             lucide.createIcons();
         }
 
+        // BUILT WITH HIGH-CONTRAST DYNAMIC CTAs (Combines responsive inline formatting, brand consistency, and active tactile scale)
         function renderAtriGuideCard(card, index) {
             const isStarred = bookmarkedResourceIds.includes(card.id);
             const cleanSummaryHtml = String(card.summary || "")
@@ -1329,24 +1255,39 @@
                 .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
                 .join('');
 
+            // Branded high-contrast launcher pill with visual scale feedbacks
+            let actionLinkButtonHtml = "";
+            if (card.url && card.url.trim() !== "" && card.linkType !== "none") {
+                const isMedia = card.mainCategory === "Device Resources" && card.subCategory === "Other Media";
+                const label = isMedia ? "View Media" : "View Document";
+                const iconName = isMedia ? "video" : "external-link";
+                actionLinkButtonHtml = `
+                    <a href="${escapeHtml(card.url)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-sm hover:shadow-md active:scale-95 shrink-0" title="Load direct document resource">
+                        <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
+                        <span>${label}</span>
+                    </a>`;
+            }
+
             return `
                 <div class="bg-white border border-slate-200 rounded-lg p-3.5 flex flex-col justify-between shadow-sm relative group animate-fade-in">
-                    <div>
-                        <div class="flex items-start justify-between gap-2 mb-2">
-                            <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${escapeHtml(card.title)}</h4>
-                            <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-0.5"><i data-lucide="star" class="w-4 h-4 ${isStarred ? 'text-amber-500 fill-amber-400' : ''}"></i></button>
-                        </div>
-                        <div class="text-[10px] text-slate-400 font-semibold mb-2 flex items-center gap-2">
-                            <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded truncate max-w-[150px]">${escapeHtml(card.author)}</span>
-                        </div>
-                        <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5">
-                            <ul class="space-y-1 list-none pl-0">${cleanSummaryHtml}</ul>
+                    <div class="flex flex-col flex-1">
+                        <div>
+                            <div class="flex items-start justify-between gap-2 mb-2">
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${escapeHtml(card.title)}</h4>
+                                <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-0.5"><i data-lucide="star" class="w-4 h-4 ${isStarred ? 'text-amber-500 fill-amber-400' : ''}"></i></button>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-semibold mb-2 flex items-center justify-between flex-wrap gap-2">
+                                <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded truncate max-w-[150px] md:max-w-[200px]">${escapeHtml(card.author)}</span>
+                                ${actionLinkButtonHtml}
+                            </div>
+                            <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5">
+                                <ul class="space-y-1 list-none pl-0">${cleanSummaryHtml}</ul>
+                            </div>
                         </div>
                     </div>
                 </div>`;
         }
 
-        // --- FULLY RESTORED & OPTIMIZED ADMINISTRATIVE FUNCTIONS ---
         window.renderAdminInventory = function() {
             const listContainer = document.getElementById("adminInventoryList");
             if (!listContainer) return;
@@ -1395,7 +1336,7 @@
                 }).join('');
                 lucide.createIcons();
             } catch (e) {
-                console.error("renderAdminInventory error: ", e);
+                console.error("renderAdminInventory crash intercept handler logic sequence triggered:", e);
             }
         };
 
@@ -1458,13 +1399,19 @@
             const author = document.getElementById("formAuthor").value;
             const mainCategory = document.getElementById("formMainCat").value;
             const subCategory = document.getElementById("formSubCat").value;
-            const headerGroup = document.getElementById("formHeaderGroup").value || "";
             const url = document.getElementById("formUrl").value || "";
             const linkType = document.getElementById("formLinkType").value || "journal";
             const summary = document.getElementById("formSummary").value;
 
             const resourceObject = {
-                title, author, mainCategory, subCategory, headerGroup, url, linkType, summary,
+                title: title.trim(),
+                author: author.trim(),
+                mainCategory: mainCategory,
+                subCategory: subCategory,
+                headerGroup: "",
+                url: url.trim(),
+                linkType: linkType,
+                summary: summary.trim(),
                 lastModifiedTimestamp: Date.now()
             };
 
@@ -1496,11 +1443,11 @@
                 }
 
                 window.cancelEditingSession();
-                window.showToast(editingResourceId ? "Resource record modified successfully." : "Clinical Resource published to database.", "success");
+                window.showToast(editingResourceId ? "Resource record successfully updated in Firestore database!" : "Clinical Resource successfully created!", "success");
                 window.renderAdminInventory();
             } catch (err) {
-                console.error("Publishing operations failed: ", err);
-                window.showToast("System error. Document modification aborted.", "warning");
+                console.error("Administrative storage transmission failed: ", err);
+                window.showToast("System write tracking exception block intercepted form push.", "warning");
             }
         }
 
@@ -1581,14 +1528,22 @@
         window.updateFormSubCategories = function() {
             const mainCat = document.getElementById("formMainCat").value;
             const subCatSelect = document.getElementById("formSubCat");
-            let options = mainCat === "MAZE" ? ["Survival Benefits", "Lesion Durability", "Procedure Safety", "EnCompass Data", "Prophylactic Data"] : ["Stroke Reduction", "Closure Success Rates", "Complication Rates"];
+            let options = [];
+            
+            if (mainCat === "MAZE") {
+                options = ["Survival Benefits", "Lesion Durability", "Procedure Safety", "EnCompass Data", "Prophylactic Data"];
+            } else if (mainCat === "LAA") {
+                options = ["Stroke Reduction", "Closure Success Rates", "Complication Rates", "Device Safety", "Prophylactic Data"];
+            } else if (mainCat === "Device Resources") {
+                options = ["IFUs", "Product Brochures", "Other Media"];
+            } else if (mainCat === "MISC") {
+                options = ["Training Courses", "Misc Research", "Guidelines", "Common Documents"];
+            }
+            
             subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-            document.getElementById("formHeaderGroup").innerHTML = '<option value="">None / Standalone Listing</option>';
         };
 
-        window.updateFormHeaderOptions = function() {
-            document.getElementById("formHeaderGroup").innerHTML = '<option value="">None / Standalone Listing</option>';
-        };
+        window.updateFormHeaderOptions = function() {};
 
         window.exportDatabaseAsJSON = function() {
             const serializedData = JSON.stringify(clinicalDatabase, null, 4);
