@@ -71,46 +71,33 @@
                 <div class="text-xs font-bold text-slate-400 tracking-wider uppercase pt-2 mb-1">Resource Hub</div>
                 
                 <nav class="space-y-2" id="navCategories">
+                    <!-- MAZE CATEGORIES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('mazeMenu')">
                             <div class="flex items-center space-x-2.5">
-                                <i data-lucide="activity" class="w-4 h-4 text-slate-500 group-hover:text-[#FF6B00]"></i>
+                                <i data-lucide="activity" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>MAZE Topics</span>
                             </div>
                             <i data-lucide="chevron-down" id="mazeMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="mazeMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
+                            <button onclick="selectSubCategory('MAZE', 'Outcomes and Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Outcomes and Safety">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart" class="w-4 h-4"></i>
-                                    <span>Survival Benefits</span>
+                                    <i data-lucide="heart-pulse" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Outcomes and Safety</span>
                                 </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MAZE', 'Lesion Durability')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Lesion Durability">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="git-commit" class="w-4 h-4"></i>
-                                    <span>Lesion Durability</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-durability">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MAZE', 'Procedure Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Procedure Safety">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                                    <span>Procedure Safety</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-safety">0</span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-outcomes">0</span>
                             </button>
                             <button onclick="selectSubCategory('MAZE', 'EnCompass Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-EnCompass Data">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="layers" class="w-4 h-4"></i>
+                                    <i data-lucide="layers" class="w-4 h-4 text-slate-500"></i>
                                     <span>EnCompass Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-encompass">0</span>
                             </button>
                             <button onclick="selectSubCategory('MAZE', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Prophylactic Data">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-slate-500"></i>
                                     <span>Prophylactic Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-prophylactic">0</span>
@@ -118,46 +105,33 @@
                         </div>
                     </div>
 
+                    <!-- LAA CATEGORIES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('laaMenu')">
                             <div class="flex items-center space-x-2.5">
-                                <i data-lucide="heart" class="w-4 h-4 text-slate-500 group-hover:text-orange-500"></i>
+                                <i data-lucide="heart" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>LAA Topics</span>
                             </div>
                             <i data-lucide="chevron-down" id="laaMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="laaMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
+                            <button onclick="selectSubCategory('LAA', 'Outcomes and Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Outcomes and Safety">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Outcomes and Safety</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-outcomes">0</span>
+                            </button>
                             <button onclick="selectSubCategory('LAA', 'Stroke Reduction')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Stroke Reduction">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="trending-down" class="w-4 h-4"></i>
+                                    <i data-lucide="trending-down" class="w-4 h-4 text-slate-500"></i>
                                     <span>Stroke Reduction</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-stroke">0</span>
                             </button>
-                            <button onclick="selectSubCategory('LAA', 'Closure Success Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Closure Success Rates">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                                    <span>Closure Success Rates</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-success">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('LAA', 'Complication Rates')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Complication Rates">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
-                                    <span>Complication Rates</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-complication">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('LAA', 'Device Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Device Safety">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
-                                    <span>Device Safety</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-safety">0</span>
-                            </button>
                             <button onclick="selectSubCategory('LAA', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Prophylactic Data">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart-pulse" class="w-4 h-4"></i>
+                                    <i data-lucide="shield-alert" class="w-4 h-4 text-slate-500"></i>
                                     <span>Prophylactic Data</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-prophylactic">0</span>
@@ -165,10 +139,11 @@
                         </div>
                     </div>
 
+                    <!-- DEVICE RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('deviceResourcesMenu')">
                             <div class="flex items-center space-x-2.5">
-                                <i data-lucide="wrench" class="w-4 h-4 text-slate-500 group-hover:text-orange-500"></i>
+                                <i data-lucide="wrench" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>Device Resources</span>
                             </div>
                             <i data-lucide="chevron-down" id="deviceResourcesMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
@@ -176,21 +151,21 @@
                         <div id="deviceResourcesMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
                             <button onclick="selectSubCategory('Device Resources', 'IFUs')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-IFUs">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
                                     <span>IFUs</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-ifus">0</span>
                             </button>
                             <button onclick="selectSubCategory('Device Resources', 'Product Brochures')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Product Brochures">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
                                     <span>Product Brochures</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-brochures">0</span>
                             </button>
                             <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="video" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
                                     <span>Other Media</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-media">0</span>
@@ -198,10 +173,11 @@
                         </div>
                     </div>
 
+                    <!-- MISC RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group" onclick="toggleCategory('miscMenu')">
                             <div class="flex items-center space-x-2.5">
-                                <i data-lucide="folder" class="w-4 h-4 text-slate-500 group-hover:text-orange-500"></i>
+                                <i data-lucide="folder" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>MISC Resources</span>
                             </div>
                             <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
@@ -209,28 +185,28 @@
                         <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
                             <button onclick="selectSubCategory('MISC', 'Training Courses')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Training Courses">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                                    <i data-lucide="graduation-cap" class="w-4 h-4 text-slate-500"></i>
                                     <span>Training Courses</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-training">0</span>
                             </button>
                             <button onclick="selectSubCategory('MISC', 'Misc Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Misc Research">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="microscope" class="w-4 h-4"></i>
+                                    <i data-lucide="microscope" class="w-4 h-4 text-slate-500"></i>
                                     <span>Misc Research</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
                             </button>
                             <button onclick="selectSubCategory('MISC', 'Guidelines')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Guidelines">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="bookmark" class="w-4 h-4"></i>
+                                    <i data-lucide="bookmark" class="w-4 h-4 text-slate-500"></i>
                                     <span>Guidelines</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-guidelines">0</span>
                             </button>
                             <button onclick="selectSubCategory('MISC', 'Common Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Common Documents">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
                                     <span>Common Documents</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-documents">0</span>
@@ -647,34 +623,22 @@
             let sCatLower = sCat.toLowerCase();
 
             if (normalizedMain === "MAZE") {
-                // FIXED PRIORITY ORDER: Evaluates high-friction terms 'encompass' and 'prophylactic' before scanning general word 'data'
+                // FIXED PRIORITY ORDER FOR NEW "BIG NET" MAZE SEGMENTS
                 if (sCatLower.includes("encompass") || sCatLower.includes("clamp")) {
                     normalizedSub = "EnCompass Data";
                 } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
                     normalizedSub = "Prophylactic Data";
-                } else if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("data") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
-                    normalizedSub = "Survival Benefits";
-                } else if (sCatLower.includes("durability") || sCatLower.includes("lesion") || sCatLower.includes("outcome") || sCatLower.includes("pattern") || sCatLower.includes("concomitant") || sCatLower.includes("persistent") || sCatLower.includes("atrial")) {
-                    normalizedSub = "Lesion Durability";
-                } else if (sCatLower.includes("safety") || sCatLower.includes("complication") || sCatLower.includes("rate") || sCatLower.includes("pacemaker")) {
-                    normalizedSub = "Procedure Safety";
                 } else {
-                    normalizedSub = "Survival Benefits";
+                    normalizedSub = "Outcomes and Safety";
                 }
             } else if (normalizedMain === "LAA") {
-                // FIXED PRIORITY ORDER: Evaluates 'prophylactic' before scanning other terms
-                if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
+                // FIXED PRIORITY ORDER FOR NEW "BIG NET" LAA SEGMENTS
+                if (sCatLower.includes("stroke") || sCatLower.includes("reduction")) {
+                    normalizedSub = "Stroke Reduction";
+                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
                     normalizedSub = "Prophylactic Data";
-                } else if (sCatLower.includes("stroke") || sCatLower.includes("reduction") || sCatLower.includes("ischemic") || sCatLower.includes("exclusion") || sCatLower.includes("benefit")) {
-                    normalizedSub = "Stroke Reduction";
-                } else if (sCatLower.includes("closure") || sCatLower.includes("success") || sCatLower.includes("complete")) {
-                    normalizedSub = "Closure Success Rates";
-                } else if (sCatLower.includes("complication") || sCatLower.includes("bleeding")) {
-                    normalizedSub = "Complication Rates";
-                } else if (sCatLower.includes("safety") || sCatLower.includes("device")) {
-                    normalizedSub = "Device Safety";
                 } else {
-                    normalizedSub = "Stroke Reduction";
+                    normalizedSub = "Outcomes and Safety";
                 }
             } else if (normalizedMain === "Device Resources") {
                 if (sCatLower.includes("ifu") || sCatLower.includes("instructions")) {
@@ -1123,25 +1087,22 @@
 
         function updateSidebarActiveStates() {
             const counts = {
-                "maze-survival": 0, "maze-durability": 0, "maze-safety": 0, "maze-encompass": 0, "maze-prophylactic": 0,
-                "laa-stroke": 0, "laa-success": 0, "laa-complication": 0, "laa-safety": 0, "laa-prophylactic": 0,
-                "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
+                "maze-outcomes": 0, "maze-encompass": 0, "maze-prophylactic": 0,
+                "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
+                "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, 
+                "misc-training": 0, "misc-research": 0, "misc-guidelines": 0, "misc-documents": 0
             };
             clinicalDatabase.forEach(d => {
                 const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
                 const sCat = d.subCategory ? String(d.subCategory).toLowerCase() : "";
                 if (mCat === "maze") {
-                    if (sCat.includes("survival")) counts["maze-survival"]++;
-                    else if (sCat.includes("durability")) counts["maze-durability"]++;
-                    else if (sCat.includes("safety")) counts["maze-safety"]++;
-                    else if (sCat.includes("encompass")) counts["maze-encompass"]++;
+                    if (sCat.includes("encompass")) counts["maze-encompass"]++;
                     else if (sCat.includes("prophylactic")) counts["maze-prophylactic"]++;
+                    else counts["maze-outcomes"]++;
                 } else if (mCat === "laa") {
                     if (sCat.includes("stroke")) counts["laa-stroke"]++;
-                    else if (sCat.includes("success")) counts["laa-success"]++;
-                    else if (sCat.includes("complication")) counts["laa-complication"]++;
-                    else if (sCat.includes("safety")) counts["laa-safety"]++;
                     else if (sCat.includes("prophylactic")) counts["laa-prophylactic"]++;
+                    else counts["laa-outcomes"]++;
                 } else if (mCat === "device resources") {
                     if (sCat === "ifus") counts["dev-ifus"]++;
                     else if (sCat === "product brochures") counts["dev-brochures"]++;
@@ -1567,9 +1528,9 @@
             let options = [];
             
             if (mainCat === "MAZE") {
-                options = ["Survival Benefits", "Lesion Durability", "Procedure Safety", "EnCompass Data", "Prophylactic Data"];
+                options = ["Outcomes and Safety", "EnCompass Data", "Prophylactic Data"];
             } else if (mainCat === "LAA") {
-                options = ["Stroke Reduction", "Closure Success Rates", "Complication Rates", "Device Safety", "Prophylactic Data"];
+                options = ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"];
             } else if (mainCat === "Device Resources") {
                 options = ["IFUs", "Product Brochures", "Other Media"];
             } else if (mainCat === "MISC") {
