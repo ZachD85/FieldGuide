@@ -83,14 +83,14 @@
                         <div id="mazeMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
                             <button onclick="selectSubCategory('MAZE', 'Rhythm Outcomes')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Rhythm Outcomes">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart-pulse" class="w-4 h-4 text-slate-500"></i>
+                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
                                     <span>Rhythm Outcomes</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-rhythm">0</span>
                             </button>
                             <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
+                                    <i data-lucide="git-commit" class="w-4 h-4 text-slate-500"></i>
                                     <span>Survival Benefits</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
@@ -117,7 +117,7 @@
                         <div id="laaMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
                             <button onclick="selectSubCategory('LAA', 'Outcomes and Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Outcomes and Safety">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
+                                    <i data-lucide="heart-pulse" class="w-4 h-4 text-slate-500"></i>
                                     <span>Outcomes and Safety</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-outcomes">0</span>
@@ -175,7 +175,7 @@
 
                     <!-- MISC RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group" onclick="toggleCategory('miscMenu')">
+                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('miscMenu')">
                             <div class="flex items-center space-x-2.5">
                                 <i data-lucide="folder" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>MISC Resources</span>
@@ -183,13 +183,6 @@
                             <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MISC', 'Misc Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Misc Research">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="microscope" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Misc Research</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
-                            </button>
                             <button onclick="selectSubCategory('MISC', 'Helpful Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Helpful Documents">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
@@ -609,18 +602,16 @@
             let sCatLower = sCat.toLowerCase();
 
             if (normalizedMain === "MAZE") {
-                // FIXED PRIORITY ORDER FOR NEW "BIG NET" MAZE SEGMENTS
-                if (sCatLower.includes("encompass") || sCatLower.includes("clamp")) {
-                    normalizedSub = "Other";
-                } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent") || sCatLower.includes("technique")) {
-                    normalizedSub = "Other";
-                } else if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("nejm")) {
+                // FIXED PRIORITY ORDER FOR RE-SORTED "BIG NET" MAZE SEGMENTS
+                if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
                     normalizedSub = "Survival Benefits";
+                } else if (sCatLower.includes("encompass") || sCatLower.includes("clamp") || sCatLower.includes("prophylactic") || sCatLower.includes("prevent") || sCatLower.includes("other") || sCatLower.includes("technique") || sCatLower.includes("how")) {
+                    normalizedSub = "Other";
                 } else {
                     normalizedSub = "Rhythm Outcomes";
                 }
             } else if (normalizedMain === "LAA") {
-                // FIXED PRIORITY ORDER FOR NEW "BIG NET" LAA SEGMENTS
+                // FIXED PRIORITY ORDER FOR RE-SORTED "BIG NET" LAA SEGMENTS
                 if (sCatLower.includes("stroke") || sCatLower.includes("reduction")) {
                     normalizedSub = "Stroke Reduction";
                 } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
@@ -637,11 +628,7 @@
                     normalizedSub = "Other Media";
                 }
             } else if (normalizedMain === "MISC") {
-                if (sCatLower.includes("research") || sCatLower.includes("misc research")) {
-                    normalizedSub = "Misc Research";
-                } else {
-                    normalizedSub = "Helpful Documents";
-                }
+                normalizedSub = "Helpful Documents";
             }
             return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
         }
@@ -971,6 +958,42 @@
             }
         }
 
+        // SMOOTH SLIDING MOBILE SIDEBAR DRAWER AND INTERACTIVES DISMISS ENGINE
+        window.toggleMobileMenu = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const overlay = document.getElementById("sidebarOverlay");
+            if (sidebar.classList.contains("-translate-x-full")) {
+                sidebar.classList.remove("-translate-x-full");
+                overlay.classList.remove("hidden");
+                setTimeout(() => {
+                    overlay.classList.remove("opacity-0");
+                    overlay.classList.add("opacity-100");
+                }, 10);
+            } else {
+                sidebar.classList.add("-translate-x-full");
+                overlay.classList.remove("opacity-100");
+                overlay.classList.add("opacity-0");
+                setTimeout(() => {
+                    overlay.classList.add("hidden");
+                }, 300);
+            }
+        };
+
+        window.closeMobileMenu = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const overlay = document.getElementById("sidebarOverlay");
+            if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
+                sidebar.classList.add("-translate-x-full");
+            }
+            if (overlay && !overlay.classList.contains("hidden")) {
+                overlay.classList.remove("opacity-100");
+                overlay.classList.add("opacity-0");
+                setTimeout(() => {
+                    overlay.classList.add("hidden");
+                }, 300);
+            }
+        };
+
         function setupLocalEventListeners() {
             const categorySearchInput = document.getElementById("categorySearchInput");
             const clearCategorySearchBtn = document.getElementById("clearCategorySearchBtn");
@@ -989,13 +1012,11 @@
             });
 
             document.getElementById("mobileMenuBtn").addEventListener("click", () => {
-                document.getElementById("sidebarMenu").classList.remove("-translate-x-full");
-                document.getElementById("sidebarOverlay").classList.remove("hidden");
+                window.toggleMobileMenu();
             });
 
             document.getElementById("sidebarOverlay").addEventListener("click", () => {
-                document.getElementById("sidebarMenu").classList.add("-translate-x-full");
-                document.getElementById("sidebarOverlay").classList.add("hidden");
+                window.closeMobileMenu();
             });
 
             document.getElementById("adminPortalBtn").addEventListener("click", () => { window.openAdminAuthModal(); });
@@ -1016,6 +1037,7 @@
                 userView.classList.remove("hidden");
                 renderAppViewboard();
             }
+            window.closeMobileMenu();
         }
 
         window.navigateToHome = function() {
@@ -1023,6 +1045,7 @@
             currentSubCategory = "Home";
             isStarredFilterActive = false;
             document.getElementById("categorySearchContainer").classList.add("hidden");
+            window.closeMobileMenu();
             renderAppViewboard();
         };
 
@@ -1031,6 +1054,7 @@
             currentSubCategory = subCat;
             isStarredFilterActive = false;
             document.getElementById("categorySearchContainer").classList.remove("hidden");
+            window.closeMobileMenu();
             renderAppViewboard();
         };
 
@@ -1053,6 +1077,7 @@
                 indicator.classList.remove("flex");
                 navigateToHome();
             }
+            window.closeMobileMenu();
             renderAppViewboard();
         };
 
@@ -1074,14 +1099,14 @@
                 "maze-rhythm": 0, "maze-survival": 0, "maze-other": 0,
                 "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
                 "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, 
-                "misc-research": 0, "misc-helpful": 0
+                "misc-helpful": 0
             };
             clinicalDatabase.forEach(d => {
                 const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
                 const sCat = d.subCategory ? String(d.subCategory).toLowerCase() : "";
                 if (mCat === "maze") {
-                    if (sCat === "other") counts["maze-other"]++;
-                    else if (sCat.includes("survival")) counts["maze-survival"]++;
+                    if (sCat === "survival benefits") counts["maze-survival"]++;
+                    else if (sCat === "other") counts["maze-other"]++;
                     else counts["maze-rhythm"]++;
                 } else if (mCat === "laa") {
                     if (sCat.includes("stroke")) counts["laa-stroke"]++;
@@ -1092,8 +1117,7 @@
                     else if (sCat === "product brochures") counts["dev-brochures"]++;
                     else if (sCat === "other media") counts["dev-media"]++;
                 } else if (mCat === "misc") {
-                    if (sCat.includes("research")) counts["misc-research"]++;
-                    else counts["misc-helpful"]++;
+                    counts["misc-helpful"]++;
                 }
             });
             for (const id in counts) {
@@ -1104,7 +1128,9 @@
 
         function renderAppViewboard() {
             const container = document.getElementById("userDashboardView");
-            if (currentMainCategory === "Welcome") {
+            
+            // CRITICAL OVERRIDE: Starred view renders smoothly even if currentMainCategory is set to onboarding "Welcome"
+            if (currentMainCategory === "Welcome" && !isStarredFilterActive) {
                 renderWelcomeScreen(container);
                 startPlaceholderRotation();
                 return;
@@ -1196,8 +1222,8 @@
 
                         <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
                             <div class="space-y-3">
-                                <div class="p-3 bg-orange-50 text-orange-600 rounded-lg w-fit">
-                                    <i data-lucide="menu" class="w-5 h-5 text-orange-500"></i>
+                                <div class="p-3 bg-[#FF6B00]/10 text-[#FF6B00] rounded-lg w-fit">
+                                    <i data-lucide="menu" class="w-5 h-5 text-[#FF6B00]"></i>
                                 </div>
                                 <h3 class="font-bold text-slate-800 text-sm md:text-base">Browse the Database</h3>
                                 <p class="text-xs text-slate-500 leading-relaxed font-medium">
@@ -1231,7 +1257,8 @@
                 .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
                 .join('');
 
-            // Automatically resolve standard Google Drive /view links into lightweight /preview bypass URLs
+            // AUTOMATIC ANONYMOUS DRIVE PREVIEW BYPASS FOR iOS & ANDROID
+            // Rewrites standard drive.google.com URLs to Google's raw CDN endpoint to prevent mobile account prompts
             let actionLinkButtonHtml = "";
             if (card.url && card.url.trim() !== "" && card.linkType !== "none") {
                 const cleanDriveUrl = formatGoogleDriveLink(card.url);
@@ -1239,7 +1266,7 @@
                 const label = isMedia ? "View Media" : "View Document";
                 const iconName = isMedia ? "video" : "external-link";
                 actionLinkButtonHtml = `
-                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-sm hover:shadow-md active:scale-95 shrink-0" title="Load document resource safely without authentication checks">
+                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
                         <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
                         <span>${label}</span>
                     </a>`;
@@ -1515,7 +1542,7 @@
             } else if (mainCat === "Device Resources") {
                 options = ["IFUs", "Product Brochures", "Other Media"];
             } else if (mainCat === "MISC") {
-                options = ["Misc Research", "Helpful Documents"];
+                options = ["Helpful Documents"];
             }
             
             subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
