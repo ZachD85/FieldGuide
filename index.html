@@ -158,14 +158,14 @@
                             </button>
                             <button onclick="selectSubCategory('Device Resources', 'Product Brochures')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Product Brochures">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
+                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
                                     <span>Product Brochures</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-brochures">0</span>
                             </button>
-                            <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
+                            <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-[#00205B] hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
+                                    <i data-lucide="video" class="w-4 h-4 text-slate-400"></i>
                                     <span>Other Media</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-media">0</span>
@@ -175,7 +175,7 @@
 
                     <!-- MISC RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('miscMenu')">
+                        <button class="w-full flex items-center justify-between p-3 font-semibold text-[#00205B] hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('miscMenu')">
                             <div class="flex items-center space-x-2.5">
                                 <i data-lucide="folder" class="w-4 h-4 text-[#FF6B00]"></i>
                                 <span>MISC Resources</span>
@@ -183,6 +183,13 @@
                             <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
                         </button>
                         <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
+                            <button onclick="selectSubCategory('MISC', 'Other Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Other Research">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="microscope" class="w-4 h-4 text-slate-500"></i>
+                                    <span>Other Research</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
+                            </button>
                             <button onclick="selectSubCategory('MISC', 'Helpful Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Helpful Documents">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
@@ -628,7 +635,12 @@
                     normalizedSub = "Other Media";
                 }
             } else if (normalizedMain === "MISC") {
-                normalizedSub = "Helpful Documents";
+                // FIXED PRIORITY ORDER FOR OTHER RESEARCH VS HELPFUL DOCUMENTS
+                if (sCatLower.includes("research") || sCatLower.includes("trial") || sCatLower.includes("misc") || sCatLower.includes("other")) {
+                    normalizedSub = "Other Research";
+                } else {
+                    normalizedSub = "Helpful Documents";
+                }
             }
             return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
         }
@@ -1099,7 +1111,7 @@
                 "maze-rhythm": 0, "maze-survival": 0, "maze-other": 0,
                 "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
                 "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, 
-                "misc-helpful": 0
+                "misc-research": 0, "misc-helpful": 0
             };
             clinicalDatabase.forEach(d => {
                 const mCat = d.mainCategory ? String(d.mainCategory).toLowerCase() : "";
@@ -1117,7 +1129,8 @@
                     else if (sCat === "product brochures") counts["dev-brochures"]++;
                     else if (sCat === "other media") counts["dev-media"]++;
                 } else if (mCat === "misc") {
-                    counts["misc-helpful"]++;
+                    if (sCat === "other research") counts["misc-research"]++;
+                    else counts["misc-helpful"]++;
                 }
             });
             for (const id in counts) {
@@ -1170,13 +1183,6 @@
         function renderWelcomeScreen(container) {
             container.innerHTML = `
                 <div class="space-y-8 animate-fade-in pb-12">
-                    <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-sm relative overflow-hidden">
-                        <div class="relative z-10">
-                            <h1 class="text-xl font-extrabold text-slate-900 tracking-tight">AtriGuide</h1>
-                            <p class="text-xs text-slate-500 mt-0.5 font-medium tracking-wide">Your clinical database, simplified.</p>
-                        </div>
-                    </div>
-
                     <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
                         <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
                             <i data-lucide="sparkles" class="w-48 h-48"></i>
@@ -1187,7 +1193,7 @@
                             </div>
                             <div>
                                 <h3 class="font-extrabold text-white text-lg md:text-xl tracking-tight">AtriGuide AI</h3>
-                                <p class="text-[11px] text-[#FF6B00] font-bold uppercase tracking-wider">AI Clinical Intelligence</p>
+                                <p class="text-[11px] text-[#FF6B00] font-bold uppercase tracking-wider">Your clinical database, simplified.</p>
                             </div>
                         </div>
 
@@ -1542,7 +1548,8 @@
             } else if (mainCat === "Device Resources") {
                 options = ["IFUs", "Product Brochures", "Other Media"];
             } else if (mainCat === "MISC") {
-                options = ["Helpful Documents"];
+                // FIXED FORM SYNC OPTIONS: Syncs perfectly with "Other Research" and "Helpful Documents"
+                options = ["Other Research", "Helpful Documents"];
             }
             
             subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
