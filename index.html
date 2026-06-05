@@ -158,14 +158,14 @@
                             </button>
                             <button onclick="selectSubCategory('Device Resources', 'Product Brochures')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Product Brochures">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
                                     <span>Product Brochures</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-brochures">0</span>
                             </button>
                             <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-[#00205B] hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
                                 <span class="flex items-center gap-2">
-                                    <i data-lucide="video" class="w-4 h-4 text-slate-400"></i>
+                                    <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
                                     <span>Other Media</span>
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-media">0</span>
@@ -220,9 +220,9 @@
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto flex flex-col h-full bg-slate-50">
-            
-            <div id="contextHeader" class="bg-white border-b border-slate-200 p-4 shrink-0 flex flex-wrap items-center justify-between gap-3">
+        <main class="flex-grow bg-slate-50 flex flex-col overflow-hidden">
+            <!-- Context Header bar -->
+            <div id="contextHeader" class="bg-white border-b border-slate-200 p-4 shrink-0 flex flex-wrap items-center justify-between gap-3 z-10">
                 <div class="flex items-center space-x-2">
                     <button onclick="navigateToHome()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-orange-500 transition-all cursor-pointer flex items-center justify-center mr-1" title="Go to Home Guide">
                         <i data-lucide="home" class="w-4.5 h-4.5"></i>
@@ -236,12 +236,7 @@
                     <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </span>
-                    <input 
-                        type="text" 
-                        id="categorySearchInput" 
-                        placeholder="Search within this category..." 
-                        class="w-full bg-slate-50 text-slate-900 placeholder-slate-400 pl-9 pr-8 py-1.5 rounded-md text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all animate-fade-in"
-                    >
+                    <input type="text" id="categorySearchInput" placeholder="Search within this category..." class="w-full bg-slate-50 text-slate-900 placeholder-slate-400 pl-9 pr-8 py-1.5 rounded-md text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all animate-fade-in">
                     <button id="clearCategorySearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-slate-400 hover:text-slate-600">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
@@ -256,12 +251,15 @@
                 </div>
             </div>
 
-            <div class="flex-1 p-4 md:p-6 overflow-y-auto">
+            <!-- Scrollable workspace area -->
+            <div class="flex-grow overflow-y-auto">
                 
-                <div id="userDashboardView" class="space-y-8 max-w-5xl mx-auto border-0">
-                    </div>
+                <!-- User Dashboard View -->
+                <div id="userDashboardView" class="p-4 md:p-6 space-y-8 max-w-5xl mx-auto border-0"></div>
 
-                <div id="adminPortalView" class="hidden max-w-5xl mx-auto space-y-8 border-0">
+                <!-- Admin Portal View (Unified single layout) -->
+                <div id="adminPortalView" class="hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+                    
                     <div class="bg-[#00205B] text-white p-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center space-x-3">
                             <div class="p-2 bg-orange-500 rounded-lg text-white">
@@ -273,6 +271,14 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
+                            <!-- Toggle Tabs for single form vs spreadsheet bulk editor -->
+                            <div class="bg-white/10 p-1 rounded-lg flex items-center gap-1.5 border border-white/10 shrink-0">
+                                <button onclick="setAdminTab('single')" id="adminTabSingle" class="text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer">Single Entry</button>
+                                <button onclick="setAdminTab('bulk')" id="adminTabBulk" class="text-xs font-bold px-3 py-1.5 rounded-md text-slate-300 hover:text-white transition-all focus:outline-none flex items-center gap-1 cursor-pointer">
+                                    <i data-lucide="layout-grid" class="w-3.5 h-3.5 shrink-0"></i>
+                                    <span>Spreadsheet View</span>
+                                </button>
+                            </div>
                             <button onclick="exportDatabaseAsJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all flex items-center space-x-1.5 cursor-pointer" title="Download database backup to update offline code file">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                                 <span>Export Database JSON</span>
@@ -312,7 +318,8 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Tab 1: Single Resource Creator View -->
+                    <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                             <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between">
                                 <div class="flex items-center space-x-2">
@@ -407,6 +414,91 @@
                             </div>
                             <div class="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[480px]" id="adminInventoryList">
                                 </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Full-Width Bulk Spreadsheet Workspace view -->
+                    <div id="adminBulkView" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                        <!-- Top Spreadsheet Controls Header -->
+                        <div class="bg-slate-50 border-b border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4 shrink-0 select-none">
+                            <div class="flex items-center space-x-3">
+                                <i data-lucide="layout-grid" class="w-5 h-5 text-orange-500"></i>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm">Database Spreadsheet Workspace</h3>
+                                    <p class="text-[11px] text-slate-400">Click cells directly to edit. Changes sync instantly to Firestore.</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Bulk Operations Panel -->
+                            <div class="flex flex-wrap items-center gap-3">
+                                <span class="text-xs font-bold text-[#FF6B00]" id="bulkSelectedCount">0 Selected</span>
+                                
+                                <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+
+                                <!-- Move selection tool -->
+                                <div class="flex items-center gap-1.5">
+                                    <select id="bulkCategoryMoveSelect" class="text-xs border border-slate-200 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 font-semibold text-slate-700">
+                                        <option value="MAZE:Rhythm Outcomes">MAZE &gt; Rhythm Outcomes</option>
+                                        <option value="MAZE:Survival Benefits">MAZE &gt; Survival Benefits</option>
+                                        <option value="MAZE:Other">MAZE &gt; Other</option>
+                                        <option value="LAA:Outcomes and Safety">LAA &gt; Outcomes & Safety</option>
+                                        <option value="LAA:Stroke Reduction">LAA &gt; Stroke Reduction</option>
+                                        <option value="LAA:Prophylactic Data">LAA &gt; Prophylactic Data</option>
+                                        <option value="Device Resources:IFUs">Devices &gt; IFUs</option>
+                                        <option value="Device Resources:Product Brochures">Devices &gt; Product Brochures</option>
+                                        <option value="Device Resources:Other Media">Devices &gt; Other Media</option>
+                                        <option value="MISC:Other Research">MISC &gt; Other Research</option>
+                                        <option value="MISC:Helpful Documents">MISC &gt; Helpful Documents</option>
+                                    </select>
+                                    <button onclick="executeBulkMove()" class="bg-[#00205B] text-white px-2.5 py-1.5 rounded text-xs font-bold hover:bg-[#FF6B00] transition-all">Move</button>
+                                </div>
+
+                                <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+
+                                <!-- Action Buttons -->
+                                <button onclick="executeBulkMerge()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="git-merge" class="w-3.5 h-3.5"></i>
+                                    <span>Merge Selected</span>
+                                </button>
+                                <button onclick="executeBulkDelete()" class="bg-red-50 border border-red-200 text-red-700 hover:bg-red-100 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="trash" class="w-3.5 h-3.5"></i>
+                                    <span>Delete Selected</span>
+                                </button>
+
+                                <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
+
+                                <button onclick="selectAllRows(true)" class="text-[11px] text-slate-500 hover:text-[#00205B] font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Select All</button>
+                                <button onclick="selectAllRows(false)" class="text-[11px] text-slate-500 hover:text-[#00205B] font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Deselect</button>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Interactive spreadsheet grid table wrapper -->
+                        <div class="overflow-x-auto max-h-[580px]">
+                            <table class="w-full text-left border-collapse min-w-[1000px]">
+                                <thead class="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-20 select-none">
+                                    <tr>
+                                        <th class="py-3 px-4 w-12 text-center border-b">Sel</th>
+                                        <th class="py-3 px-4 w-44 border-b">Main Category</th>
+                                        <th class="py-3 px-4 w-52 border-b">Sub-Category</th>
+                                        <th onclick="sortBulkDatabase('title')" class="py-3 px-4 min-w-[340px] cursor-pointer hover:bg-slate-200 transition-all border-b">
+                                            <div class="flex items-center gap-1">
+                                                <span>Clinical Study / Resource Title</span>
+                                                <i id="sort-icon-title" data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                            </div>
+                                        </th>
+                                        <th onclick="sortBulkDatabase('author')" class="py-3 px-4 w-56 cursor-pointer hover:bg-slate-200 transition-all border-b">
+                                            <div class="flex items-center gap-1">
+                                                <span>Author / Year</span>
+                                                <i id="sort-icon-author" data-lucide="arrow-up-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                            </div>
+                                        </th>
+                                        <th class="py-3 px-4 w-28 text-center border-b">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bulkEditorTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dynamic articles parse cleanly here -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -509,13 +601,14 @@
             measurementId: "G-S8Y8SL6MTB"
         };
 
-        // Note: Gemini API key is loaded dynamically from Firestore on startup to bypass GitHub scanning
-        let apiKey = ""; 
-        let db = null;
-        let auth = null;
-        let activeUser = null;
-        let isFirebaseActive = false;
-        let appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
+        // EXPOSE CORE STATE & GLOBAL LIFECYCLE HANDLERS DIRECTLY TO WINDOW
+        // This ensures async deferred scripts completely bypass ReferenceErrors across all sandboxes
+        window.apiKey = ""; 
+        window.db = null;
+        window.auth = null;
+        window.activeUser = null;
+        window.isFirebaseActive = false;
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
 
         const fallbackDatabase = [
             {
@@ -523,7 +616,7 @@
                 title: "Five-Year Outcomes of the Cox-Maze IV Procedure for Atrial Fibrillation",
                 author: "Damiano RJ, et al. / J Thorac Cardiovasc Surg",
                 mainCategory: "MAZE",
-                subCategory: "Lesion Durability",
+                subCategory: "Rhythm Outcomes",
                 headerGroup: "",
                 url: "https://www.jtcvs.org",
                 linkType: "journal",
@@ -531,13 +624,17 @@
             }
         ];
 
-        let clinicalDatabase = [];
-        let currentMainCategory = "Welcome";
-        let currentSubCategory = "Home";
-        let bookmarkedResourceIds = [];
-        let isStarredFilterActive = false;
-        let activeDeletionTargetId = null;
-        let editingResourceId = null; 
+        window.clinicalDatabase = [];
+        window.currentMainCategory = "Welcome";
+        window.currentSubCategory = "Home";
+        window.bookmarkedResourceIds = [];
+        window.isStarredFilterActive = false;
+        window.activeDeletionTargetId = null;
+        window.editingResourceId = null; 
+        
+        window.activeAdminTab = 'single'; // Toggles between single form and full-width bulk spreadsheet editor
+        window.bulkSortField = 'title'; // 'title' or 'author'
+        window.bulkSortAsc = true;
 
         const placeholderPhrases = [
             "\'Show me 10-year success rates for Cox-MAZE IV\'",
@@ -549,7 +646,7 @@
         let currentPlaceholderIndex = 0;
         let placeholderTimer = null;
 
-        function escapeHtml(str) {
+        window.escapeHtml = function(str) {
             if (str === null || str === undefined) return '';
             return String(str)
                 .replace(/&/g, '&amp;')
@@ -557,29 +654,25 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
-        }
+        };
 
         // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ANONYMOUS PREVIEW BYPASS LINKS
-        // This stops Google Drive from intercepting deep links and demanding user account credentials on mobile
-        function formatGoogleDriveLink(url) {
+        window.formatGoogleDriveLink = function(url) {
             if (!url) return "";
             let formattedUrl = url.trim();
             
-            // Match standard /file/d/FILE_ID/view or edit
             const fileDMatch = formattedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (fileDMatch) {
                 const fileId = fileDMatch[1];
                 return `https://drive.google.com/file/d/${fileId}/preview`;
             }
             
-            // Match /open?id=FILE_ID
             const openIdMatch = formattedUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             if (openIdMatch) {
                 const fileId = openIdMatch[1];
                 return `https://drive.google.com/file/d/${fileId}/preview`;
             }
 
-            // Match docs.google.com/document/d/FILE_ID/edit
             const docsDMatch = formattedUrl.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
             if (docsDMatch) {
                 const fileId = docsDMatch[1];
@@ -587,9 +680,9 @@
             }
             
             return formattedUrl;
-        }
+        };
 
-        function normalizeDocument(doc) {
+        window.normalizeDocument = function(doc) {
             let mCat = String(doc.mainCategory || "").trim();
             let sCat = String(doc.subCategory || "").trim();
             let normalizedMain = "MAZE";
@@ -609,7 +702,6 @@
             let sCatLower = sCat.toLowerCase();
 
             if (normalizedMain === "MAZE") {
-                // FIXED PRIORITY ORDER FOR RE-SORTED "BIG NET" MAZE SEGMENTS
                 if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
                     normalizedSub = "Survival Benefits";
                 } else if (sCatLower.includes("encompass") || sCatLower.includes("clamp") || sCatLower.includes("prophylactic") || sCatLower.includes("prevent") || sCatLower.includes("other") || sCatLower.includes("technique") || sCatLower.includes("how")) {
@@ -618,7 +710,6 @@
                     normalizedSub = "Rhythm Outcomes";
                 }
             } else if (normalizedMain === "LAA") {
-                // FIXED PRIORITY ORDER FOR RE-SORTED "BIG NET" LAA SEGMENTS
                 if (sCatLower.includes("stroke") || sCatLower.includes("reduction")) {
                     normalizedSub = "Stroke Reduction";
                 } else if (sCatLower.includes("prophylactic") || sCatLower.includes("prevent")) {
@@ -635,7 +726,6 @@
                     normalizedSub = "Other Media";
                 }
             } else if (normalizedMain === "MISC") {
-                // FIXED PRIORITY ORDER FOR OTHER RESEARCH VS HELPFUL DOCUMENTS
                 if (sCatLower.includes("research") || sCatLower.includes("trial") || sCatLower.includes("misc") || sCatLower.includes("other")) {
                     normalizedSub = "Other Research";
                 } else {
@@ -643,16 +733,16 @@
                 }
             }
             return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
-        }
+        };
 
-        function startPlaceholderRotation() {
+        window.startPlaceholderRotation = function() {
             if (placeholderTimer) clearInterval(placeholderTimer);
             const input = document.getElementById("copilotQueryInput");
             if (input) input.placeholder = placeholderPhrases[0];
-            placeholderTimer = setInterval(executePlaceholderTransitionStep, 4000);
-        }
+            placeholderTimer = setInterval(window.executePlaceholderTransitionStep, 4000);
+        };
 
-        function executePlaceholderTransitionStep() {
+        window.executePlaceholderTransitionStep = function() {
             const input = document.getElementById("copilotQueryInput");
             if (!input) return;
             input.classList.add("placeholder-fade-out");
@@ -661,18 +751,9 @@
                 input.placeholder = placeholderPhrases[currentPlaceholderIndex];
                 input.classList.remove("placeholder-fade-out");
             }, 500); 
-        }
+        };
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            loadStarredCache();
-            await attemptInitializeFirebase();
-            updateSidebarActiveStates();
-            renderAppViewboard();
-            setupLocalEventListeners();
-            lucide.createIcons();
-        });
-
-        async function attemptInitializeFirebase() {
+        window.attemptInitializeFirebase = async function() {
             const syncIndicator = document.getElementById("syncStatus");
             try {
                 const hasValidPrivateConfig = myPrivateFirebaseConfig && myPrivateFirebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -692,39 +773,39 @@
                             isFirebaseActive = true;
                             syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                             window.showToast("Cloud database connected successfully.", "success");
-                            subscribeToDatabaseStreams();
-                            loadSecureApiKey();
+                            window.subscribeToDatabaseStreams();
+                            window.loadSecureApiKey();
                         } else {
                             isFirebaseActive = false;
-                            loadLocalFallbackData();
+                            window.loadLocalFallbackData();
                         }
                     });
                 } else {
-                    loadLocalFallbackData();
+                    window.loadLocalFallbackData();
                 }
             } catch (err) {
-                loadLocalFallbackData();
+                window.loadLocalFallbackData();
             }
-        }
+        };
 
-        async function loadSecureApiKey() {
+        window.loadSecureApiKey = async function() {
             if (!db) return;
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gemini');
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     apiKey = docSnap.data().key || "";
-                    updateApiKeyStatusUI(apiKey ? true : false);
+                    window.updateApiKeyStatusUI(apiKey ? true : false);
                 } else {
-                    updateApiKeyStatusUI(false);
+                    window.updateApiKeyStatusUI(false);
                 }
             } catch (err) {
                 console.error("Error loading secure API key:", err);
-                updateApiKeyStatusUI(false);
+                window.updateApiKeyStatusUI(false);
             }
-        }
+        };
 
-        function updateApiKeyStatusUI(isLoaded) {
+        window.updateApiKeyStatusUI = function(isLoaded) {
             const badge = document.getElementById("apiKeyStatusBadge");
             if (badge) {
                 if (isLoaded && apiKey) {
@@ -735,67 +816,48 @@
                     badge.innerHTML = `<span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span><span>No Key Loaded</span>`;
                 }
             }
-        }
-
-        window.saveApiKeyToFirestore = async function() {
-            const input = document.getElementById("secureApiKeyInput");
-            const newKey = input.value.trim();
-            if (!newKey) {
-                window.showToast("Please enter a valid API key.", "warning");
-                return;
-            }
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gemini');
-                await setDoc(docRef, { key: newKey });
-                apiKey = newKey;
-                updateApiKeyStatusUI(true);
-                input.value = "";
-                window.showToast("Gemini API key saved securely to Firestore database!", "success");
-            } catch (err) {
-                console.error("Error saving API key:", err);
-                window.showToast("Failed to save API key to Firestore.", "warning");
-            }
         };
 
-        function subscribeToDatabaseStreams() {
+        window.subscribeToDatabaseStreams = function() {
             if (!isFirebaseActive || !activeUser) return;
             const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
             onSnapshot(publicDataCollection, (snapshot) => {
                 const cloudDocs = [];
-                snapshot.forEach(doc => { cloudDocs.push(normalizeDocument({ id: doc.id, ...doc.data() })); });
+                snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
                 if (cloudDocs.length === 0) {
-                    seedLocalDataToCloud();
+                    window.seedLocalDataToCloud();
                 } else {
                     clinicalDatabase = cloudDocs;
-                    updateSidebarActiveStates();
-                    renderAppViewboard();
+                    window.updateSidebarActiveStates();
+                    window.renderAppViewboard();
                     window.renderAdminInventory();
+                    if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
                 }
             }, (error) => {
                 console.error("Firestore subscription snapshot breakdown:", error);
             });
-        }
+        };
 
-        async function seedLocalDataToCloud() {
+        window.seedLocalDataToCloud = async function() {
             if (!isFirebaseActive || !activeUser) return;
             try {
                 const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
                 for (const item of fallbackDatabase) { await addDoc(publicDataCollection, item); }
             } catch (err) {}
-        }
+        };
 
-        function loadLocalFallbackData() {
+        window.loadLocalFallbackData = function() {
             const cached = localStorage.getItem("atricure_local_resources");
             if (cached) { clinicalDatabase = JSON.parse(cached); } 
             else {
                 clinicalDatabase = [...fallbackDatabase];
                 localStorage.setItem("atricure_local_resources", JSON.stringify(clinicalDatabase));
             }
-            updateSidebarActiveStates();
-            renderAppViewboard();
-        }
+            window.updateSidebarActiveStates();
+            window.renderAppViewboard();
+        };
 
-        function cleanAndParseJSON(rawStr) {
+        window.cleanAndParseJSON = function(rawStr) {
             const start = rawStr.indexOf('{');
             const end = rawStr.lastIndexOf('}');
             if (start === -1 || end === -1) {
@@ -803,9 +865,9 @@
             }
             const jsonText = rawStr.substring(start, end + 1);
             return JSON.parse(jsonText);
-        }
+        };
 
-        async function callGeminiAPI(systemPrompt, userQuery) {
+        window.callGeminiAPI = async function(systemPrompt, userQuery) {
             if (!apiKey) {
                 throw new Error("No Gemini API key supplied in index.html configuration.");
             }
@@ -833,7 +895,7 @@
                 }
             }
             throw lastError || new Error("AI Routing timed out on all system matrices.");
-        }
+        };
 
         window.askAtriGuide = async function() {
             const queryArea = document.getElementById("copilotQueryInput");
@@ -869,15 +931,15 @@
             const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
 
             try {
-                const apiRawResult = await callGeminiAPI(systemPrompt, userPrompt);
-                const parsedResult = cleanAndParseJSON(apiRawResult);
+                const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
+                const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
                 document.getElementById("aiSynthesisText").innerText = parsedResult.synthesis || "No direct executive brief available.";
                 
                 const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
                 
                 if (matches.length > 0) {
-                    cardsContainer.innerHTML = matches.map((c, idx) => renderAtriGuideCard(c, idx + 1)).join('');
+                    cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
                     window.showToast("Synthesized results populated successfully.", "success");
                 } else {
                     cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
@@ -920,12 +982,12 @@
                 const finalLocalMatches = scoredMatches.map(sm => sm.doc);
 
                 if (finalLocalMatches.length > 0) {
-                    cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => renderAtriGuideCard(c, idx + 1)).join('');
+                    cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
                     window.showToast(`Local engine retrieved ${finalLocalMatches.length} matching papers.`, "success");
                 } else {
                     cardsContainer.innerHTML = `
                         <div class="text-slate-400 font-semibold p-8 text-center text-xs">
-                            No matching items found for "${escapeHtml(query)}" offline.<br>
+                            No matching items found for "${window.escapeHtml(query)}" offline.<br>
                             <span class="text-slate-350 block mt-1 font-normal">Try searching with simplified terms like "Whitlock", "Damiano", "EnCompass", or "LAAOS".</span>
                         </div>`;
                 }
@@ -936,41 +998,21 @@
             }
         };
 
-        window.closeAISearchOverlay = function() {
-            document.getElementById("aiSearchOverlay").classList.add("hidden");
-            document.getElementById("copilotQueryInput").value = "";
+        window.closeMobileMenu = function() {
+            const sidebar = document.getElementById("sidebarMenu");
+            const overlay = document.getElementById("sidebarOverlay");
+            if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
+                sidebar.classList.add("-translate-x-full");
+            }
+            if (overlay && !overlay.classList.contains("hidden")) {
+                overlay.classList.remove("opacity-100");
+                overlay.classList.add("opacity-0");
+                setTimeout(() => {
+                    overlay.classList.add("hidden");
+                }, 300);
+            }
         };
 
-        function saveLocalFallbackData() {
-            if (!isFirebaseActive) { localStorage.setItem("atricure_local_resources", JSON.stringify(clinicalDatabase)); }
-        }
-
-        function loadStarredCache() {
-            const stars = localStorage.getItem("atricure_starred_resources");
-            if (stars) { bookmarkedResourceIds = JSON.parse(stars); }
-            updateStarredBadge();
-        }
-
-        function saveStarredCache() {
-            localStorage.setItem("atricure_starred_resources", JSON.stringify(bookmarkedResourceIds));
-            updateStarredBadge();
-        }
-
-        function updateStarredBadge() {
-            const badge = document.getElementById("starBadgeCount");
-            const btn = document.getElementById("starredQuickBtn");
-            const count = bookmarkedResourceIds.length;
-            if (count > 0) {
-                badge.innerText = count;
-                badge.classList.remove("hidden");
-                btn.classList.add("text-[#FF6B00]");
-            } else {
-                badge.className = "hidden";
-                btn.classList.remove("text-[#FF6B00]");
-            }
-        }
-
-        // SMOOTH SLIDING MOBILE SIDEBAR DRAWER AND INTERACTIVES DISMISS ENGINE
         window.toggleMobileMenu = function() {
             const sidebar = document.getElementById("sidebarMenu");
             const overlay = document.getElementById("sidebarOverlay");
@@ -991,22 +1033,32 @@
             }
         };
 
-        window.closeMobileMenu = function() {
-            const sidebar = document.getElementById("sidebarMenu");
-            const overlay = document.getElementById("sidebarOverlay");
-            if (sidebar && !sidebar.classList.contains("-translate-x-full")) {
-                sidebar.classList.add("-translate-x-full");
-            }
-            if (overlay && !overlay.classList.contains("hidden")) {
-                overlay.classList.remove("opacity-100");
-                overlay.classList.add("opacity-0");
-                setTimeout(() => {
-                    overlay.classList.add("hidden");
-                }, 300);
+        window.loadStarredCache = function() {
+            const stars = localStorage.getItem("atricure_starred_resources");
+            if (stars) { bookmarkedResourceIds = JSON.parse(stars); }
+            window.updateStarredBadge();
+        };
+
+        window.saveStarredCache = function() {
+            localStorage.setItem("atricure_starred_resources", JSON.stringify(bookmarkedResourceIds));
+            window.updateStarredBadge();
+        };
+
+        window.updateStarredBadge = function() {
+            const badge = document.getElementById("starBadgeCount");
+            const btn = document.getElementById("starredQuickBtn");
+            const count = bookmarkedResourceIds.length;
+            if (count > 0) {
+                badge.innerText = count;
+                badge.classList.remove("hidden");
+                btn.classList.add("text-[#FF6B00]");
+            } else {
+                badge.className = "hidden";
+                btn.classList.remove("text-[#FF6B00]");
             }
         };
 
-        function setupLocalEventListeners() {
+        window.setupLocalEventListeners = function() {
             const categorySearchInput = document.getElementById("categorySearchInput");
             const clearCategorySearchBtn = document.getElementById("clearCategorySearchBtn");
 
@@ -1014,13 +1066,13 @@
                 const val = e.target.value;
                 if(val.trim() !== "") clearCategorySearchBtn.classList.remove("hidden");
                 else clearCategorySearchBtn.classList.add("hidden");
-                renderAppViewboard();
+                window.renderAppViewboard();
             });
 
             clearCategorySearchBtn.addEventListener("click", () => {
                 categorySearchInput.value = "";
                 clearCategorySearchBtn.classList.add("hidden");
-                renderAppViewboard();
+                window.renderAppViewboard();
             });
 
             document.getElementById("mobileMenuBtn").addEventListener("click", () => {
@@ -1032,11 +1084,11 @@
             });
 
             document.getElementById("adminPortalBtn").addEventListener("click", () => { window.openAdminAuthModal(); });
-            document.getElementById("exitAdminBtn").addEventListener("click", () => { switchToView("user"); });
-            document.getElementById("uploadForm").addEventListener("submit", (e) => { e.preventDefault(); processFormSubmission(); });
-        }
+            document.getElementById("exitAdminBtn").addEventListener("click", () => { window.switchToView("user"); });
+            document.getElementById("uploadForm").addEventListener("submit", (e) => { e.preventDefault(); window.processFormSubmission(); });
+        };
 
-        function switchToView(viewMode) {
+        window.switchToView = function(viewMode) {
             const userView = document.getElementById("userDashboardView");
             const adminView = document.getElementById("adminPortalView");
             if(viewMode === "admin") {
@@ -1044,13 +1096,14 @@
                 adminView.classList.remove("hidden");
                 window.updateFormSubCategories();
                 window.renderAdminInventory();
+                if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
             } else {
                 adminView.classList.add("hidden");
                 userView.classList.remove("hidden");
-                renderAppViewboard();
+                window.renderAppViewboard();
             }
             window.closeMobileMenu();
-        }
+        };
 
         window.navigateToHome = function() {
             currentMainCategory = "Welcome";
@@ -1058,7 +1111,7 @@
             isStarredFilterActive = false;
             document.getElementById("categorySearchContainer").classList.add("hidden");
             window.closeMobileMenu();
-            renderAppViewboard();
+            window.renderAppViewboard();
         };
 
         window.selectSubCategory = function(mainCat, subCat) {
@@ -1067,7 +1120,7 @@
             isStarredFilterActive = false;
             document.getElementById("categorySearchContainer").classList.remove("hidden");
             window.closeMobileMenu();
-            renderAppViewboard();
+            window.renderAppViewboard();
         };
 
         window.toggleCategory = function(menuId) {
@@ -1087,10 +1140,10 @@
             } else {
                 indicator.classList.add("hidden");
                 indicator.classList.remove("flex");
-                navigateToHome();
+                window.navigateToHome();
             }
             window.closeMobileMenu();
-            renderAppViewboard();
+            window.renderAppViewboard();
         };
 
         window.toggleStarItem = function(id) {
@@ -1102,11 +1155,11 @@
                 bookmarkedResourceIds.splice(idx, 1);
                 window.showToast("Removed item from star reference registers.", "info");
             }
-            saveStarredCache();
-            renderAppViewboard();
+            window.saveStarredCache();
+            window.renderAppViewboard();
         };
 
-        function updateSidebarActiveStates() {
+        window.updateSidebarActiveStates = function() {
             const counts = {
                 "maze-rhythm": 0, "maze-survival": 0, "maze-other": 0,
                 "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
@@ -1137,15 +1190,14 @@
                 const el = document.getElementById(`count-${id}`);
                 if (el) el.innerText = counts[id];
             }
-        }
+        };
 
-        function renderAppViewboard() {
+        window.renderAppViewboard = function() {
             const container = document.getElementById("userDashboardView");
             
-            // CRITICAL OVERRIDE: Starred view renders smoothly even if currentMainCategory is set to onboarding "Welcome"
             if (currentMainCategory === "Welcome" && !isStarredFilterActive) {
-                renderWelcomeScreen(container);
-                startPlaceholderRotation();
+                window.renderWelcomeScreen(container);
+                window.startPlaceholderRotation();
                 return;
             }
             
@@ -1174,13 +1226,13 @@
             container.innerHTML = `
                 <div class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        ${workingDataSet.map((c, i) => renderAtriGuideCard(c, i + 1)).join('')}
+                        ${workingDataSet.map((c, i) => window.renderAtriGuideCard(c, i + 1)).join('')}
                     </div>
                 </div>`;
             lucide.createIcons();
-        }
+        };
 
-        function renderWelcomeScreen(container) {
+        window.renderWelcomeScreen = function(container) {
             container.innerHTML = `
                 <div class="space-y-8 animate-fade-in pb-12">
                     <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
@@ -1252,27 +1304,24 @@
                     </div>
                 </div>`;
             lucide.createIcons();
-        }
+        };
 
-        // BUILT WITH HIGH-CONTRAST DYNAMIC CTAs & AUTO-HEALED GOOGLE DRIVE LINK MAPPINGS
-        function renderAtriGuideCard(card, index) {
+        window.renderAtriGuideCard = function(card, index) {
             const isStarred = bookmarkedResourceIds.includes(card.id);
             const cleanSummaryHtml = String(card.summary || "")
                 .split('\n')
                 .filter(line => line.trim().length > 0)
-                .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
+                .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${window.escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
                 .join('');
 
-            // AUTOMATIC ANONYMOUS DRIVE PREVIEW BYPASS FOR iOS & ANDROID
-            // Rewrites standard drive.google.com URLs to Google's raw CDN endpoint to prevent mobile account prompts
             let actionLinkButtonHtml = "";
             if (card.url && card.url.trim() !== "" && card.linkType !== "none") {
-                const cleanDriveUrl = formatGoogleDriveLink(card.url);
+                const cleanDriveUrl = window.formatGoogleDriveLink(card.url);
                 const isMedia = card.mainCategory === "Device Resources" && card.subCategory === "Other Media";
                 const label = isMedia ? "View Media" : "View Document";
                 const iconName = isMedia ? "video" : "external-link";
                 actionLinkButtonHtml = `
-                    <a href="${escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
+                    <a href="${window.escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
                         <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
                         <span>${label}</span>
                     </a>`;
@@ -1283,11 +1332,11 @@
                     <div class="flex flex-col flex-1">
                         <div>
                             <div class="flex items-start justify-between gap-2 mb-2">
-                                <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${escapeHtml(card.title)}</h4>
+                                <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${window.escapeHtml(card.title)}</h4>
                                 <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-0.5"><i data-lucide="star" class="w-4 h-4 ${isStarred ? 'text-amber-500 fill-amber-400' : ''}"></i></button>
                             </div>
                             <div class="text-[10px] text-slate-400 font-semibold mb-2 flex items-center justify-between flex-wrap gap-2">
-                                <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded truncate max-w-[150px] md:max-w-[200px]">${escapeHtml(card.author)}</span>
+                                <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded truncate max-w-[150px] md:max-w-[200px]">${window.escapeHtml(card.author)}</span>
                                 ${actionLinkButtonHtml}
                             </div>
                             <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5">
@@ -1296,7 +1345,7 @@
                         </div>
                     </div>
                 </div>`;
-        }
+        };
 
         window.renderAdminInventory = function() {
             const listContainer = document.getElementById("adminInventoryList");
@@ -1327,10 +1376,10 @@
                     const mainCategory = String(item.mainCategory || 'MAZE');
                     const subCategory = String(item.subCategory || 'General');
 
-                    const escapedTitle = escapeHtml(title);
-                    const escapedAuthor = escapeHtml(author);
-                    const escapedMainCat = escapeHtml(mainCategory);
-                    const escapedSubCat = escapeHtml(subCategory);
+                    const escapedTitle = window.escapeHtml(title);
+                    const escapedAuthor = window.escapeHtml(author);
+                    const escapedMainCat = window.escapeHtml(mainCategory);
+                    const escapedSubCat = window.escapeHtml(subCategory);
 
                     return `
                         <div class="p-3 bg-white flex items-center justify-between border-b border-slate-100 admin-inv-row" data-title="${escapedTitle.toLowerCase()}" data-author="${escapedAuthor.toLowerCase()}">
@@ -1404,7 +1453,7 @@
             lucide.createIcons();
         };
 
-        async function processFormSubmission() {
+        window.processFormSubmission = async function() {
             const title = document.getElementById("formTitle").value;
             const author = document.getElementById("formAuthor").value;
             const mainCategory = document.getElementById("formMainCat").value;
@@ -1448,8 +1497,8 @@
                         clinicalDatabase.unshift(resourceObject);
                     }
                     saveLocalFallbackData();
-                    updateSidebarActiveStates();
-                    renderAppViewboard();
+                    window.updateSidebarActiveStates();
+                    window.renderAppViewboard();
                 }
 
                 window.cancelEditingSession();
@@ -1459,7 +1508,7 @@
                 console.error("Administrative storage transmission failed: ", err);
                 window.showToast("System write tracking exception block intercepted form push.", "warning");
             }
-        }
+        };
 
         window.triggerDeleteConfirmModal = function(id) {
             activeDeletionTargetId = id;
@@ -1471,7 +1520,7 @@
             modal.classList.remove("hidden");
             
             const confirmBtn = document.getElementById("confirmDeleteBtn");
-            confirmBtn.onclick = executeResourceDeletion;
+            confirmBtn.onclick = window.executeResourceDeletion;
             lucide.createIcons();
         };
 
@@ -1492,8 +1541,8 @@
                     if (index !== -1) {
                         clinicalDatabase.splice(index, 1);
                         saveLocalFallbackData();
-                        updateSidebarActiveStates();
-                        renderAppViewboard();
+                        window.updateSidebarActiveStates();
+                        window.renderAppViewboard();
                     }
                 }
                 if (editingResourceId === activeDeletionTargetId) window.cancelEditingSession();
@@ -1528,14 +1577,13 @@
             
             if (pin === "admin") {
                 window.closeAdminAuthModal();
-                switchToView("admin");
+                window.switchToView("admin");
                 window.showToast("System Access Authorized.", "success");
             } else {
                 error.classList.remove("hidden");
             }
         };
 
-        // SIMPLIFIED SUB-CATEGORY NET BUILDER MAPPINGS
         window.updateFormSubCategories = function() {
             const mainCat = document.getElementById("formMainCat").value;
             const subCatSelect = document.getElementById("formSubCat");
@@ -1548,7 +1596,6 @@
             } else if (mainCat === "Device Resources") {
                 options = ["IFUs", "Product Brochures", "Other Media"];
             } else if (mainCat === "MISC") {
-                // FIXED FORM SYNC OPTIONS: Syncs perfectly with "Other Research" and "Helpful Documents"
                 options = ["Other Research", "Helpful Documents"];
             }
             
@@ -1575,6 +1622,340 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         };
+
+        // --- FULL-WIDTH BULK SPREADSHEET SYSTEM WORKSPACE ENGINE ---
+        window.setAdminTab = function(tab) {
+            window.activeAdminTab = tab;
+            const singleBtn = document.getElementById("adminTabSingle");
+            const bulkBtn = document.getElementById("adminTabBulk");
+            const singleView = document.getElementById("adminSingleView");
+            const bulkView = document.getElementById("adminBulkView");
+            
+            if (tab === 'bulk') {
+                singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
+                bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
+                singleView.classList.add("hidden");
+                bulkView.classList.remove("hidden");
+                window.renderSpreadsheetWorkspace();
+            } else {
+                singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
+                bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
+                singleView.classList.remove("hidden");
+                bulkView.classList.add("hidden");
+                window.renderAdminInventory();
+            }
+            lucide.createIcons();
+        };
+
+        window.sortBulkDatabase = function(field) {
+            if (window.bulkSortField === field) {
+                window.bulkSortAsc = !window.bulkSortAsc;
+            } else {
+                window.bulkSortField = field;
+                window.bulkSortAsc = true;
+            }
+            window.renderSpreadsheetWorkspace();
+        };
+
+        window.renderSpreadsheetWorkspace = function() {
+            const body = document.getElementById("bulkEditorTableBody");
+            if (!body) return;
+
+            // Copy and sort clinical database in real-time
+            let items = [...clinicalDatabase];
+            items.sort((a, b) => {
+                const valA = String(a[window.bulkSortField] || "").toLowerCase();
+                const valB = String(b[window.bulkSortField] || "").toLowerCase();
+                return window.bulkSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            // Update sort visual indicator state arrows
+            const titleIcon = document.getElementById("sort-icon-title");
+            const authorIcon = document.getElementById("sort-icon-author");
+            if (titleIcon && authorIcon) {
+                titleIcon.setAttribute("data-lucide", window.bulkSortField === 'title' ? (window.bulkSortAsc ? "arrow-up" : "arrow-down") : "arrow-up-down");
+                authorIcon.setAttribute("data-lucide", window.bulkSortField === 'author' ? (window.bulkSortAsc ? "arrow-up" : "arrow-down") : "arrow-up-down");
+            }
+
+            body.innerHTML = items.map(item => {
+                const mainCat = item.mainCategory || "MAZE";
+                const subCat = item.subCategory || "Rhythm Outcomes";
+                
+                const mazeSelected = mainCat === "MAZE" ? "selected" : "";
+                const laaSelected = mainCat === "LAA" ? "selected" : "";
+                const devSelected = mainCat === "Device Resources" ? "selected" : "";
+                const miscSelected = mainCat === "MISC" ? "selected" : "";
+
+                let subOptions = [];
+                if (mainCat === "MAZE") subOptions = ["Rhythm Outcomes", "Survival Benefits", "Other"];
+                else if (mainCat === "LAA") subOptions = ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"];
+                else if (mainCat === "Device Resources") subOptions = ["IFUs", "Product Brochures", "Other Media"];
+                else if (mainCat === "MISC") subOptions = ["Other Research", "Helpful Documents"];
+
+                const subOptionsHtml = subOptions.map(opt => {
+                    const sel = subCat === opt ? "selected" : "";
+                    return `<option value="${opt}" ${sel}>${opt}</option>`;
+                }).join('');
+
+                return `
+                    <tr class="hover:bg-slate-50/80 transition-colors" id="row-${item.id}">
+                        <td class="py-3 px-4 text-center border-b">
+                            <input type="checkbox" value="${item.id}" onchange="onBulkCheckboxChange()" class="bulk-row-cb rounded border-slate-300 text-orange-500 focus:ring-orange-500 w-4 h-4 cursor-pointer">
+                        </td>
+                        <td class="py-3 px-4 border-b">
+                            <select onchange="updateCellCategory('${item.id}', this.value)" class="text-xs border border-slate-200 rounded p-1 w-full bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 font-medium text-slate-700">
+                                <option value="MAZE" ${mazeSelected}>MAZE</option>
+                                <option value="LAA" ${laaSelected}>LAA</option>
+                                <option value="Device Resources" ${devSelected}>Device Resources</option>
+                                <option value="MISC" ${miscSelected}>MISC</option>
+                            </select>
+                        </td>
+                        <td class="py-3 px-4 border-b">
+                            <select onchange="updateCellSubCategory('${item.id}', this.value)" class="text-xs border border-slate-200 rounded p-1 w-full bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 font-medium text-slate-700">
+                                ${subOptionsHtml}
+                            </select>
+                        </td>
+                        <td contenteditable="true" onblur="updateCell('${item.id}', 'title', this.innerText)" class="py-3 px-4 text-xs font-semibold text-slate-800 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.title)}</td>
+                        <td contenteditable="true" onblur="updateCell('${item.id}', 'author', this.innerText)" class="py-3 px-4 text-xs text-slate-600 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.author)}</td>
+                        <td class="py-3 px-4 text-center border-b">
+                            <button onclick="triggerDeleteConfirmModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete Row"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+            window.onBulkCheckboxChange();
+        };
+
+        window.onBulkCheckboxChange = function() {
+            const selected = document.querySelectorAll(".bulk-row-cb:checked");
+            const countLabel = document.getElementById("bulkSelectedCount");
+            if (countLabel) {
+                countLabel.innerText = `${selected.length} Selected`;
+            }
+        };
+
+        window.selectAllRows = function(check) {
+            document.querySelectorAll(".bulk-row-cb").forEach(cb => cb.checked = check);
+            window.onBulkCheckboxChange();
+        };
+
+        window.updateCell = async function(id, field, value) {
+            const cleanVal = value.trim();
+            const item = clinicalDatabase.find(d => d.id === id);
+            if (!item) return;
+            if (item[field] === cleanVal) return; 
+
+            item[field] = cleanVal;
+            try {
+                if (isFirebaseActive && db) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                    await updateDoc(docRef, { [field]: cleanVal, lastModifiedTimestamp: Date.now() });
+                } else {
+                    saveLocalFallbackData();
+                }
+                window.showToast("Field updated successfully.", "success");
+                window.updateSidebarActiveStates();
+            } catch (err) {
+                console.error("Cell sync error:", err);
+                window.showToast("Failed to sync cell changes.", "warning");
+            }
+        };
+
+        window.updateCellCategory = async function(id, value) {
+            const item = clinicalDatabase.find(d => d.id === id);
+            if (!item) return;
+            
+            let subDefault = "Rhythm Outcomes";
+            if (value === "LAA") subDefault = "Outcomes and Safety";
+            else if (value === "Device Resources") subDefault = "IFUs";
+            else if (value === "MISC") subDefault = "Other Research";
+
+            item.mainCategory = value;
+            item.subCategory = subDefault;
+
+            try {
+                if (isFirebaseActive && db) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                    await updateDoc(docRef, { mainCategory: value, subCategory: subDefault, lastModifiedTimestamp: Date.now() });
+                } else {
+                    saveLocalFallbackData();
+                }
+                window.showToast("Category moved successfully.", "success");
+                window.updateSidebarActiveStates();
+                window.renderSpreadsheetWorkspace();
+            } catch (err) {
+                console.error("Category sync error:", err);
+                window.showToast("Failed to move category.", "warning");
+            }
+        };
+
+        window.updateCellSubCategory = async function(id, value) {
+            const item = clinicalDatabase.find(d => d.id === id);
+            if (!item) return;
+
+            item.subCategory = value;
+            try {
+                if (isFirebaseActive && db) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                    await updateDoc(docRef, { subCategory: value, lastModifiedTimestamp: Date.now() });
+                } else {
+                    saveLocalFallbackData();
+                }
+                window.showToast("Subcategory updated successfully.", "success");
+                window.updateSidebarActiveStates();
+            } catch (err) {
+                console.error("Subcategory sync error:", err);
+                window.showToast("Failed to save subcategory.", "warning");
+            }
+        };
+
+        window.executeBulkMove = async function() {
+            const selected = Array.from(document.querySelectorAll(".bulk-row-cb:checked")).map(cb => cb.value);
+            if (selected.length === 0) {
+                window.showToast("Please select at least one study to move.", "warning");
+                return;
+            }
+
+            const moveTarget = document.getElementById("bulkCategoryMoveSelect").value;
+            const [mainCat, subCat] = moveTarget.split(":");
+
+            try {
+                for (const id of selected) {
+                    const item = clinicalDatabase.find(d => d.id === id);
+                    if (item) {
+                        item.mainCategory = mainCat;
+                        item.subCategory = subCat;
+                        if (isFirebaseActive && db) {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                            await updateDoc(docRef, { mainCategory: mainCat, subCategory: subCat, lastModifiedTimestamp: Date.now() });
+                        }
+                    }
+                }
+                if (!isFirebaseActive) saveLocalFallbackData();
+                window.showToast(`Successfully moved ${selected.length} items to ${mainCat} > ${subCat}`, "success");
+                window.updateSidebarActiveStates();
+                window.renderSpreadsheetWorkspace();
+            } catch (err) {
+                console.error("Bulk move error:", err);
+                window.showToast("Failed to complete bulk move.", "warning");
+            }
+        };
+
+        window.executeBulkDelete = async function() {
+            const selected = Array.from(document.querySelectorAll(".bulk-row-cb:checked")).map(cb => cb.value);
+            if (selected.length === 0) {
+                window.showToast("Please select at least one item to delete.", "warning");
+                return;
+            }
+
+            if (!confirm(`Are you absolutely sure you want to PERMANENTLY delete ${selected.length} selected items from Firestore?`)) {
+                return;
+            }
+
+            try {
+                for (const id of selected) {
+                    if (isFirebaseActive && db) {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                        await deleteDoc(docRef);
+                    } else {
+                        const idx = clinicalDatabase.findIndex(d => d.id === id);
+                        if (idx !== -1) clinicalDatabase.splice(idx, 1);
+                    }
+                }
+                if (!isFirebaseActive) {
+                    saveLocalFallbackData();
+                    window.updateSidebarActiveStates();
+                    window.renderSpreadsheetWorkspace();
+                }
+                window.showToast(`Purged ${selected.length} entries successfully.`, "info");
+            } catch (err) {
+                console.error("Bulk delete error:", err);
+                window.showToast("Failed to delete selection.", "warning");
+            }
+        };
+
+        window.executeBulkMerge = async function() {
+            const selected = Array.from(document.querySelectorAll(".bulk-row-cb:checked")).map(cb => cb.value);
+            if (selected.length < 2) {
+                window.showToast("Select at least 2 duplicates to merge them into a single record.", "warning");
+                return;
+            }
+
+            if (!confirm(`This will merge ${selected.length} records into one master study. The other duplicate records will be permanently removed. Continue?`)) {
+                return;
+            }
+
+            try {
+                const masterId = selected[0];
+                const duplicates = selected.slice(1);
+                const masterItem = clinicalDatabase.find(d => d.id === masterId);
+
+                if (!masterItem) return;
+
+                let consolidatedSummary = masterItem.summary || "";
+                let consolidatedUrls = [masterItem.url].filter(Boolean);
+
+                for (const id of duplicates) {
+                    const dupItem = clinicalDatabase.find(d => d.id === id);
+                    if (dupItem) {
+                        const dupPoints = (dupItem.summary || "").split('\n').filter(p => p.trim());
+                        dupPoints.forEach(pt => {
+                            if (!consolidatedSummary.includes(pt)) {
+                                consolidatedSummary += "\n" + pt;
+                            }
+                        });
+                        if (dupItem.url && !consolidatedUrls.includes(dupItem.url)) {
+                            consolidatedUrls.push(dupItem.url);
+                        }
+                        
+                        if (isFirebaseActive && db) {
+                          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                          await deleteDoc(docRef);
+                        } else {
+                          const idx = clinicalDatabase.findIndex(d => d.id === id);
+                          if (idx !== -1) clinicalDatabase.splice(idx, 1);
+                        }
+                    }
+                }
+
+                masterItem.summary = consolidatedSummary;
+                if (consolidatedUrls.length > 0) {
+                    masterItem.url = consolidatedUrls[0];
+                }
+
+                if (isFirebaseActive && db) {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', masterId);
+                    await updateDoc(docRef, { summary: consolidatedSummary, url: masterItem.url, lastModifiedTimestamp: Date.now() });
+                } else {
+                    saveLocalFallbackData();
+                }
+
+                window.showToast(`Merged ${selected.length} records into consolidated Master Study!`, "success");
+                window.updateSidebarActiveStates();
+                window.renderSpreadsheetWorkspace();
+            } catch (err) {
+                console.error("Merge failure:", err);
+                window.showToast("Failed to complete duplicate merge.", "warning");
+            }
+        };
+
+        // --- LIFECYCLE INITIALIZER SEQUENCE ---
+        // Exposing and invoking cleanly inside single module module-block to prevent DOMContentLoaded race conditions
+        const initApp = async () => {
+            window.loadStarredCache();
+            await window.attemptInitializeFirebase();
+            window.updateSidebarActiveStates();
+            window.renderAppViewboard();
+            window.setupLocalEventListeners();
+            lucide.createIcons();
+        };
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
