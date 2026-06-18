@@ -956,10 +956,9 @@
 
                         searchWords.forEach(word => {
                             if (titleLower.includes(word)) score += 15;
-                            if (profileLower.includes(word)) score += 10; // 🚀 HIGH PRIORITY FOR HIDDEN KEYWORDS Block
+                            if (authorLower.includes(word)) score += 12; // 🚀 Replaced! Author searches now have high-priority scoring
                             if (summaryLower.includes(word)) score += 6;
-                            if (authorLower.includes(word)) score += 4;
-                            if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
+                            if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;    
                         });
 
                         if (score > 0) {
