@@ -645,16 +645,17 @@
             if (!url) return "";
             let formattedUrl = url.trim();
             
+            // 🚀 BYPASS IDENTITY CHECK: Render raw file directly to bypass account select loops
             const fileDMatch = formattedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (fileDMatch) {
                 const fileId = fileDMatch[1];
-                return `https://drive.google.com/file/d/${fileId}/preview`;
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
             
             const openIdMatch = formattedUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             if (openIdMatch) {
                 const fileId = openIdMatch[1];
-                return `https://drive.google.com/file/d/${fileId}/preview`;
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
             }
 
             const docsDMatch = formattedUrl.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
