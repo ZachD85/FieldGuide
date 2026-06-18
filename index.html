@@ -1229,7 +1229,26 @@
         };
 
         window.renderWelcomeScreen = function(container) {
-            container.innerHTML = `
+    container.innerHTML = `
+        <div class="space-y-8 animate-fade-in pb-12">
+            
+            <!-- BETA NOTICE SECTION (NOW AT THE TOP) -->
+            <div class="bg-slate-100 border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-5 text-slate-900 pointer-events-none">
+                    <i data-lucide="hard-hat" class="w-32 h-32"></i>
+                </div>
+                <div class="flex items-start space-x-3 relative z-10">
+                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg shrink-0">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div class="space-y-2 pt-0.5">
+                        <h4 class="font-bold text-slate-800 text-sm">AtriGuide v0.9 Beta: Expect Turbulence</h4>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                            What's up guys, it's Zach (the Toledo CAS). When I'm not chasing surgeons around the OR, I've been building this tool—I’ve been working on this on and off for the better part of 18 months and over 50 different versions. Welcome to the AtriGuide Beta. Full transparency: I'm a one-man show building this between case coverage, so there <em>will</em> be bugs. If you hit a snag, PLEASE let me know. Missing a crucial paper? Found a dead link? AI copilot spitting out nonsense? See a document sitting in the wrong category? <a href="mailto:zdavidson@atricure.com?subject=AtriGuide%20Beta%20Feedback" class="text-[#FF6B00] hover:text-orange-700 font-extrabold underline cursor-pointer">Tap here to email me (zdavidson@atricure.com)</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
                 <div class="space-y-8 animate-fade-in pb-12">
                     <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
                         <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
@@ -1300,26 +1319,7 @@
                     </div>
                     </div>
 
-                    <!-- BETA NOTICE SECTION -->
-                    <div class="bg-slate-100 border border-slate-200 rounded-xl p-5 shadow-sm mt-6 relative overflow-hidden">
-                        <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-5 text-slate-900 pointer-events-none">
-                            <i data-lucide="hard-hat" class="w-32 h-32"></i>
-                        </div>
-                        <div class="flex items-start space-x-3 relative z-10">
-                            <div class="p-2 bg-amber-100 text-amber-600 rounded-lg shrink-0">
-                                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                            </div>
-                            <div class="space-y-2 pt-0.5">
-                                <h4 class="font-bold text-slate-800 text-sm">AtriGuide v0.9 Beta: Expect Turbulence</h4>
-                                <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                    What's up guys, it's Zach (the Toledo CAS). When I'm not chasing surgeons around the OR, I've been building this tool. I’ve been working on this on and off for the better part of 18 months and over 50 different versions. Welcome to the AtriGuide Beta. Full transparency: I'm a one-man show building this between case coverage, so there <em>will</em> be bugs. If you hit a snag, PLEASE let me know. Missing a crucial paper? Found a dead link? AI copilot spitting out nonsense? See a document sitting in the wrong category? <a href="mailto:zdavidson@atricure.com?subject=AtriGuide%20Beta%20Feedback" class="text-[#FF6B00] hover:text-orange-700 font-extrabold underline cursor-pointer">Tap here to email me (zdavidson@atricure.com)</a>.
-                                </p>
-                                <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                                    <em>P.S. There is a lot more to come (CNB and Hybrid are dropping shortly too). Tell me what other features would make your life easier.</em>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+         
                 </div>`;
             lucide.createIcons();
         };
