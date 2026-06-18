@@ -215,7 +215,7 @@
                 </div>
                 <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1 border-t border-slate-200/60 pt-1">
                     <span>System Build:</span>
-                    <span class="font-mono font-semibold tracking-wider">v0.9.1-beta</span>
+                    <span class="font-mono font-semibold tracking-wider">v0.9.3-beta</span>
                 </div>
             </div>
         </aside>
@@ -645,17 +645,16 @@
             if (!url) return "";
             let formattedUrl = url.trim();
             
-            // 🚀 BYPASS IDENTITY CHECK: Render raw file directly to bypass account select loops
             const fileDMatch = formattedUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
             if (fileDMatch) {
                 const fileId = fileDMatch[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                return `https://drive.google.com/file/d/${fileId}/preview`;
             }
             
             const openIdMatch = formattedUrl.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/);
             if (openIdMatch) {
                 const fileId = openIdMatch[1];
-                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+                return `https://drive.google.com/file/d/${fileId}/preview`;
             }
 
             const docsDMatch = formattedUrl.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
