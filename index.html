@@ -71,7 +71,6 @@
                 <div class="text-xs font-bold text-slate-400 tracking-wider uppercase pt-2 mb-1">Resource Hub</div>
                 
                 <nav class="space-y-2" id="navCategories">
-                    <!-- MAZE CATEGORIES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('mazeMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -105,7 +104,6 @@
                         </div>
                     </div>
 
-                    <!-- LAA CATEGORIES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('laaMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -139,7 +137,6 @@
                         </div>
                     </div>
 
-                    <!-- DEVICE RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('deviceResourcesMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -173,7 +170,6 @@
                         </div>
                     </div>
 
-                    <!-- MISC RESOURCES -->
                     <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
                         <button class="w-full flex items-center justify-between p-3 font-semibold text-[#00205B] hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('miscMenu')">
                             <div class="flex items-center space-x-2.5">
@@ -221,7 +217,6 @@
         </aside>
 
         <main class="flex-grow bg-slate-50 flex flex-col overflow-hidden">
-            <!-- Context Header bar -->
             <div id="contextHeader" class="bg-white border-b border-slate-200 p-4 shrink-0 flex flex-wrap items-center justify-between gap-3 z-10">
                 <div class="flex items-center space-x-2">
                     <button onclick="navigateToHome()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-orange-500 transition-all cursor-pointer flex items-center justify-center mr-1" title="Go to Home Guide">
@@ -251,13 +246,10 @@
                 </div>
             </div>
 
-            <!-- Scrollable workspace area -->
             <div class="flex-grow overflow-y-auto">
                 
-                <!-- User Dashboard View -->
                 <div id="userDashboardView" class="p-4 md:p-6 space-y-8 max-w-5xl mx-auto border-0"></div>
 
-                <!-- Admin Portal View (Unified single layout) -->
                 <div id="adminPortalView" class="hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6">
                     
                     <div class="bg-[#00205B] text-white p-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-4">
@@ -271,7 +263,6 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <!-- Toggle Tabs for single form vs spreadsheet bulk editor -->
                             <div class="bg-white/10 p-1 rounded-lg flex items-center gap-1.5 border border-white/10 shrink-0">
                                 <button onclick="setAdminTab('single')" id="adminTabSingle" class="text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer">Single Entry</button>
                                 <button onclick="setAdminTab('bulk')" id="adminTabBulk" class="text-xs font-bold px-3 py-1.5 rounded-md text-slate-300 hover:text-white transition-all focus:outline-none flex items-center gap-1 cursor-pointer">
@@ -290,7 +281,6 @@
                         </div>
                     </div>
 
-                    <!-- SECURE API KEY MANAGER UI -->
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center space-x-3">
@@ -318,7 +308,6 @@
                         </div>
                     </div>
 
-                    <!-- Tab 1: Single Resource Creator View -->
                     <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                             <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between">
@@ -417,9 +406,7 @@
                         </div>
                     </div>
 
-                    <!-- Tab 2: Full-Width Bulk Spreadsheet Workspace view -->
                     <div id="adminBulkView" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                        <!-- Top Spreadsheet Controls Header -->
                         <div class="bg-slate-50 border-b border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4 shrink-0 select-none">
                             <div class="flex items-center space-x-3">
                                 <i data-lucide="layout-grid" class="w-5 h-5 text-orange-500"></i>
@@ -429,13 +416,11 @@
                                 </div>
                             </div>
                             
-                            <!-- Bulk Operations Panel -->
                             <div class="flex flex-wrap items-center gap-3">
                                 <span class="text-xs font-bold text-[#FF6B00]" id="bulkSelectedCount">0 Selected</span>
                                 
                                 <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
-                                <!-- Move selection tool -->
                                 <div class="flex items-center gap-1.5">
                                     <select id="bulkCategoryMoveSelect" class="text-xs border border-slate-200 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 font-semibold text-slate-700">
                                         <option value="MAZE:Rhythm Outcomes">MAZE &gt; Rhythm Outcomes</option>
@@ -455,7 +440,6 @@
 
                                 <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
 
-                                <!-- Action Buttons -->
                                 <button onclick="executeBulkMerge()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all">
                                     <i data-lucide="git-merge" class="w-3.5 h-3.5"></i>
                                     <span>Merge Selected</span>
@@ -472,7 +456,6 @@
                             </div>
                         </div>
 
-                        <!-- Real-time Interactive spreadsheet grid table wrapper -->
                         <div class="overflow-x-auto max-h-[580px]">
                             <table class="w-full text-left border-collapse min-w-[1000px]">
                                 <thead class="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-20 select-none">
@@ -496,8 +479,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="bulkEditorTableBody" class="divide-y divide-slate-100">
-                                    <!-- Dynamic articles parse cleanly here -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
@@ -507,7 +489,6 @@
         </main>
     </div>
 
-    <!-- MOBILE SEARCH MODAL OVERLAY -->
     <div id="aiSearchOverlay" class="fixed inset-0 bg-slate-900/60 z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4 animate-fade-in">
         <div class="bg-white w-full h-[100dvh] sm:h-[85vh] sm:max-w-4xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
             <div class="bg-[#00205B] text-white p-4 flex items-center justify-between shrink-0">
@@ -515,8 +496,8 @@
                     <i data-lucide="sparkles" class="w-5 h-5 text-[#FF6B00] animate-pulse"></i>
                     <h4 class="font-extrabold text-sm md:text-base tracking-tight">AtriGuide Clinical Intelligence</h4>
                 </div>
-                <button onclick="closeAISearchOverlay()" class="p-1 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button onclick="window.closeAISearchOverlay()" class="p-2 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Close Overlay Window">
+                    <i data-lucide="x" class="w-6 h-6"></i>
                 </button>
             </div>
             
@@ -602,7 +583,6 @@
         };
 
         // EXPOSE CORE STATE & GLOBAL LIFECYCLE HANDLERS DIRECTLY TO WINDOW
-        // This ensures async deferred scripts completely bypass ReferenceErrors across all sandboxes
         window.apiKey = ""; 
         window.db = null;
         window.auth = null;
@@ -620,7 +600,8 @@
                 headerGroup: "",
                 url: "https://www.jtcvs.org",
                 linkType: "journal",
-                summary: "• Assessed long-term durability of the Cox-MAZE IV procedure using biatrial radiofrequency and cryoablation.\n• Freedom from AF at 5 years was 89% in patients undergoing stand-alone procedures.\n• Overall safety profile demonstrated negligible clinical deviations; procedural success tracked high durability over late-term tracking."
+                summary: "• Assessed long-term durability of the Cox-MAZE IV procedure using biatrial radiofrequency and cryoablation.\n• Freedom from AF at 5 years was 89% in patients undergoing stand-alone procedures.\n• Overall safety profile demonstrated negligible clinical deviations; procedural success tracked high durability over late-term tracking.",
+                searchProfile: "cox maze iv damiano durability radiofrequency cryoablation stand alone biatrial five year outcomes 5 year"
             }
         ];
 
@@ -632,8 +613,8 @@
         window.activeDeletionTargetId = null;
         window.editingResourceId = null; 
         
-        window.activeAdminTab = 'single'; // Toggles between single form and full-width bulk spreadsheet editor
-        window.bulkSortField = 'title'; // 'title' or 'author'
+        window.activeAdminTab = 'single'; 
+        window.bulkSortField = 'title'; 
         window.bulkSortAsc = true;
 
         const placeholderPhrases = [
@@ -656,7 +637,6 @@
                 .replace(/'/g, '&#39;');
         };
 
-        // AUTO-HEAL GOOGLE DRIVE WORKSPACE LINKS TO SECURE, ANONYMOUS PREVIEW BYPASS LINKS
         window.formatGoogleDriveLink = function(url) {
             if (!url) return "";
             let formattedUrl = url.trim();
@@ -897,6 +877,13 @@
             throw lastError || new Error("AI Routing timed out on all system matrices.");
         };
 
+        // --- FIXED OVERLAY DISMISSAL HOOK ---
+        window.closeAISearchOverlay = function() {
+            document.getElementById("aiSearchOverlay").classList.add("hidden");
+            const queryArea = document.getElementById("copilotQueryInput");
+            if (queryArea) queryArea.value = "";
+        };
+
         window.askAtriGuide = async function() {
             const queryArea = document.getElementById("copilotQueryInput");
             const btn = document.getElementById("copilotSubmitBtn");
@@ -916,12 +903,13 @@
             const cardsContainer = document.getElementById("aiCardsContainer");
             
             syncBox.classList.remove("hidden");
-            document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against 190+ indexed documents...";
+            document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against indexed documents...";
             cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
-            const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary}`).join("\n");
+            // 🚀 UPGRADED AI ROUTING CONTEXT TO INJECT THE SEARCH PROFILE MATRIX
+            const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
 
-            const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
+            const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
             Format exactly like this:
             {
                 "synthesis": "A direct 2-3 sentence clinical answer compiled from the matching sources.",
@@ -945,7 +933,7 @@
                     cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
                 }
             } catch (err) {
-                console.warn("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
+                console.error("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
                 
                 document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
 
@@ -964,9 +952,11 @@
                         const summaryLower = String(doc.summary || "").toLowerCase();
                         const mCatLower = String(doc.mainCategory || "").toLowerCase();
                         const sCatLower = String(doc.subCategory || "").toLowerCase();
+                        const profileLower = String(doc.searchProfile || "").toLowerCase(); // <--- THE HIDDEN SEARCH PROFILE FIELD
 
                         searchWords.forEach(word => {
                             if (titleLower.includes(word)) score += 15;
+                            if (profileLower.includes(word)) score += 10; // 🚀 HIGH PRIORITY FOR HIDDEN KEYWORDS Block
                             if (summaryLower.includes(word)) score += 6;
                             if (authorLower.includes(word)) score += 4;
                             if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
@@ -1215,11 +1205,13 @@
                 document.getElementById("breadcrumbSub").innerText = currentSubCategory;
             }
 
+            // 🚀 UPGRADED LOCAL CATEGORY FILTER GRID SCANNERS TO SEARCH THE SEARCH PROFILE LAYER
             if(filterText !== "") {
                 workingDataSet = workingDataSet.filter(d => 
                     String(d.title || "").toLowerCase().includes(filterText) ||
                     String(d.author || "").toLowerCase().includes(filterText) ||
-                    String(d.summary || "").toLowerCase().includes(filterText)
+                    String(d.summary || "").toLowerCase().includes(filterText) ||
+                    String(d.searchProfile || "").toLowerCase().includes(filterText) // <--- POWERED BY HIDDEN AI DNA DATA MATRIX
                 );
             }
 
@@ -1337,7 +1329,7 @@
                             </div>
                             <div class="text-[10px] text-slate-400 font-semibold mb-2 flex items-center justify-between flex-wrap gap-2">
                                 <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded truncate max-w-[150px] md:max-w-[200px]">${window.escapeHtml(card.author)}</span>
-                                ${actionLinkButtonHtml}
+                                actionLinkButtonHtml
                             </div>
                             <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5">
                                 <ul class="space-y-1 list-none pl-0">${cleanSummaryHtml}</ul>
@@ -1661,7 +1653,6 @@
             const body = document.getElementById("bulkEditorTableBody");
             if (!body) return;
 
-            // Copy and sort clinical database in real-time
             let items = [...clinicalDatabase];
             items.sort((a, b) => {
                 const valA = String(a[window.bulkSortField] || "").toLowerCase();
@@ -1669,7 +1660,6 @@
                 return window.bulkSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
 
-            // Update sort visual indicator state arrows
             const titleIcon = document.getElementById("sort-icon-title");
             const authorIcon = document.getElementById("sort-icon-author");
             if (titleIcon && authorIcon) {
@@ -1941,7 +1931,6 @@
         };
 
         // --- LIFECYCLE INITIALIZER SEQUENCE ---
-        // Exposing and invoking cleanly inside single module module-block to prevent DOMContentLoaded race conditions
         const initApp = async () => {
             window.loadStarredCache();
             await window.attemptInitializeFirebase();
