@@ -907,7 +907,7 @@
             cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
             // 🚀 UPGRADED AI ROUTING CONTEXT TO INJECT THE SEARCH PROFILE MATRIX
-            const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
+            const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
 
             const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
             Format exactly like this:
@@ -952,13 +952,14 @@
                         const summaryLower = String(doc.summary || "").toLowerCase();
                         const mCatLower = String(doc.mainCategory || "").toLowerCase();
                         const sCatLower = String(doc.subCategory || "").toLowerCase();
-                        const profileLower = String(doc.searchProfile || "").toLowerCase(); // <--- THE HIDDEN SEARCH PROFILE FIELD
+                        const profileLower = String(doc.searchProfile || "").toLowerCase();
 
                         searchWords.forEach(word => {
                             if (titleLower.includes(word)) score += 15;
-                            if (authorLower.includes(word)) score += 12; // 🚀 Replaced! Author searches now have high-priority scoring
+                            if (authorLower.includes(word)) score += 15; // 🚀 Boosted author priority
+                            if (profileLower.includes(word)) score += 10; // 🚀 Read hidden keywords
                             if (summaryLower.includes(word)) score += 6;
-                            if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;    
+                            if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
                         });
 
                         if (score > 0) {
@@ -1210,7 +1211,7 @@
                     String(d.title || "").toLowerCase().includes(filterText) ||
                     String(d.author || "").toLowerCase().includes(filterText) ||
                     String(d.summary || "").toLowerCase().includes(filterText) ||
-                    String(d.searchProfile || "").toLowerCase().includes(filterText) // <--- POWERED BY HIDDEN AI DNA DATA MATRIX
+                    String(d.searchProfile || "").toLowerCase().includes(filterText) // 🚀 Deep scan active
                 );
             }
 
