@@ -756,11 +756,21 @@ window.renderAtriGuideCard = function(card, index) {
         const isMedia = card.mainCategory === "Device Resources" && card.subCategory === "Other Media";
         const label = isMedia ? "View Media" : "View Document";
         const iconName = isMedia ? "video" : "external-link";
+        
+        // Escaping variables for attributes safely
+        const escapedUrl = window.escapeHtml(cleanDriveUrl);
+        const escapedTitle = window.escapeHtml(card.title || "");
+
         actionLinkButtonHtml = `
-            <a href="${window.escapeHtml(cleanDriveUrl)}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1.5 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95 shrink-0" title="Open preview directly bypass mobile login requests">
-                <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
-                <span>${label}</span>
-            </a>`;
+            <div class="flex items-center space-x-1 shrink-0">
+                <a href="${escapedUrl}" target="_blank" class="inline-flex items-center space-x-1.5 bg-[#FF6B00] hover:bg-[#00205B] text-white px-2.5 py-1.5 rounded-md font-extrabold transition-all duration-200 text-[10px] shadow-md hover:shadow-lg active:scale-95" title="Open preview panel directly">
+                    <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-white"></i>
+                    <span>${label}</span>
+                </a>
+                <button onclick="window.generateQrCodePopstream('${escapedUrl}', '${escapedTitle}')" class="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 p-1.5 rounded-md transition-all border border-slate-200 shadow-sm active:scale-95 cursor-pointer" title="Generate immediate QR transfer stream for surgeons">
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>`;
     }
 
     return `
@@ -1366,6 +1376,33 @@ window.executeBulkMerge = async function() {
         console.error("Merge failure:", err);
         window.showToast("Failed to complete duplicate merge.", "warning");
     }
+};
+
+// 🚀 DYNAMIC GENERATIVE QR MATRIX GENERATOR MODAL LOADER HOOKS
+window.generateQrCodePopstream = function(url, title) {
+    const canvasContainer = document.getElementById("qrCodeCanvasTarget");
+    const modalTitle = document.getElementById("qrModalTitle");
+    
+    // Clear out any previous matrix drawings inside the canvas target
+    canvasContainer.innerHTML = "";
+    modalTitle.innerText = title;
+
+    // Fire rendering stream payload onto target viewport wrapper elements
+    new QRCode(canvasContainer, {
+        text: url,
+        width: 180,
+        height: 180,
+        colorDark: "#00205B", // AtriGuide deep navy theme code
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    document.getElementById("qrCodeDisplayModal").classList.remove("hidden");
+    lucide.createIcons();
+};
+
+window.closeQrCodeModal = function() {
+    document.getElementById("qrCodeDisplayModal").classList.add("hidden");
 };
 
 const initApp = async () => {
