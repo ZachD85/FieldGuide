@@ -15,3 +15,10 @@
 #copilotQueryInput.placeholder-fade-out::placeholder {
     opacity: 0;
 }
+
+/* Ensure QR code image scales smoothly within its fallback box */
+#qrCodeCanvasTarget img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
