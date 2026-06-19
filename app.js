@@ -51,7 +51,7 @@ const placeholderPhrases = [
     "\'Show the data on prophylactic clipping\'",
     "\'List the papers by Dr. McCarthy\'",
     "\'IFU for the Cryo3\'",
-    "\'I need the EnCompass video by Dr Kiankhooy\'"
+    "\'Give me the information we have on EnCompass\'"
 ];
 let currentPlaceholderIndex = 0;
 let placeholderTimer = null;
@@ -661,9 +661,9 @@ window.renderWelcomeScreen = function(container) {
                     <div class="space-y-2 pt-0.5">
                         <h4 class="font-bold text-slate-800 text-sm">AtriGuide v0.9 Beta: Expect Turbulence</h4>
                         <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                            What's up guys, it's Zach (the Toledo CAS). When I'm not chasing surgeons around the OR, I've been building this tool. I’ve been working on it on and off for the better part of 18 months and probably over 100 different versions. Welcome to the AtriGuide Beta. 
+                            What's up guys, it's Zach (the Toledo CAS). Welcome to the AtriGuide Beta. When I'm not chasing surgeons around the OR, I've been building this tool. I’ve been working on it on and off for the better part of 18 months and probably over 100 different versions.  
                             <br>
-                            Full transparency: I'm a one-man show building this between case coverage, so there <em>will</em> be bugs. If you hit a snag, PLEASE let me know. Missing a crucial paper? Found a dead link? AI copilot spitting out nonsense? See a document sitting in the wrong category? <a href="mailto:zdavidson@atricure.com?subject=AtriGuide%20Beta%20Feedback" class="text-[#FF6B00] hover:text-orange-700 font-extrabold underline cursor-pointer">Tap here to email me (zdavidson@atricure.com)</a>.
+                            Full transparency: I'm a one-man show building this between case coverage, so there <em>will</em> be bugs. The Database is still being updated so pardon the mess. Obvious studies may be missing (or in the wrong category). If you hit a snag, PLEASE let me know. Found a dead link? AI copilot spitting out nonsense? Got a suggestion? <a href="mailto:zdavidson@atricure.com?subject=AtriGuide%20Beta%20Feedback" class="text-[#FF6B00] hover:text-orange-700 font-extrabold underline cursor-pointer">Tap here to email me (zdavidson@atricure.com)</a>.
                             <br><br>
                             <em>P.S. There is a lot more to come (CNB and Hybrid are dropping shortly too). Tell me what other features would make your life easier.</em>
                         </p>
