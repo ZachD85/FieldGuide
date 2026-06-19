@@ -6,6 +6,7 @@
     <title>AtriGuide: The Rep's Clinical Copilot</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
@@ -533,6 +534,19 @@
                     <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow cursor-pointer">Erase Permanently</button>
                 </div>
             </div>
+        </div>
+    </div><div id="qrCodeDisplayModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4" onclick="window.closeQrCodeModal()">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 transform scale-95 transition-all p-6 space-y-4 text-center" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 id="qrModalTitle" class="font-bold text-slate-800 text-xs truncate max-w-[240px]">Share Resource Link</h4>
+                <button onclick="window.closeQrCodeModal()" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <div id="qrCodeCanvasTarget" class="flex justify-center p-4 bg-slate-50 border border-slate-100 rounded-lg mx-auto w-fit"></div>
+            
+            <p class="text-[11px] text-slate-500 font-medium leading-normal">
+                Scan using a smartphone or iPad camera to open this document stream instantly on the target field device.
+            </p>
         </div>
     </div>
 
