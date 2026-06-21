@@ -182,7 +182,40 @@ window.attemptInitializeFirebase = async function() {
                     isFirebaseActive = true;
                     syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
-                    window.subscribeToDatabaseStreams();
+                    window.subscribeToDatabaseStreams = function() {
+    if (!isFirebaseActive || !activeUser) return;
+    
+    // Channel A: Clinical Cards Inventory
+    const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+    onSnapshot(publicDataCollection, (snapshot) => {
+        const cloudDocs = [];
+        snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
+        if (cloudDocs.length === 0) {
+            window.seedLocalDataToCloud();
+        } else {
+            clinicalDatabase = cloudDocs;
+            window.updateSidebarActiveStates();
+            window.renderAppViewboard();
+            window.renderAdminInventory();
+            if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
+        }
+    }, (error) => { console.error("Resource index tracking engine fault trace:", error); });
+
+    // 🚀 PASTE THIS NEW CODE FOR CHANNEL B DIRECTLY HERE:
+    const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
+    onSnapshot(broadcastCollection, (snapshot) => {
+        const logs = [];
+        snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
+        
+        // Ensure chronological index integrity across timeline render points
+        logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        window.activeBroadcastLogs = logs;
+        
+        // Trigger updates to the accordion and admin console feeds
+        window.renderLiveBroadcastTimeline();
+        window.renderAdminBroadcastInventory();
+    }, (error) => { console.error("Broadcast streaming protocol failure:", error); });
+};
                     window.loadSecureApiKey();
                 } else {
                     isFirebaseActive = false;
@@ -1405,6 +1438,244 @@ window.closeQrCodeModal = function() {
     document.getElementById("qrCodeDisplayModal").classList.add("hidden");
 };
 
+// =========================================================================
+// 🚀 DYNAMIC SYSTEM BROADCAST TIMELINE AND ADMINISTRATION CONTROLLER CORE
+// =========================================================================
+window.activeBroadcastLogs = [];
+window.isBroadcastExpanded = false;
+
+window.toggleBroadcastAccordion = function() {
+    window.isBroadcastExpanded = !window.isBroadcastExpanded;
+    window.renderLiveBroadcastTimeline();
+};
+
+// Interface Paint Routine: Home Accordion Container Box
+window.renderLiveBroadcastTimeline = function() {
+    const target = document.getElementById("dynamicSystemBroadcastWrapper");
+    if (!target) return;
+
+    const items = window.activeBroadcastLogs || [];
+    if (items.length === 0) {
+        target.innerHTML = `
+            <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 text-center text-slate-500 text-xs font-semibold select-none">
+                📢 AtriGuide Cloud Registry Active: Multi-file core modular framework successfully mapped.
+            </div>`;
+        return;
+    }
+
+    const latestBuild = items[0];
+    const visibleLogs = items.slice(0, 3); // Restrict window to immediate top 3 records
+
+    const timelineHtml = visibleLogs.map((log, idx) => `
+        <div class="border-l-2 ${idx === 0 ? 'border-orange-500 bg-orange-50/10' : 'border-slate-200'} pl-4 ml-2 py-2.5 text-left">
+            <div class="flex items-center space-x-2 mb-1.5 flex-wrap gap-y-1">
+                <span class="font-mono text-[9px] font-black uppercase tracking-wider bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded shadow-sm">${window.escapeHtml(log.version)}</span>
+                <h5 class="font-bold text-slate-800 text-xs tracking-tight">${window.escapeHtml(log.title)}</h5>
+            </div>
+            <p class="text-[11px] text-slate-600 leading-relaxed font-medium whitespace-pre-line">${window.escapeHtml(log.message)}</p>
+        </div>
+    `).join('<div class="h-2.5"></div>');
+
+    target.innerHTML = `
+        <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
+            <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 opacity-[0.03] text-slate-900 pointer-events-none select-none">
+                <i data-lucide="megaphone" class="w-24 h-24"></i>
+            </div>
+            <div onclick="window.toggleBroadcastAccordion()" class="flex items-center justify-between cursor-pointer group select-none relative z-10">
+                <div class="flex items-center space-x-3 min-w-0 flex-1 pr-2">
+                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg shrink-0 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-200">
+                        <i data-lucide="megaphone" class="w-4 h-4 ${!window.isBroadcastExpanded ? 'animate-bounce' : ''}"></i>
+                    </div>
+                    <div class="min-w-0 flex-1 text-left">
+                        <h4 class="font-bold text-slate-800 text-xs leading-none">What's New & System Logs</h4>
+                        <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider font-mono truncate">
+                            Latest: ${window.escapeHtml(latestBuild.version)} — ${window.escapeHtml(latestBuild.title)}
+                        </p>
+                    </div>
+                </div>
+                <button class="p-1 text-slate-400 group-hover:text-[#00205B] transition-colors shrink-0">
+                    <i data-lucide="${window.isBroadcastExpanded ? 'chevron-up' : 'chevron-down'}" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- ENFORCED FIXED MAXIMUM HEIGHT SCROLLING WINDOW -->
+            <div class="${window.isBroadcastExpanded ? 'block mt-4 pt-4 border-t border-slate-200/60 animate-fade-in' : 'hidden'} relative z-10">
+                <div class="max-h-[220px] overflow-y-auto pr-1.5 space-y-2 text-slate-700 scrollbar-thin">
+                    ${timelineHtml}
+                </div>
+                <div class="border-t border-slate-200/50 mt-3 pt-2.5 flex justify-end">
+                    <button onclick="window.routeToFullSystemChangelogHistory()" class="inline-flex items-center space-x-1 text-[10px] font-bold text-orange-500 hover:text-[#00205B] transition-colors cursor-pointer uppercase tracking-wider">
+                        <span>View All Previous Updates</span>
+                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            </div>
+        </div>`;
+    lucide.createIcons();
+};
+
+// Router Intercept: Render Full Historical Archives Timeline Sheet
+window.routeToFullSystemChangelogHistory = function() {
+    window.currentMainCategory = null;
+    window.currentSubCategory = null;
+    window.isStarredFilterActive = false;
+    
+    document.querySelectorAll(".subcat-btn").forEach(btn => btn.classList.remove("bg-slate-100", "text-[#00205B]", "font-bold"));
+    document.getElementById("categorySearchContainer").classList.add("hidden");
+
+    const container = document.getElementById("userDashboardView");
+    const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
+    if (!container) return;
+    
+    if (bannerWrapper) bannerWrapper.classList.add("hidden");
+
+    const items = window.activeBroadcastLogs || [];
+    const historyCardsHtml = items.map(log => `
+        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2 text-left">
+            <div class="flex items-center space-x-3 border-b border-slate-100 pb-2 flex-wrap gap-y-1">
+                <span class="font-mono text-xs font-black uppercase tracking-wider bg-[#00205B] text-white px-2 py-0.5 rounded shadow-sm">${window.escapeHtml(log.version)}</span>
+                <h4 class="font-bold text-slate-800 text-sm tracking-tight leading-snug">${window.escapeHtml(log.title)}</h4>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line pt-1">${window.escapeHtml(log.message)}</p>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="space-y-6 animate-fade-in pb-12 max-w-2xl mx-auto">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                <div class="flex items-center space-x-3">
+                    <button onclick="window.navigateToHome()" class="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500 transition-colors cursor-pointer flex items-center justify-center">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    </button>
+                    <div class="text-left">
+                        <h2 class="text-lg font-black tracking-tight text-slate-800">System Build Archives</h2>
+                        <p class="text-xs text-slate-400 font-semibold">Changelog ledger configuration history metrics</p>
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-4">
+                ${items.length === 0 ? '<p class="text-center text-slate-400 text-xs py-12">No historical registers loaded.</p>' : historyCardsHtml}
+            </div>
+        </div>`;
+    document.getElementById("breadcrumbMain").innerText = "System History";
+    document.getElementById("breadcrumbSub").innerText = "Changelog Registry";
+    lucide.createIcons();
+};
+
+// Admin UI Broadcast Management Feed Sync Routine
+window.renderAdminBroadcastInventory = function() {
+    const target = document.getElementById("adminBroadcastInventoryTarget");
+    if (!target) return;
+
+    const items = window.activeBroadcastLogs || [];
+    if (items.length === 0) {
+        target.innerHTML = `<p class="text-center text-slate-400 text-xs py-10 font-medium">Broadcast ledger stream arrays empty.</p>`;
+        return;
+    }
+
+    target.innerHTML = items.map(log => `
+        <div class="bg-white border border-slate-200 p-3 rounded-lg shadow-sm flex items-start justify-between space-x-4 text-left">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center space-x-1.5 mb-1 flex-wrap">
+                    <span class="font-mono text-[9px] font-bold bg-slate-100 border border-slate-200 px-1 py-0.2 rounded text-slate-600">${window.escapeHtml(log.version)}</span>
+                    <h6 class="font-bold text-slate-800 text-xs truncate max-w-[240px]">${window.escapeHtml(log.title)}</h6>
+                </div>
+                <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium">${window.escapeHtml(log.message)}</p>
+            </div>
+            <div class="flex items-center space-x-1 shrink-0">
+                <button onclick="window.setupBroadcastEditWorkflow('${log.id}')" class="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Edit fields">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="window.purgeBroadcastLogEntry('${log.id}')" class="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer" title="Purge permanently">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+    lucide.createIcons();
+};
+
+window.setupBroadcastEditWorkflow = function(docId) {
+    const log = window.activeBroadcastLogs.find(l => l.id === docId);
+    if (!log) return;
+
+    document.getElementById("broadcastEditDocId").value = log.id;
+    document.getElementById("broadcastVersion").value = log.version;
+    document.getElementById("broadcastTitle").value = log.title;
+    document.getElementById("broadcastMessage").value = log.message;
+
+    document.getElementById("submitBroadcastBtnLabel").innerText = "Save Log Changes";
+    document.getElementById("cancelBroadcastEditBtn").classList.remove("hidden");
+    window.showToast("Log attributes pulled onto control deck inputs.", "info");
+};
+
+window.clearBroadcastFormLayout = function() {
+    document.getElementById("broadcastEditDocId").value = "";
+    document.getElementById("broadcastVersion").value = "";
+    document.getElementById("broadcastTitle").value = "";
+    document.getElementById("broadcastMessage").value = "";
+
+    document.getElementById("submitBroadcastBtnLabel").innerText = "Transmit Update";
+    document.getElementById("cancelBroadcastEditBtn").classList.add("hidden");
+};
+
+window.publishFieldBroadcast = async function() {
+    const editDocId = document.getElementById("broadcastEditDocId").value.trim();
+    const versionInput = document.getElementById("broadcastVersion");
+    const titleInput = document.getElementById("broadcastTitle");
+    const msgInput = document.getElementById("broadcastMessage");
+
+    const payload = {
+        version: versionInput.value.trim(),
+        title: titleInput.value.trim(),
+        message: msgInput.value.trim()
+    };
+
+    try {
+        if (!window.isFirebaseActive || !window.db) {
+            window.showToast("Database write stream offline.", "warning");
+            return;
+        }
+
+        const { collection, doc, addDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        
+        if (editDocId !== "") {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', editDocId);
+            await updateDoc(docRef, payload);
+            window.showToast("Log entry configurations updated seamlessly!", "success");
+        } else {
+            payload.timestamp = Date.now();
+            const targetCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements');
+            await addDoc(targetCollection, payload);
+            window.showToast("New system announcement broadcasted live to field!", "success");
+        }
+
+        window.clearBroadcastFormLayout();
+    } catch (err) {
+        console.error("Broadcast write transmission failure trace:", err);
+        window.showToast("Log write cycle failure.", "warning");
+    }
+};
+
+window.purgeBroadcastLogEntry = async function(docId) {
+    if (!confirm("Are you certain you want to purge this build notice log file entry permanently from network systems?")) return;
+
+    try {
+        if (window.isFirebaseActive && window.db) {
+            const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', docId);
+            await deleteDoc(docRef);
+            
+            if (document.getElementById("broadcastEditDocId").value === docId) {
+                window.clearBroadcastFormLayout();
+            }
+            window.showToast("Build register record removed from server arrays.", "success");
+        }
+    } catch (err) {
+        console.error("Purge routine execution trace crash:", err);
+        window.showToast("Purge system call failed.", "warning");
+    }
+};
 const initApp = async () => {
     window.loadStarredCache();
     await window.attemptInitializeFirebase();
