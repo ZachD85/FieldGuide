@@ -46,6 +46,10 @@ window.activeAdminTab = 'single';
 window.bulkSortField = 'title'; 
 window.bulkSortAsc = true;
 
+// GLOBAL BROADCAST TIMELINE APP STATE REGISTER VARIABLES
+window.activeBroadcastLogs = [];
+window.isBroadcastExpanded = false;
+
 const placeholderPhrases = [
     "\'Show me 10-year success rates for Cox-MAZE IV\'",
     "\'Show the data on prophylactic clipping\'",
@@ -182,40 +186,9 @@ window.attemptInitializeFirebase = async function() {
                     isFirebaseActive = true;
                     syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
-                    window.subscribeToDatabaseStreams = function() {
-    if (!isFirebaseActive || !activeUser) return;
-    
-    // Channel A: Clinical Cards Inventory
-    const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
-    onSnapshot(publicDataCollection, (snapshot) => {
-        const cloudDocs = [];
-        snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
-        if (cloudDocs.length === 0) {
-            window.seedLocalDataToCloud();
-        } else {
-            clinicalDatabase = cloudDocs;
-            window.updateSidebarActiveStates();
-            window.renderAppViewboard();
-            window.renderAdminInventory();
-            if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
-        }
-    }, (error) => { console.error("Resource index tracking engine fault trace:", error); });
-
-    // 🚀 PASTE THIS NEW CODE FOR CHANNEL B DIRECTLY HERE:
-    const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
-    onSnapshot(broadcastCollection, (snapshot) => {
-        const logs = [];
-        snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
-        
-        // Ensure chronological index integrity across timeline render points
-        logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        window.activeBroadcastLogs = logs;
-        
-        // Trigger updates to the accordion and admin console feeds
-        window.renderLiveBroadcastTimeline();
-        window.renderAdminBroadcastInventory();
-    }, (error) => { console.error("Broadcast streaming protocol failure:", error); });
-};
+                    
+                    // 🚀 FIXED: Trigger the database streams downstream download execution layout
+                    window.subscribeToDatabaseStreams();
                     window.loadSecureApiKey();
                 } else {
                     isFirebaseActive = false;
@@ -260,8 +233,11 @@ window.updateApiKeyStatusUI = function(isLoaded) {
     }
 };
 
+// 🚀 FIXED: Extracted to the global module layer so execution sequences compile seamlessly
 window.subscribeToDatabaseStreams = function() {
     if (!isFirebaseActive || !activeUser) return;
+    
+    // Channel A: Clinical Studies Registry Snapshot Channel
     const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
     onSnapshot(publicDataCollection, (snapshot) => {
         const cloudDocs = [];
@@ -277,6 +253,23 @@ window.subscribeToDatabaseStreams = function() {
         }
     }, (error) => {
         console.error("Firestore subscription snapshot breakdown:", error);
+    });
+
+    // Channel B: Live System Broadcast Timeline logs Real-time Data pipeline
+    const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
+    onSnapshot(broadcastCollection, (snapshot) => {
+        const logs = [];
+        snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
+        
+        // Stabilize descending timeline indices order
+        logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        window.activeBroadcastLogs = logs;
+        
+        // Execute instant updates to layout layers across standard views and management view frames
+        window.renderLiveBroadcastTimeline();
+        window.renderAdminBroadcastInventory();
+    }, (error) => {
+        console.error("System announcement log channel sync fault:", error);
     });
 };
 
@@ -537,15 +530,20 @@ window.setupLocalEventListeners = function() {
 window.switchToView = function(viewMode) {
     const userView = document.getElementById("userDashboardView");
     const adminView = document.getElementById("adminPortalView");
+    const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
+    
     if(viewMode === "admin") {
         userView.classList.add("hidden");
+        if (bannerWrapper) bannerWrapper.classList.add("hidden");
         adminView.classList.remove("hidden");
         window.updateFormSubCategories();
         window.renderAdminInventory();
+        window.renderAdminBroadcastInventory();
         if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
     } else {
         adminView.classList.add("hidden");
         userView.classList.remove("hidden");
+        if (bannerWrapper) bannerWrapper.classList.remove("hidden");
         window.renderAppViewboard();
     }
     window.closeMobileMenu();
@@ -584,8 +582,7 @@ window.toggleStarredFilter = function() {
         document.getElementById("breadcrumbMain").innerText = "Starred";
         document.getElementById("breadcrumbSub").innerText = "Personal Library";
     } else {
-        indicator.classList.add("hidden");
-        indicator.classList.remove("flex");
+        indicator.className = "hidden";
         window.navigateToHome();
     }
     window.closeMobileMenu();
@@ -640,13 +637,19 @@ window.updateSidebarActiveStates = function() {
 
 window.renderAppViewboard = function() {
     const container = document.getElementById("userDashboardView");
+    const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
     
     if (window.currentMainCategory === "Welcome" && !window.isStarredFilterActive) {
+        if (bannerWrapper) bannerWrapper.classList.remove("hidden");
         window.renderWelcomeScreen(container);
         window.startPlaceholderRotation();
+        window.renderLiveBroadcastTimeline();
         return;
     }
     
+    // Hide accordion if browsing clinical nested card parameters
+    if (bannerWrapper) bannerWrapper.classList.add("hidden");
+
     const categorySearchInput = document.getElementById("categorySearchInput");
     const filterText = categorySearchInput ? categorySearchInput.value.toLowerCase().trim() : "";
 
@@ -682,28 +685,6 @@ window.renderAppViewboard = function() {
 window.renderWelcomeScreen = function(container) {
     container.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
-            
-            <div class="bg-slate-100 border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
-                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 opacity-5 text-slate-900 pointer-events-none">
-                    <i data-lucide="hard-hat" class="w-32 h-32"></i>
-                </div>
-                <div class="flex items-start space-x-3 relative z-10">
-                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg shrink-0">
-                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
-                    </div>
-                    <div class="space-y-2 pt-0.5">
-                        <h4 class="font-bold text-slate-800 text-sm">AtriGuide v0.9 Beta: Expect Turbulence</h4>
-                        <p class="text-xs text-slate-600 leading-relaxed font-medium">
-                            What's up guys, it's Zach (the Toledo CAS). Welcome to the AtriGuide Beta. When I'm not chasing surgeons around the OR, I've been building this tool. I’ve been working on it on and off for the better part of 18 months and probably over 100 different versions.  
-                            <br>
-                            Full transparency: I'm a one-man show building this between case coverage, so there <em>will</em> be bugs. The Database is still being updated so pardon the mess. Obvious studies may be missing (or in the wrong category). If you hit a snag, PLEASE let me know. Found a dead link? AI copilot spitting out nonsense? Got a suggestion? <a href="mailto:zdavidson@atricure.com?subject=AtriGuide%20Beta%20Feedback" class="text-[#FF6B00] hover:text-orange-700 font-extrabold underline cursor-pointer">Tap here to email me (zdavidson@atricure.com)</a>.
-                            <br><br>
-                            <em>P.S. There is a lot more to come (CNB and Hybrid are dropping shortly too). Tell me what other features would make your life easier.</em>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
                 <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
                     <i data-lucide="sparkles" class="w-48 h-48"></i>
@@ -790,7 +771,6 @@ window.renderAtriGuideCard = function(card, index) {
         const label = isMedia ? "View Media" : "View Document";
         const iconName = isMedia ? "video" : "external-link";
         
-        // Escaping variables for attributes safely
         const escapedUrl = window.escapeHtml(cleanDriveUrl);
         const escapedTitle = window.escapeHtml(card.title || "");
 
@@ -1498,7 +1478,6 @@ window.renderLiveBroadcastTimeline = function() {
                 </button>
             </div>
 
-            <!-- ENFORCED FIXED MAXIMUM HEIGHT SCROLLING WINDOW -->
             <div class="${window.isBroadcastExpanded ? 'block mt-4 pt-4 border-t border-slate-200/60 animate-fade-in' : 'hidden'} relative z-10">
                 <div class="max-h-[220px] overflow-y-auto pr-1.5 space-y-2 text-slate-700 scrollbar-thin">
                     ${timelineHtml}
@@ -1676,6 +1655,8 @@ window.purgeBroadcastLogEntry = async function(docId) {
         window.showToast("Purge system call failed.", "warning");
     }
 };
+
+// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
 const initApp = async () => {
     window.loadStarredCache();
     await window.attemptInitializeFirebase();
