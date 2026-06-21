@@ -1467,7 +1467,9 @@ window.renderLiveBroadcastTimeline = function() {
                         <i data-lucide="megaphone" class="w-4 h-4 ${!window.isBroadcastExpanded ? 'animate-bounce' : ''}"></i>
                     </div>
                     <div class="min-w-0 flex-1 text-left">
-                        <h4 class="font-bold text-slate-800 text-xs leading-none">What's New & System Logs</h4>
+                        <h4 class="font-bold text-slate-800 text-xs leading-none">
+                            ${window.isBroadcastExpanded ? "What's New & System Logs" : "📢 Click to see what's new!"}
+                        </h4>
                         <p class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-wider font-mono truncate">
                             Latest: ${window.escapeHtml(latestBuild.version)} — ${window.escapeHtml(latestBuild.title)}
                         </p>
