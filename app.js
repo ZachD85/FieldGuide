@@ -213,9 +213,17 @@ window.attemptInitializeFirebase = async function() {
 
 window.loadSecureApiKey = async function() {
     if (!window.db) return;
+    
+    // DEBUG: Print the exact path and ID being used
+    console.log("Attempting to load key from:", 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
+    
     try {
         const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
         const docSnap = await getDoc(docRef);
+        
+        // DEBUG: Tell us if the document exists
+        console.log("Document exists:", docSnap.exists());
+        
         if (docSnap.exists()) {
             window.apiKey = docSnap.data().key || "";
             window.updateApiKeyStatusUI(window.apiKey ? true : false);
