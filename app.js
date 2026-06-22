@@ -175,23 +175,22 @@ window.attemptInitializeFirebase = async function() {
         if (hasValidPrivateConfig || hasEnvConfig) {
             const finalConfig = hasValidPrivateConfig ? myPrivateFirebaseConfig : JSON.parse(__firebase_config);
             const app = initializeApp(finalConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
+            window.auth = getAuth(app);
+            window.db = getFirestore(app);
 
-            await signInAnonymously(auth);
+            await signInAnonymously(window.auth);
 
-            onAuthStateChanged(auth, (user) => {
+            onAuthStateChanged(window.auth, (user) => {
                 if (user) {
-                    activeUser = user;
-                    isFirebaseActive = true;
-                    syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
+                    window.activeUser = user;
+                    window.isFirebaseActive = true;
+                    if (syncIndicator) syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
                     
-                    // 🚀 FIXED: Trigger the database streams downstream download execution layout
                     window.subscribeToDatabaseStreams();
                     window.loadSecureApiKey();
                 } else {
-                    isFirebaseActive = false;
+                    window.isFirebaseActive = false;
                     window.loadLocalFallbackData();
                 }
             });
@@ -204,13 +203,13 @@ window.attemptInitializeFirebase = async function() {
 };
 
 window.loadSecureApiKey = async function() {
-    if (!db) return;
+    if (!window.db) return;
     try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gemini');
+        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            apiKey = docSnap.data().key || "";
-            window.updateApiKeyStatusUI(apiKey ? true : false);
+            window.apiKey = docSnap.data().key || "";
+            window.updateApiKeyStatusUI(window.apiKey ? true : false);
         } else {
             window.updateApiKeyStatusUI(false);
         }
@@ -223,7 +222,7 @@ window.loadSecureApiKey = async function() {
 window.updateApiKeyStatusUI = function(isLoaded) {
     const badge = document.getElementById("apiKeyStatusBadge");
     if (badge) {
-        if (isLoaded && apiKey) {
+        if (isLoaded && window.apiKey) {
             badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1";
             badge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Key Safe & Active</span>`;
         } else {
@@ -233,19 +232,17 @@ window.updateApiKeyStatusUI = function(isLoaded) {
     }
 };
 
-// 🚀 FIXED: Extracted to the global module layer so execution sequences compile seamlessly
 window.subscribeToDatabaseStreams = function() {
-    if (!isFirebaseActive || !activeUser) return;
+    if (!window.isFirebaseActive || !window.activeUser) return;
     
-    // Channel A: Clinical Studies Registry Snapshot Channel
-    const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+    const publicDataCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources');
     onSnapshot(publicDataCollection, (snapshot) => {
         const cloudDocs = [];
         snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
         if (cloudDocs.length === 0) {
             window.seedLocalDataToCloud();
         } else {
-            clinicalDatabase = cloudDocs;
+            window.clinicalDatabase = cloudDocs;
             window.updateSidebarActiveStates();
             window.renderAppViewboard();
             window.renderAdminInventory();
@@ -255,17 +252,14 @@ window.subscribeToDatabaseStreams = function() {
         console.error("Firestore subscription snapshot breakdown:", error);
     });
 
-    // Channel B: Live System Broadcast Timeline logs Real-time Data pipeline
-    const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
+    const broadcastCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements');
     onSnapshot(broadcastCollection, (snapshot) => {
         const logs = [];
         snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
         
-        // Stabilize descending timeline indices order
         logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         window.activeBroadcastLogs = logs;
         
-        // Execute instant updates to layout layers across standard views and management view frames
         window.renderLiveBroadcastTimeline();
         window.renderAdminBroadcastInventory();
     }, (error) => {
@@ -274,19 +268,19 @@ window.subscribeToDatabaseStreams = function() {
 };
 
 window.seedLocalDataToCloud = async function() {
-    if (!isFirebaseActive || !activeUser) return;
+    if (!window.isFirebaseActive || !window.activeUser) return;
     try {
-        const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+        const publicDataCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources');
         for (const item of fallbackDatabase) { await addDoc(publicDataCollection, item); }
     } catch (err) {}
 };
 
 window.loadLocalFallbackData = function() {
     const cached = localStorage.getItem("atricure_local_resources");
-    if (cached) { clinicalDatabase = JSON.parse(cached); } 
+    if (cached) { window.clinicalDatabase = JSON.parse(cached); } 
     else {
-        clinicalDatabase = [...fallbackDatabase];
-        localStorage.setItem("atricure_local_resources", JSON.stringify(clinicalDatabase));
+        window.clinicalDatabase = [...fallbackDatabase];
+        localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
     }
     window.updateSidebarActiveStates();
     window.renderAppViewboard();
@@ -303,7 +297,7 @@ window.cleanAndParseJSON = function(rawStr) {
 };
 
 window.callGeminiAPI = async function(systemPrompt, userQuery) {
-    if (!apiKey) {
+    if (!window.apiKey) {
         throw new Error("No Gemini API key supplied in index.html configuration.");
     }
     const models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-09-2025", "gemini-1.5-flash"];
@@ -311,7 +305,7 @@ window.callGeminiAPI = async function(systemPrompt, userQuery) {
 
     for (const model of models) {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${window.apiKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -336,6 +330,27 @@ window.closeAISearchOverlay = function() {
     document.getElementById("aiSearchOverlay").classList.add("hidden");
     const queryArea = document.getElementById("copilotQueryInput");
     if (queryArea) queryArea.value = "";
+};
+
+window.queryGeminiEngine = async function(query, docsData) {
+    const systemPrompt = `You are AtriGuide AI, an elite clinical database assistant. Analyze the database resources and construct a summary with matching items. Respond strictly in valid JSON format matching this pattern: { "synthesis": "your summary text", "matchedDocTitles": ["Exact Title 1", "Exact Title 2"] }`;
+    const catalogContext = docsData.map(d => `Title: ${d.title}\nAuthor: ${d.author}\nSummary: ${d.summary}\n---`).join('\n');
+    const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
+    
+    const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
+    return window.cleanAndParseJSON(apiRawResult);
+};
+
+window.renderAISourceCards = function(matchedTitles, docsData) {
+    const cardsContainer = document.getElementById("aiCardsContainer");
+    const matches = docsData.filter(d => (matchedTitles || []).some(t => String(d.title).toLowerCase().trim() === String(t).toLowerCase().trim()));
+    
+    if (matches.length > 0) {
+        cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
+        window.showToast("Synthesized results populated successfully.", "success");
+    } else {
+        cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
+    }
 };
 
 window.askAtriGuide = async function(customQuery = null) {
@@ -363,7 +378,21 @@ window.askAtriGuide = async function(customQuery = null) {
 
     try {
         if (!window.isFirebaseActive || !window.db) {
-            window.showToast("Database linkage required for AI parsing.", "warning");
+            // Local fallback logic if connection is offline
+            document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline Search Active</strong><br>Displaying the best matched clinical papers based on keyword search relevance.`;
+            const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies'];
+            const searchWords = query.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(word => word.length > 1 && !stopWords.includes(word));
+            let scoredMatches = [];
+            window.clinicalDatabase.forEach(doc => {
+                let score = 0;
+                const titleLower = String(doc.title || "").toLowerCase();
+                if (searchWords.some(w => titleLower.includes(word))) score += 15;
+                if (score > 0) scoredMatches.push({ doc, score });
+            });
+            scoredMatches.sort((a, b) => b.score - a.score);
+            const finalMatches = scoredMatches.map(sm => sm.doc);
+            if (finalMatches.length > 0) cardsContainer.innerHTML = finalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
+            else cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No matching items found offline.</div>`;
             return;
         }
 
@@ -372,9 +401,7 @@ window.askAtriGuide = async function(customQuery = null) {
         const querySnapshot = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources'));
         
         let docsData = [];
-        querySnapshot.forEach((doc) => {
-            docsData.push(doc.data());
-        });
+        querySnapshot.forEach((doc) => { docsData.push(doc.data()); });
 
         if (docsData.length === 0) {
             synthText.innerHTML = "No indexed clinical documents found in the current master registry.";
@@ -395,7 +422,6 @@ window.askAtriGuide = async function(customQuery = null) {
             </p>
         `;
         
-        // Map out matching resource cards underneath it
         window.renderAISourceCards(aiResponse.matchedDocTitles, docsData);
         lucide.createIcons();
 
@@ -403,78 +429,6 @@ window.askAtriGuide = async function(customQuery = null) {
         console.error("Clinical intelligence search handshake error:", err);
         synthText.innerHTML = "An extraction fault occurred while analyzing the target documents.";
         cardsContainer.innerHTML = "";
-    }
-};
-
-    const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
-
-    try {
-        const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
-        const parsedResult = window.cleanAndParseJSON(apiRawResult);
-
-        document.getElementById("aiSynthesisText").innerText = parsedResult.synthesis || "No direct executive brief available.";
-        
-        const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
-        
-        if (matches.length > 0) {
-            cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
-            window.showToast("Synthesized results populated successfully.", "success");
-        } else {
-            cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
-        }
-    } catch (err) {
-        console.error("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
-        
-        document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
-
-        const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies', 'study', 'papers', 'paper', 'data', 'evidence', 'find', 'search', 'how', 'we', 'have'];
-        const searchWords = query.toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .split(/\s+/)
-            .filter(word => word.length > 1 && !stopWords.includes(word));
-
-        let scoredMatches = [];
-        if (searchWords.length > 0 && clinicalDatabase.length > 0) {
-            clinicalDatabase.forEach(doc => {
-                let score = 0;
-                const titleLower = String(doc.title || "").toLowerCase();
-                const authorLower = String(doc.author || "").toLowerCase();
-                const summaryLower = String(doc.summary || "").toLowerCase();
-                const mCatLower = String(doc.mainCategory || "").toLowerCase();
-                const sCatLower = String(doc.subCategory || "").toLowerCase();
-                const profileLower = String(doc.searchProfile || "").toLowerCase();
-
-                searchWords.forEach(word => {
-                    if (titleLower.includes(word)) score += 15;
-                    if (authorLower.includes(word)) score += 15; 
-                    if (profileLower.includes(word)) score += 10; 
-                    if (summaryLower.includes(word)) score += 6;
-                    if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
-                });
-
-                if (score > 0) {
-                    scoredMatches.push({ doc, score });
-                }
-            });
-            scoredMatches.sort((a, b) => b.score - a.score);
-        }
-
-        const finalLocalMatches = scoredMatches.map(sm => sm.doc);
-
-        if (finalLocalMatches.length > 0) {
-            cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
-            window.showToast("Local engine retrieved " + finalLocalMatches.length + " matching papers.", "success");
-        } else {
-            cardsContainer.innerHTML = `
-                <div class="text-slate-400 font-semibold p-8 text-center text-xs">
-                    No matching items found for "${window.escapeHtml(query)}" offline.<br>
-                    <span class="text-slate-350 block mt-1 font-normal">Try searching with simplified terms like "Whitlock", "Damiano", "EnCompass", or "LAAOS".</span>
-                </div>`;
-        }
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-white"></i><span>✨ Ask AtriGuide</span>`;
-        lucide.createIcons();
     }
 };
 
@@ -538,30 +492,47 @@ window.setupLocalEventListeners = function() {
     const categorySearchInput = document.getElementById("categorySearchInput");
     const clearCategorySearchBtn = document.getElementById("clearCategorySearchBtn");
 
-    categorySearchInput.addEventListener("input", (e) => {
-        const val = e.target.value;
-        if(val.trim() !== "") clearCategorySearchBtn.classList.remove("hidden");
-        else clearCategorySearchBtn.classList.add("hidden");
-        window.renderAppViewboard();
-    });
+    if (categorySearchInput) {
+        categorySearchInput.addEventListener("input", (e) => {
+            const val = e.target.value;
+            if(val.trim() !== "") clearCategorySearchBtn.classList.remove("hidden");
+            else clearCategorySearchBtn.classList.add("hidden");
+            window.renderAppViewboard();
+        });
+    }
 
-    clearCategorySearchBtn.addEventListener("click", () => {
-        categorySearchInput.value = "";
-        clearCategorySearchBtn.classList.add("hidden");
-        window.renderAppViewboard();
-    });
+    if (clearCategorySearchBtn) {
+        clearCategorySearchBtn.addEventListener("click", () => {
+            categorySearchInput.value = "";
+            clearCategorySearchBtn.classList.add("hidden");
+            window.renderAppViewboard();
+        });
+    }
 
-    document.getElementById("mobileMenuBtn").addEventListener("click", () => {
-        window.toggleMobileMenu();
-    });
+    const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener("click", () => { window.toggleMobileMenu(); });
+    }
 
-    document.getElementById("sidebarOverlay").addEventListener("click", () => {
-        window.closeMobileMenu();
-    });
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", () => { window.closeMobileMenu(); });
+    }
 
-    document.getElementById("adminPortalBtn").addEventListener("click", () => { window.openAdminAuthModal(); });
-    document.getElementById("exitAdminBtn").addEventListener("click", () => { window.switchToView("user"); });
-    document.getElementById("uploadForm").addEventListener("submit", (e) => { e.preventDefault(); window.processFormSubmission(); });
+    const adminBtn = document.getElementById("adminPortalBtn");
+    if (adminBtn) {
+        adminBtn.addEventListener("click", () => { window.openAdminAuthModal(); });
+    }
+
+    const exitAdminBtn = document.getElementById("exitAdminBtn");
+    if (exitAdminBtn) {
+        exitAdminBtn.addEventListener("click", () => { window.switchToView("user"); });
+    }
+
+    const uploadForm = document.getElementById("uploadForm");
+    if (uploadForm) {
+        uploadForm.addEventListener("submit", (e) => { e.preventDefault(); window.processFormSubmission(); });
+    }
 };
 
 window.switchToView = function(viewMode) {
@@ -570,16 +541,16 @@ window.switchToView = function(viewMode) {
     const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
     
     if(viewMode === "admin") {
-        userView.classList.add("hidden");
+        if (userView) userView.classList.add("hidden");
         if (bannerWrapper) bannerWrapper.classList.add("hidden");
-        adminView.classList.remove("hidden");
+        if (adminView) adminView.classList.remove("hidden");
         window.updateFormSubCategories();
         window.renderAdminInventory();
         window.renderAdminBroadcastInventory();
         if (window.activeAdminTab === 'bulk') window.renderSpreadsheetWorkspace();
     } else {
-        adminView.classList.add("hidden");
-        userView.classList.remove("hidden");
+        if (adminView) adminView.classList.add("hidden");
+        if (userView) userView.classList.remove("hidden");
         if (bannerWrapper) bannerWrapper.classList.remove("hidden");
         window.renderAppViewboard();
     }
@@ -590,7 +561,8 @@ window.navigateToHome = function() {
     window.currentMainCategory = "Welcome";
     window.currentSubCategory = "Home";
     window.isStarredFilterActive = false;
-    document.getElementById("categorySearchContainer").classList.add("hidden");
+    const container = document.getElementById("categorySearchContainer");
+    if (container) container.classList.add("hidden");
     window.closeMobileMenu();
     window.renderAppViewboard();
 };
@@ -599,27 +571,32 @@ window.selectSubCategory = function(mainCat, subCat) {
     window.currentMainCategory = mainCat;
     window.currentSubCategory = subCat;
     window.isStarredFilterActive = false;
-    document.getElementById("categorySearchContainer").classList.remove("hidden");
+    const container = document.getElementById("categorySearchContainer");
+    if (container) container.classList.remove("hidden");
     window.closeMobileMenu();
     window.renderAppViewboard();
 };
 
 window.toggleCategory = function(menuId) {
     const menu = document.getElementById(menuId);
-    if(menu.classList.contains("hidden")) menu.classList.remove("hidden");
-    else menu.classList.add("hidden");
+    if (menu) {
+        if(menu.classList.contains("hidden")) menu.classList.remove("hidden");
+        else menu.classList.add("hidden");
+    }
 };
 
 window.toggleStarredFilter = function() {
     window.isStarredFilterActive = !window.isStarredFilterActive;
     const indicator = document.getElementById("starredFilterIndicator");
     if (window.isStarredFilterActive) {
-        indicator.classList.remove("hidden");
-        indicator.classList.add("flex");
+        if (indicator) {
+            indicator.classList.remove("hidden");
+            indicator.classList.add("flex");
+        }
         document.getElementById("breadcrumbMain").innerText = "Starred";
         document.getElementById("breadcrumbSub").innerText = "Personal Library";
     } else {
-        indicator.className = "hidden";
+        if (indicator) indicator.className = "hidden";
         window.navigateToHome();
     }
     window.closeMobileMenu();
@@ -676,6 +653,8 @@ window.renderAppViewboard = function() {
     const container = document.getElementById("userDashboardView");
     const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
     
+    if (!container) return;
+
     if (window.currentMainCategory === "Welcome" && !window.isStarredFilterActive) {
         if (bannerWrapper) bannerWrapper.classList.remove("hidden");
         window.renderWelcomeScreen(container);
@@ -684,7 +663,6 @@ window.renderAppViewboard = function() {
         return;
     }
     
-    // Hide accordion if browsing clinical nested card parameters
     if (bannerWrapper) bannerWrapper.classList.add("hidden");
 
     const categorySearchInput = document.getElementById("categorySearchInput");
@@ -722,21 +700,21 @@ window.renderAppViewboard = function() {
 window.renderWelcomeScreen = function(container) {
     container.innerHTML = `
         <div class="space-y-8 animate-fade-in pb-12">
-            <div class="bg-[#00205B] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
-                <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none">
+            <div class="bg-gradient-to-br from-[#00205B] to-[#00153D] border-l-[6px] border-[#FF6B00] rounded-2xl p-6 shadow-lg space-y-5 relative overflow-hidden">
+                <div class="absolute right-0 bottom-0 translate-x-8 translate-y-8 opacity-5 text-white pointer-events-none select-none">
                     <i data-lucide="sparkles" class="w-48 h-48"></i>
                 </div>
                 <div class="flex items-center space-x-3 relative z-10">
                     <div class="p-2 bg-white/10 text-[#FF6B00] rounded-lg">
                         <i data-lucide="sparkles" class="w-6 h-6 text-[#FF6B00]"></i>
                     </div>
-                    <div>
+                    <div class="text-left">
                         <h3 class="font-extrabold text-white text-lg md:text-xl tracking-tight">AtriGuide AI</h3>
                         <p class="text-[11px] text-[#FF6B00] font-bold uppercase tracking-wider">Your clinical database, simplified.</p>
                     </div>
                 </div>
 
-                <p class="text-white/95 text-xs md:text-sm leading-relaxed max-w-2xl relative z-10 font-medium">
+                <p class="text-white/95 text-xs md:text-sm leading-relaxed max-w-2xl relative z-10 font-medium text-left">
                     An AI-powered engine that instantly finds and retrieves matching research articles, IFUs, and media from a curated library of AtriCure-relevant data.
                 </p>
 
@@ -758,8 +736,8 @@ window.renderWelcomeScreen = function(container) {
                         <div class="p-3 bg-blue-50 text-[#00205B] rounded-lg w-fit">
                             <i data-lucide="search" class="w-5 h-5 text-[#00205B]"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-sm md:text-base">Instant Search</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                        <h3 class="font-bold text-slate-800 text-sm md:text-base text-left">Instant Search</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed font-medium text-left">
                             Type directly into AtriGuide. Search by author, specific trial, or type a clinical phrase to pull up relevant peer-reviewed articles instantly.
                         </p>
                     </div>
@@ -770,8 +748,8 @@ window.renderWelcomeScreen = function(container) {
                         <div class="p-3 bg-[#FF6B00]/10 text-[#FF6B00] rounded-lg w-fit">
                             <i data-lucide="menu" class="w-5 h-5 text-[#FF6B00]"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-sm md:text-base">Browse the Database</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                        <h3 class="font-bold text-slate-800 text-sm md:text-base text-left">Browse the Database</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed font-medium text-left">
                             Tap the menu icon (☰) at the top left to browse our hand-curated research categories manually, sorted directly by MAZE and LAA clinical topics.
                         </p>
                     </div>
@@ -782,8 +760,8 @@ window.renderWelcomeScreen = function(container) {
                         <div class="p-3 bg-amber-50 text-amber-500 rounded-lg w-fit">
                             <i data-lucide="star" class="w-5 h-5 text-amber-500"></i>
                         </div>
-                        <h3 class="font-bold text-slate-800 text-sm md:text-base">Quick Access</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                        <h3 class="font-bold text-slate-800 text-sm md:text-base text-left">Quick Access</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed font-medium text-left">
                             Bookmark your most frequently referenced trials and device materials to save them directly to your personal dashboard.
                         </p>
                     </div>
@@ -827,7 +805,7 @@ window.renderAtriGuideCard = function(card, index) {
         <div class="bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between shadow-sm relative group animate-fade-in">
             <div class="flex flex-col flex-1">
                 <div class="flex items-start justify-between gap-2 mb-2">
-                    <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${window.escapeHtml(card.title)}</h4>
+                    <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug text-left">${window.escapeHtml(card.title)}</h4>
                     <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-0.5"><i data-lucide="star" class="w-4 h-4 ${isStarred ? 'text-amber-500 fill-amber-400' : ''}"></i></button>
                 </div>
                 
@@ -836,8 +814,8 @@ window.renderAtriGuideCard = function(card, index) {
                     ${actionLinkButtonHtml}
                 </div>
                 
-                <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5 flex-1">
-                    <ul class="space-y-1 list-none pl-0">${cleanSummaryHtml}</ul>
+                <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5 flex-1 text-left">
+                    <ul class="space-y-1 list-none pl-0 font-medium">${cleanSummaryHtml}</ul>
                 </div>
             </div>
         </div>`;
@@ -868,18 +846,16 @@ window.renderAdminInventory = function() {
             if (!item) return '';
             const itemId = String(item.id || '');
             const title = String(item.title || 'Untitled');
-            const author = String(item.author || 'Unknown Author');
             const mainCategory = String(item.mainCategory || 'MAZE');
             const subCategory = String(item.subCategory || 'General');
 
             const escapedTitle = window.escapeHtml(title);
-            const escapedAuthor = window.escapeHtml(author);
             const escapedMainCat = window.escapeHtml(mainCategory);
             const escapedSubCat = window.escapeHtml(subCategory);
 
             return `
-                <div class="p-3 bg-white flex items-center justify-between border-b border-slate-100 admin-inv-row" data-title="${escapedTitle.toLowerCase()}" data-author="${escapedAuthor.toLowerCase()}">
-                    <div class="min-w-0 flex-1">
+                <div class="p-3 bg-white flex items-center justify-between border-b border-slate-100 admin-inv-row" data-title="${escapedTitle.toLowerCase()}">
+                    <div class="min-w-0 flex-1 text-left">
                         <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${escapedTitle}</h5>
                         <p class="text-[10px] font-medium text-slate-400 mt-0.5">${escapedMainCat} &gt; ${escapedSubCat}</p>
                     </div>
@@ -899,12 +875,8 @@ window.filterAdminInventory = function() {
     const query = document.getElementById("adminInventorySearch").value.toLowerCase().trim();
     document.querySelectorAll(".admin-inv-row").forEach(row => {
         const t = row.getAttribute("data-title") || "";
-        const a = row.getAttribute("data-author") || "";
-        if(t.includes(query) || a.includes(query)) {
-            row.classList.remove("hidden");
-        } else {
-            row.classList.add("hidden");
-        }
+        if(t.includes(query)) row.classList.remove("hidden");
+        else row.classList.add("hidden");
     });
 };
 
@@ -971,13 +943,13 @@ window.processFormSubmission = async function() {
     };
 
     try {
-        if (window.isFirebaseActive && db) {
+        if (window.isFirebaseActive && window.db) {
             if (window.editingResourceId) {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', window.editingResourceId);
+                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', window.editingResourceId);
                 await updateDoc(docRef, resourceObject);
             } else {
                 resourceObject.createdTimestamp = Date.now();
-                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+                const collectionRef = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources');
                 await addDoc(collectionRef, resourceObject);
             }
         } else {
@@ -998,7 +970,7 @@ window.processFormSubmission = async function() {
         }
 
         window.cancelEditingSession();
-        window.showToast(window.editingResourceId ? "Resource record successfully updated in Firestore database!" : "Clinical Resource successfully created!", "success");
+        window.showToast(window.editingResourceId ? "Resource record successfully updated!" : "Clinical Resource successfully created!", "success");
         window.renderAdminInventory();
     } catch (err) {
         console.error("Administrative storage transmission failed: ", err);
@@ -1029,8 +1001,8 @@ window.executeResourceDeletion = async function() {
     if (!window.activeDeletionTargetId) return;
 
     try {
-        if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', window.activeDeletionTargetId);
+        if (window.isFirebaseActive && window.db) {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', window.activeDeletionTargetId);
             await deleteDoc(docRef);
         } else {
             const index = window.clinicalDatabase.findIndex(d => d.id === window.activeDeletionTargetId);
@@ -1056,10 +1028,10 @@ window.openAdminAuthModal = function() {
     const input = document.getElementById("adminPasswordInput");
     const error = document.getElementById("adminAuthError");
     
-    error.classList.add("hidden");
-    input.value = "";
-    modal.classList.remove("hidden");
-    setTimeout(() => input.focus(), 100);
+    if (error) error.classList.add("hidden");
+    if (input) input.value = "";
+    if (modal) modal.classList.remove("hidden");
+    setTimeout(() => { if (input) input.focus(); }, 100);
     lucide.createIcons();
 };
 
@@ -1080,12 +1052,11 @@ window.verifyAdminAuthPassword = async function() {
             return;
         }
 
-        // Fetch secure doc layers straight out of hidden server registers
         const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'security');
         const docSnap = await getDoc(docRef);
 
-        let correctCloudPin = "admin"; // Fallback to safe default index state if doc layout drops
+        let correctCloudPin = "admin";
         if (docSnap.exists()) {
             correctCloudPin = docSnap.data().pin || "admin";
         }
@@ -1120,7 +1091,7 @@ window.updateFormSubCategories = function() {
         options = ["Other Research", "Helpful Documents"];
     }
     
-    subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+    if (subCatSelect) subCatSelect.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
 };
 
 window.exportDatabaseAsJSON = function() {
@@ -1135,6 +1106,7 @@ window.exportDatabaseAsJSON = function() {
 
 window.showToast = function(message, type = "info") {
     const container = document.getElementById("toastContainer");
+    if (!container) return;
     const toast = document.createElement("div");
     toast.className = `p-3.5 rounded-xl shadow-xl border text-xs font-semibold bg-white ${type === "success" ? 'border-emerald-100 text-emerald-800 bg-emerald-50/90' : 'border-slate-100 text-slate-800'}`;
     toast.innerHTML = `<span>${message}</span>`;
@@ -1150,16 +1122,16 @@ window.setAdminTab = function(tab) {
     const bulkView = document.getElementById("adminBulkView");
     
     if (tab === 'bulk') {
-        singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
-        bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
-        singleView.classList.add("hidden");
-        bulkView.classList.remove("hidden");
+        if (singleBtn) singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
+        if (bulkBtn) bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
+        if (singleView) singleView.classList.add("hidden");
+        if (bulkView) bulkView.classList.remove("hidden");
         window.renderSpreadsheetWorkspace();
     } else {
-        singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
-        bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
-        singleView.classList.remove("hidden");
-        bulkView.classList.add("hidden");
+        if (singleBtn) singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
+        if (bulkBtn) bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
+        if (singleView) singleView.classList.remove("hidden");
+        if (bulkView) bulkView.classList.add("hidden");
         window.renderAdminInventory();
     }
     lucide.createIcons();
@@ -1231,8 +1203,8 @@ window.renderSpreadsheetWorkspace = function() {
                         ${subOptionsHtml}
                     </select>
                 </td>
-                <td contenteditable="true" onblur="updateCell('${item.id}', 'title', this.innerText)" class="py-3 px-4 text-xs font-semibold text-slate-800 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.title)}</td>
-                <td contenteditable="true" onblur="updateCell('${item.id}', 'author', this.innerText)" class="py-3 px-4 text-xs text-slate-600 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.author)}</td>
+                <td contenteditable="true" onblur="updateCell('${item.id}', 'title', this.innerText)" class="py-3 px-4 text-xs font-semibold text-slate-800 border-b focus:bg-white outline-none cursor-text text-left">${window.escapeHtml(item.title)}</td>
+                <td contenteditable="true" onblur="updateCell('${item.id}', 'author', this.innerText)" class="py-3 px-4 text-xs text-slate-600 border-b focus:bg-white outline-none cursor-text text-left">${window.escapeHtml(item.author)}</td>
                 <td class="py-3 px-4 text-center border-b">
                     <button onclick="triggerDeleteConfirmModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete Row"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
@@ -1261,8 +1233,8 @@ window.updateCell = async function(id, field, value) {
 
     item[field] = cleanVal;
     try {
-        if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+        if (window.isFirebaseActive && window.db) {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
             await updateDoc(docRef, { [field]: cleanVal, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
@@ -1288,8 +1260,8 @@ window.updateCellCategory = async function(id, value) {
     item.subCategory = subDefault;
 
     try {
-        if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+        if (window.isFirebaseActive && window.db) {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
             await updateDoc(docRef, { mainCategory: value, subCategory: subDefault, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
@@ -1309,8 +1281,8 @@ window.updateCellSubCategory = async function(id, value) {
 
     item.subCategory = value;
     try {
-        if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+        if (window.isFirebaseActive && window.db) {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
             await updateDoc(docRef, { subCategory: value, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
@@ -1339,8 +1311,8 @@ window.executeBulkMove = async function() {
             if (item) {
                 item.mainCategory = mainCat;
                 item.subCategory = subCat;
-                if (window.isFirebaseActive && db) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                if (window.isFirebaseActive && window.db) {
+                    const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
                     await updateDoc(docRef, { mainCategory: mainCat, subCategory: subCat, lastModifiedTimestamp: Date.now() });
                 }
             }
@@ -1368,8 +1340,8 @@ window.executeBulkDelete = async function() {
 
     try {
         for (const id of selected) {
-            if (window.isFirebaseActive && db) {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+            if (window.isFirebaseActive && window.db) {
+                const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
                 await deleteDoc(docRef);
             } else {
                 const idx = window.clinicalDatabase.findIndex(d => d.id === id);
@@ -1422,8 +1394,8 @@ window.executeBulkMerge = async function() {
                     consolidatedUrls.push(dupItem.url);
                 }
                 
-                if (window.isFirebaseActive && db) {
-                  const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                if (window.isFirebaseActive && window.db) {
+                  const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', id);
                   await deleteDoc(docRef);
                 } else {
                   const idx = window.clinicalDatabase.findIndex(d => d.id === id);
@@ -1437,8 +1409,8 @@ window.executeBulkMerge = async function() {
             masterItem.url = consolidatedUrls[0];
         }
 
-        if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', masterId);
+        if (window.isFirebaseActive && window.db) {
+            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources', masterId);
             await updateDoc(docRef, { summary: consolidatedSummary, url: masterItem.url, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
@@ -1453,21 +1425,19 @@ window.executeBulkMerge = async function() {
     }
 };
 
-// 🚀 DYNAMIC GENERATIVE QR MATRIX GENERATOR MODAL LOADER HOOKS
 window.generateQrCodePopstream = function(url, title) {
     const canvasContainer = document.getElementById("qrCodeCanvasTarget");
     const modalTitle = document.getElementById("qrModalTitle");
     
-    // Clear out any previous matrix drawings inside the canvas target
+    if (!canvasContainer) return;
     canvasContainer.innerHTML = "";
-    modalTitle.innerText = title;
+    if (modalTitle) modalTitle.innerText = title;
 
-    // Fire rendering stream payload onto target viewport wrapper elements
     new QRCode(canvasContainer, {
         text: url,
         width: 180,
         height: 180,
-        colorDark: "#00205B", // AtriGuide deep navy theme code
+        colorDark: "#00205B", 
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
     });
@@ -1480,18 +1450,11 @@ window.closeQrCodeModal = function() {
     document.getElementById("qrCodeDisplayModal").classList.add("hidden");
 };
 
-// =========================================================================
-// 🚀 DYNAMIC SYSTEM BROADCAST TIMELINE AND ADMINISTRATION CONTROLLER CORE
-// =========================================================================
-window.activeBroadcastLogs = [];
-window.isBroadcastExpanded = false;
-
 window.toggleBroadcastAccordion = function() {
     window.isBroadcastExpanded = !window.isBroadcastExpanded;
     window.renderLiveBroadcastTimeline();
 };
 
-// Interface Paint Routine: Home Accordion Container Box
 window.renderLiveBroadcastTimeline = function() {
     const target = document.getElementById("dynamicSystemBroadcastWrapper");
     if (!target) return;
@@ -1506,7 +1469,7 @@ window.renderLiveBroadcastTimeline = function() {
     }
 
     const latestBuild = items[0];
-    const visibleLogs = items.slice(0, 3); // Restrict window to immediate top 3 records
+    const visibleLogs = items.slice(0, 3);
 
     const timelineHtml = visibleLogs.map((log, idx) => `
         <div class="border-l-2 ${idx === 0 ? 'border-orange-500 bg-orange-50/10' : 'border-slate-200'} pl-4 ml-2 py-2.5 text-left">
@@ -1557,18 +1520,18 @@ window.renderLiveBroadcastTimeline = function() {
     lucide.createIcons();
 };
 
-// Router Intercept: Render Full Historical Archives Timeline Sheet
 window.routeToFullSystemChangelogHistory = function() {
     window.currentMainCategory = null;
     window.currentSubCategory = null;
     window.isStarredFilterActive = false;
     
     document.querySelectorAll(".subcat-btn").forEach(btn => btn.classList.remove("bg-slate-100", "text-[#00205B]", "font-bold"));
-    document.getElementById("categorySearchContainer").classList.add("hidden");
+    const container = document.getElementById("categorySearchContainer");
+    if (container) container.classList.add("hidden");
 
-    const container = document.getElementById("userDashboardView");
+    const dashboardContainer = document.getElementById("userDashboardView");
     const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
-    if (!container) return;
+    if (!dashboardContainer) return;
     
     if (bannerWrapper) bannerWrapper.classList.add("hidden");
 
@@ -1577,13 +1540,13 @@ window.routeToFullSystemChangelogHistory = function() {
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2 text-left">
             <div class="flex items-center space-x-3 border-b border-slate-100 pb-2 flex-wrap gap-y-1">
                 <span class="font-mono text-xs font-black uppercase tracking-wider bg-[#00205B] text-white px-2 py-0.5 rounded shadow-sm">${window.escapeHtml(log.version)}</span>
-                <h4 class="font-bold text-slate-800 text-sm tracking-tight leading-snug">${window.escapeHtml(log.title)}</h4>
+                <h4 class="font-bold text-slate-800 text-sm tracking-tight leading-snug text-left">${window.escapeHtml(log.title)}</h4>
             </div>
-            <p class="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line pt-1">${window.escapeHtml(log.message)}</p>
+            <p class="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line pt-1 text-left">${window.escapeHtml(log.message)}</p>
         </div>
     `).join('');
 
-    container.innerHTML = `
+    dashboardContainer.innerHTML = `
         <div class="space-y-6 animate-fade-in pb-12 max-w-2xl mx-auto">
             <div class="flex items-center justify-between border-b border-slate-200 pb-4">
                 <div class="flex items-center space-x-3">
@@ -1605,7 +1568,6 @@ window.routeToFullSystemChangelogHistory = function() {
     lucide.createIcons();
 };
 
-// Admin UI Broadcast Management Feed Sync Routine
 window.renderAdminBroadcastInventory = function() {
     const target = document.getElementById("adminBroadcastInventoryTarget");
     if (!target) return;
@@ -1621,9 +1583,9 @@ window.renderAdminBroadcastInventory = function() {
             <div class="min-w-0 flex-1">
                 <div class="flex items-center space-x-1.5 mb-1 flex-wrap">
                     <span class="font-mono text-[9px] font-bold bg-slate-100 border border-slate-200 px-1 py-0.2 rounded text-slate-600">${window.escapeHtml(log.version)}</span>
-                    <h6 class="font-bold text-slate-800 text-xs truncate max-w-[240px]">${window.escapeHtml(log.title)}</h6>
+                    <h6 class="font-bold text-slate-800 text-xs truncate max-w-[240px] text-left">${window.escapeHtml(log.title)}</h6>
                 </div>
-                <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium">${window.escapeHtml(log.message)}</p>
+                <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium text-left">${window.escapeHtml(log.message)}</p>
             </div>
             <div class="flex items-center space-x-1 shrink-0">
                 <button onclick="window.setupBroadcastEditWorkflow('${log.id}')" class="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Edit fields">
@@ -1680,7 +1642,7 @@ window.publishFieldBroadcast = async function() {
             return;
         }
 
-        const { collection, doc, addDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const { doc, addDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         
         if (editDocId !== "") {
             const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', editDocId);
