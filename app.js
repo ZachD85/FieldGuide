@@ -369,7 +369,7 @@ window.askAtriGuide = async function() {
     syncBox.classList.remove("hidden");
     
     // 📢 CLEAN ACTIVE STATE: No extra headers, just the punchy action status
-    document.getElementById("aiSynthesisText").innerHTML = "AtriGuide AI is retrieving relevant papers and generating key insights...";
+    document.getElementById("aiSynthesisText").innerHTML = "🧬AtriGuide AI is retrieving relevant papers and generating key insights...";
     
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
