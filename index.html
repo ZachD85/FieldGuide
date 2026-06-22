@@ -301,7 +301,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mt-6 w-full">
                         <div class="flex items-center space-x-3 border-b border-slate-100 pb-3 mb-4">
                             <div class="p-2 bg-orange-50 rounded-lg text-[#FF6B00]">
                                 <i data-lucide="megaphone" class="w-5 h-5"></i>
@@ -352,7 +352,7 @@
 
                     <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
                         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full">
-                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between select-none">
+                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between">
                                 <div class="flex items-center space-x-2">
                                     <i data-lucide="file-plus" class="w-4 h-4 text-orange-500" id="formHeaderIcon"></i>
                                     <h3 class="font-bold text-slate-800 text-sm" id="formPanelTitle">Upload New Clinical Resource</h3>
@@ -517,10 +517,36 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden transform scale-95 transition-all border border-slate-200">
+            <div class="bg-[#00205B] text-white p-4 flex items-center space-x-3">
+                <div class="p-2 bg-orange-500 rounded-lg">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <div class="text-left">
+                    <h4 class="font-bold text-sm tracking-tight">Administrative Security Check</h4>
+                    <p class="text-[10px] text-slate-300">Authorization required to edit data</p>
+                </div>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="text-left">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Enter Master Access Pin</label>
+                    <input type="password" id="adminPasswordInput" placeholder="••••••••" class="w-full border border-slate-200 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 text-sm bg-slate-50/50 text-center tracking-widest font-bold">
+                    <p id="adminAuthError" class="text-xs text-red-600 mt-1.5 font-semibold hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Access code rejected.
+                    </p>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="closeAdminAuthModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-colors cursor-pointer">Cancel</button>
+                    <button onclick="verifyAdminAuthPassword()" class="flex-1 bg-[#00205B] hover:bg-orange-600 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow shadow-md cursor-pointer">Validate Key</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
