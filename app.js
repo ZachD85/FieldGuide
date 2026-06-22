@@ -228,7 +228,8 @@ window.loadSecureApiKey = async function() {
 window.updateApiKeyStatusUI = function(isLoaded) {
     const badge = document.getElementById("apiKeyStatusBadge");
     if (badge) {
-        if (isLoaded && apiKey) {
+        // FIXED: Now checking window.apiKey instead of the dead local variable
+        if (isLoaded && window.apiKey) {
             badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1";
             badge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Key Safe & Active</span>`;
         } else {
@@ -310,15 +311,17 @@ window.cleanAndParseJSON = function(rawStr) {
 };
 
 window.callGeminiAPI = async function(systemPrompt, userQuery) {
-    if (!apiKey) {
-        throw new Error("No Gemini API key supplied in index.html configuration.");
+    // FIXED: Now checking window.apiKey
+    if (!window.apiKey) {
+        throw new Error("No Gemini API key supplied in database configuration.");
     }
     const models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-09-2025", "gemini-1.5-flash"];
     let lastError = null;
 
     for (const model of models) {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            // FIXED: Injecting window.apiKey into the fetch URL
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${window.apiKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
