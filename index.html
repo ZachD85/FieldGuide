@@ -1,255 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AtriGuide: The Rep's Clinical Copilot</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link rel="stylesheet" href="./styles.css">
-</head>
-<body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen flex flex-col overflow-hidden">
-
-    <header class="bg-[#00205B] text-white px-4 py-3 flex items-center justify-between shadow-md z-30 shrink-0">
-        <div class="flex items-center space-x-3">
-            <button id="mobileMenuBtn" class="md:hidden text-white hover:text-orange-400 focus:outline-none transition-colors">
-                <i data-lucide="menu" class="w-6 h-6"></i>
-            </button>
-            <div class="flex items-baseline space-x-1 cursor-pointer" onclick="navigateToHome()">
-                <span class="text-xl font-bold tracking-tight">Atri<span class="text-[#FF6B00]">Guide</span></span>
-                <span class="text-xs text-slate-300 ml-2 hidden sm:inline font-semibold tracking-wider uppercase">FIELD REFERENCE</span>
-            </div>
-        </div>
-
-        <div class="flex items-center space-x-3">
-            <button onclick="navigateToHome()" class="p-1.5 text-slate-300 hover:text-orange-400 transition-colors focus:outline-none cursor-pointer flex items-center justify-center" title="Go to Home Guide">
-                <i data-lucide="home" class="w-5 h-5"></i>
-            </button>
-
-            <button id="starredQuickBtn" onclick="toggleStarredFilter()" class="relative p-1.5 text-slate-300 hover:text-orange-400 transition-colors focus:outline-none cursor-pointer" title="Starred Resources">
-                <i data-lucide="star" class="w-5 h-5"></i>
-                <span id="starBadgeCount" class="absolute -top-1 -right-1 bg-orange-500 text-white text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center hidden">0</span>
-            </button>
-            
-            <button id="adminPortalBtn" class="text-xs font-semibold text-slate-300 hover:text-orange-400 border border-slate-400/30 hover:border-orange-400/50 px-2.5 py-1.5 rounded transition-all flex items-center space-x-1 bg-white/5 cursor-pointer">
-                <i data-lucide="lock" class="w-3.5 h-3.5"></i>
-                <span>Admin Portal</span>
-            </button>
-        </div>
-    </header>
-
-    <div class="flex flex-1 overflow-hidden relative">
-        <div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 z-10 hidden md:hidden transition-opacity duration-300 opacity-0"></div>
-
-        <aside id="sidebarMenu" class="fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 w-64 bg-white border-r border-slate-200 z-20 flex flex-col justify-between sidebar-transition md:transition-none h-full shadow-lg md:shadow-none">
-            <div class="overflow-y-auto p-4 space-y-4 flex-1">
-                <button onclick="navigateToHome()" id="homeGuideBtn" class="w-full flex items-center space-x-2.5 p-3 rounded-lg border border-orange-100 hover:bg-slate-50 hover:text-[#00205B] font-semibold text-sm transition-all shadow-sm">
-                    <i data-lucide="home" class="w-4 h-4 text-orange-500"></i>
-                    <span>App Home Guide</span>
-                </button>
-
-                <div class="text-xs font-bold text-slate-400 tracking-wider uppercase pt-2 mb-1">Resource Hub</div>
-                
-                <nav class="space-y-2" id="navCategories">
-                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('mazeMenu')">
-                            <div class="flex items-center space-x-2.5">
-                                <i data-lucide="activity" class="w-4 h-4 text-[#FF6B00]"></i>
-                                <span>MAZE Topics</span>
-                            </div>
-                            <i data-lucide="chevron-down" id="mazeMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
-                        </button>
-                        <div id="mazeMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MAZE', 'Rhythm Outcomes')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Rhythm Outcomes">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="heart" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Rhythm Outcomes</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-rhythm">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MAZE', 'Survival Benefits')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Survival Benefits">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="git-commit" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Survival Benefits</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MAZE', 'Other')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Other">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="help-circle" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Other</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-other">0</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('laaMenu')">
-                            <div class="flex items-center space-x-2.5">
-                                <i data-lucide="heart" class="w-4 h-4 text-[#FF6B00]"></i>
-                                <span>LAA Topics</span>
-                            </div>
-                            <i data-lucide="chevron-down" id="laaMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
-                        </button>
-                        <div id="laaMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('LAA', 'Outcomes and Safety')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Outcomes and Safety">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="heart-pulse" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Outcomes and Safety</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-outcomes">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('LAA', 'Stroke Reduction')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Stroke Reduction">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="trending-down" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Stroke Reduction</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-stroke">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('LAA', 'Prophylactic Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="LAA-Prophylactic Data">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="shield-alert" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Prophylactic Data</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-prophylactic">0</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('deviceResourcesMenu')">
-                            <div class="flex items-center space-x-2.5">
-                                <i data-lucide="wrench" class="w-4 h-4 text-[#FF6B00]"></i>
-                                <span>Device Resources</span>
-                            </div>
-                            <i data-lucide="chevron-down" id="deviceResourcesMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
-                        </button>
-                        <div id="deviceResourcesMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('Device Resources', 'IFUs')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-IFUs">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
-                                    <span>IFUs</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-ifus">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('Device Resources', 'Product Brochures')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Product Brochures">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Product Brochures</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-brochures">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('Device Resources', 'Other Media')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-[#00205B] hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="Device Resources-Other Media">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="video" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Other Media</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-dev-media">0</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
-                        <button class="w-full flex items-center justify-between p-3 font-semibold text-[#00205B] hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('miscMenu')">
-                            <div class="flex items-center space-x-2.5">
-                                <i data-lucide="folder" class="w-4 h-4 text-[#FF6B00]"></i>
-                                <span>MISC Resources</span>
-                            </div>
-                            <i data-lucide="chevron-down" id="miscMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
-                        </button>
-                        <div id="miscMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5 space-y-0.5">
-                            <button onclick="selectSubCategory('MISC', 'Other Research')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Other Research">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="microscope" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Other Research</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-research">0</span>
-                            </button>
-                            <button onclick="selectSubCategory('MISC', 'Helpful Documents')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MISC-Helpful Documents">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
-                                    <span>Helpful Documents</span>
-                                </span>
-                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-misc-helpful">0</span>
-                            </button>
-                            <a href="mailto:zdavidson@atricure.com?subject=AtriGuide Feedback" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between group">
-                                <span class="flex items-center gap-2">
-                                    <i data-lucide="mail" class="w-4 h-4 text-slate-500 group-hover:text-[#FF6B00] transition-colors"></i>
-                                    <span>Report Bug/Suggestion</span>
-                                </span>
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                            </a>
-                        </div>
-                    </div>
-                </nav>
-            </div>
-            
-            <div class="p-3 border-t border-slate-100 bg-slate-50 flex flex-col space-y-1 text-[11px] text-slate-500">
-                <div class="flex items-center justify-between">
-                    <span>Database Connection:</span>
-                    <span id="syncStatus" class="font-semibold text-emerald-600 flex items-center gap-1">
-                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        <span>Cloud Synced</span>
-                    </span>
-                </div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400">
-                    <span>AI Engine Status:</span>
-                    <span class="text-[#FF6B00] font-semibold flex items-center gap-1">
-                        <i data-lucide="sparkles" class="w-2.5 h-2.5 text-[#FF6B00]"></i>
-                        <span>Gemini 2.5 Active</span>
-                    </span>
-                </div>
-                <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1 border-t border-slate-200/60 pt-1">
-                    <span>System Build:</span>
-                    <span class="font-mono font-semibold tracking-wider">v0.9.5-beta</span>
-                </div>
-            </div>
-        </aside>
-
-        <main class="flex-grow bg-slate-50 flex flex-col overflow-hidden">
-            <div id="contextHeader" class="bg-white border-b border-slate-200 p-4 shrink-0 flex flex-wrap items-center justify-between gap-3 z-10">
-                <div class="flex items-center space-x-2">
-                    <button onclick="navigateToHome()" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-orange-500 transition-all cursor-pointer flex items-center justify-center mr-1" title="Go to Home Guide">
-                        <i data-lucide="home" class="w-4.5 h-4.5"></i>
-                    </button>
-                    <span id="breadcrumbMain" class="text-lg font-bold text-[#00205B]">Home</span>
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
-                    <span id="breadcrumbSub" class="text-sm font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">App Guide</span>
-                </div>
-
-                <div id="categorySearchContainer" class="hidden relative w-full sm:w-72">
-                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </span>
-                    <input type="text" id="categorySearchInput" placeholder="Search within this category..." class="w-full bg-slate-50 text-slate-900 placeholder-slate-400 pl-9 pr-8 py-1.5 rounded-md text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all animate-fade-in">
-                    <button id="clearCategorySearchBtn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden text-slate-400 hover:text-slate-600">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-                
-                <div class="flex items-center space-x-3">
-                    <div id="starredFilterIndicator" class="hidden bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-md text-xs font-semibold items-center space-x-2">
-                        <i data-lucide="star" class="w-3.5 h-3.5 text-amber-500 fill-amber-400"></i>
-                        <span>Showing Starred Resources</span>
-                        <button onclick="toggleStarredFilter()" class="hover:text-amber-950 underline ml-1 font-bold">Show All</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex-grow overflow-y-auto">
-                <div id="dynamicSystemBroadcastWrapper" class="p-4 md:p-6 pb-0 max-w-5xl mx-auto space-y-3"></div>
-
-                <div id="userDashboardView" class="p-4 md:p-6 space-y-8 max-w-5xl mx-auto border-0"></div>
-
-                <div id="adminPortalView" class="hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+<div id="adminPortalView" class="hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+                    
                     <div class="bg-[#00205B] text-white p-5 rounded-xl shadow-md flex flex-wrap items-center justify-between gap-4">
                         <div class="flex items-center space-x-3">
                             <div class="p-2 bg-orange-500 rounded-lg text-white">
                                 <i data-lucide="sliders" class="w-6 h-6"></i>
                             </div>
-                            <div>
+                            <div class="text-left">
                                 <h2 class="text-xl font-bold tracking-tight">Administrative Configuration Portal</h2>
                                 <p class="text-xs text-slate-300 mt-0.5">Secure clinical data synchronization and document repository manager.</p>
                             </div>
@@ -273,13 +29,13 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div class="flex items-center space-x-3">
                                 <div class="p-2 bg-slate-100 rounded-lg text-orange-500">
                                     <i data-lucide="key" class="w-5 h-5"></i>
                                 </div>
-                                <div>
+                                <div class="text-left">
                                     <h4 class="font-bold text-sm text-slate-800">Secure Gemini API Key Manager</h4>
                                     <p class="text-[11px] text-slate-400">Stores API keys safely inside Firestore. No keys are committed inside plain-text files.</p>
                                 </div>
@@ -300,12 +56,12 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mt-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm w-full">
                         <div class="flex items-center space-x-3 border-b border-slate-100 pb-3 mb-4">
                             <div class="p-2 bg-orange-50 rounded-lg text-[#FF6B00]">
                                 <i data-lucide="megaphone" class="w-5 h-5"></i>
                             </div>
-                            <div>
+                            <div class="text-left">
                                 <h4 class="font-bold text-sm text-slate-800">System Broadcast Registry & Changelog Engine</h4>
                                 <p class="text-[11px] text-slate-400">Deploy live patch timelines, track active build numbers, and manage logs straight from your dashboard workflow.</p>
                             </div>
@@ -316,16 +72,16 @@
                                 <input type="hidden" id="broadcastEditDocId" value="">
                                 
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    <div>
+                                    <div class="text-left">
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Target Build *</label>
                                         <input type="text" id="broadcastVersion" required placeholder="e.g., v0.9.5-beta" class="w-full text-xs border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-mono font-semibold">
                                     </div>
-                                    <div class="sm:col-span-2">
+                                    <div class="sm:col-span-2 text-left">
                                         <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Update Header Hook Title *</label>
                                         <input type="text" id="broadcastTitle" required placeholder="e.g., QR Code Sharing System Is Live!" class="w-full text-xs border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-bold">
                                     </div>
                                 </div>
-                                <div>
+                                <div class="text-left">
                                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Log Content & Patch Details *</label>
                                     <textarea id="broadcastMessage" required rows="4" placeholder="Enter deployment details or instructions here..." class="w-full text-xs border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-medium"></textarea>
                                 </div>
@@ -340,7 +96,7 @@
                                 </div>
                             </form>
 
-                            <div class="lg:col-span-7 flex flex-col">
+                            <div class="lg:col-span-7 flex flex-col text-left">
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Live Production Release Stream Log Registers</label>
                                 <div id="adminBroadcastInventoryTarget" class="border border-slate-100 rounded-xl bg-slate-50/50 p-3 max-h-[280px] overflow-y-auto space-y-2 flex-1 scrollbar-thin">
                                     <p class="text-center text-slate-400 text-xs py-8">Synchronizing build data streams...</p>
@@ -349,15 +105,12 @@
                         </div>
                     </div>
 
-                    <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    
-
-                    <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div id="adminSingleView" class="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full">
                         <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between">
+                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center justify-between select-none">
                                 <div class="flex items-center space-x-2">
                                     <i data-lucide="file-plus" class="w-4 h-4 text-orange-500" id="formHeaderIcon"></i>
-                                    <h3 class="font-bold text-slate-800" id="formPanelTitle">Upload New Clinical Resource</h3>
+                                    <h3 class="font-bold text-slate-800 text-sm" id="formPanelTitle">Upload New Clinical Resource</h3>
                                 </div>
                                 <button onclick="cancelEditingSession()" id="cancelEditBtn" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-2.5 py-1 rounded transition-all flex items-center gap-1 cursor-pointer">
                                     <i data-lucide="x" class="w-3 h-3"></i>
@@ -365,21 +118,21 @@
                                 </button>
                             </div>
                             <form id="uploadForm" class="p-5 space-y-4 flex-1">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Resource/Study Title *</label>
-                                        <input type="text" id="formTitle" required placeholder="e.g., Five-Year Outcomes of Cox-MAZE IV" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Resource/Study Title *</label>
+                                        <input type="text" id="formTitle" required placeholder="e.g., Five-Year Outcomes of Cox-MAZE IV" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-semibold">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Author Group / Source *</label>
-                                        <input type="text" id="formAuthor" required placeholder="e.g., Damiano, et al. / JTCVS" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Author Group / Source *</label>
+                                        <input type="text" id="formAuthor" required placeholder="e.g., Damiano, et al. / JTCVS" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-semibold">
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Main Category *</label>
-                                        <select id="formMainCat" required onchange="updateFormSubCategories()" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Main Category *</label>
+                                        <select id="formMainCat" required onchange="updateFormSubCategories()" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-white font-semibold text-slate-700">
                                             <option value="MAZE">MAZE</option>
                                             <option value="LAA">LAA</option>
                                             <option value="Device Resources">Device Resources</option>
@@ -387,26 +140,26 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sub-Category *</label>
-                                        <select id="formSubCat" required class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Sub-Category *</label>
+                                        <select id="formSubCat" required class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-white font-semibold text-slate-700">
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Header Section Group</label>
-                                        <select id="formHeaderGroup" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Header Section Group</label>
+                                        <select id="formHeaderGroup" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-white font-semibold text-slate-700">
                                             <option value="">None / Standalone Listing</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 text-left">
                                     <div class="sm:col-span-8">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Document URL / Journal Link</label>
-                                        <input type="text" id="formUrl" placeholder="e.g., https://atricure.com/clinical-data/study-pdf" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Document URL / Journal Link</label>
+                                        <input type="text" id="formUrl" placeholder="e.g., https://atricure.com/clinical-data/study-pdf" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-medium">
                                     </div>
                                     <div class="sm:col-span-4">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Link Destination Type</label>
-                                        <select id="formLinkType" class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-white">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Link Destination Type</label>
+                                        <select id="formLinkType" class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-white font-semibold text-slate-700">
                                             <option value="journal">Online Journal Article</option>
                                             <option value="pdf">Direct PDF / Document</option>
                                             <option value="none">No Link / Reference Only</option>
@@ -414,28 +167,28 @@
                                     </div>
                                 </div>
 
-                                <div class="relative">
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Clinical Key Takeaways & AI Summary *</label>
-                                        <button type="button" onclick="generateLiveAISummary()" id="aiGenBtn" class="text-[11px] text-orange-600 hover:text-white font-bold flex items-center space-x-1 border border-orange-200 hover:border-orange-500 hover:bg-orange-500 px-2.5 py-1 rounded bg-orange-50/50 transition-all cursor-pointer">
-                                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                <div class="relative text-left">
+                                    <div class="flex items-center justify-between mb-1.5 select-none">
+                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Clinical Key Takeaways & AI Summary *</label>
+                                        <button type="button" onclick="generateLiveAISummary()" id="aiGenBtn" class="text-[10px] text-orange-600 hover:text-white font-bold flex items-center space-x-1 border border-orange-200 hover:border-orange-500 hover:bg-orange-500 px-2.5 py-1 rounded bg-orange-50/50 transition-all cursor-pointer">
+                                            <i data-lucide="sparkles" class="w-3 h-3"></i>
                                             <span id="aiButtonText">✨ Auto-Generate Insights</span>
                                         </button>
                                     </div>
-                                    <textarea id="formSummary" required rows="5" placeholder="Enter bulleted clinical arguments..." class="w-full text-sm border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all bg-slate-50/50 font-sans"></textarea>
+                                    <textarea id="formSummary" required rows="5" placeholder="Enter bulleted clinical arguments..." class="w-full text-xs border border-slate-200 rounded-md p-2.5 focus:outline-none focus:ring-1 focus:ring-orange-500 bg-slate-50/50 font-medium font-sans"></textarea>
                                 </div>
 
-                                <button type="submit" id="submitFormBtn" class="w-full bg-[#00205B] hover:bg-orange-600 text-white font-bold text-sm p-3 rounded-md transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow active:scale-[0.99] cursor-pointer">
+                                <button type="submit" id="submitFormBtn" class="w-full bg-[#00205B] hover:bg-orange-600 text-white font-bold text-xs p-3 rounded-md transition-all flex items-center justify-center space-x-2 shadow-sm hover:shadow cursor-pointer select-none">
                                     <i data-lucide="upload-cloud" class="w-4 h-4" id="submitButtonIcon"></i>
                                     <span id="submitButtonText">Publish to Database Records</span>
                                 </button>
                             </form>
                         </div>
 
-                        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center space-x-2 shrink-0">
+                        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full">
+                            <div class="bg-slate-50 border-b border-slate-200 p-4 flex items-center space-x-2 shrink-0 select-none">
                                 <i data-lucide="library" class="w-4 h-4 text-slate-600"></i>
-                                <h3 class="font-bold text-slate-800">Manage System Inventory</h3>
+                                <h3 class="font-bold text-slate-800 text-sm">Manage System Inventory</h3>
                             </div>
                             <div class="p-3 border-b border-slate-100 bg-slate-50/50 shrink-0">
                                 <div class="relative">
@@ -449,9 +202,9 @@
                         </div>
                     </div>
 
-                    <div id="adminBulkView" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                    <div id="adminBulkView" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col w-full">
                         <div class="bg-slate-50 border-b border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4 shrink-0 select-none">
-                            <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-3 text-left">
                                 <i data-lucide="layout-grid" class="w-5 h-5 text-orange-500"></i>
                                 <div>
                                     <h3 class="font-bold text-slate-800 text-sm">Database Spreadsheet Workspace</h3>
@@ -488,12 +241,12 @@
                                     <span>Delete Selected</span>
                                 </button>
                                 <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-                                <button onclick="selectAllRows(true)" class="text-[11px] text-slate-500 hover:text-[#00205B] font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Select All</button>
-                                <button onclick="selectAllRows(false)" class="text-[11px] text-slate-500 hover:text-[#00205B] font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Deselect</button>
+                                <button onclick="selectAllRows(true)" class="text-[11px] text-slate-500 hover:text-slate-800 font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Select All</button>
+                                <button onclick="selectAllRows(false)" class="text-[11px] text-slate-500 hover:text-slate-800 font-bold border border-slate-200 hover:border-slate-300 px-2.5 py-1.5 rounded bg-white transition-all">Deselect</button>
                             </div>
                         </div>
 
-                        <div class="overflow-x-auto max-h-[580px]">
+                        <div class="overflow-x-auto max-h-[580px] w-full">
                             <table class="w-full text-left border-collapse min-w-[1000px]">
                                 <thead class="bg-slate-100 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider sticky top-0 z-20 select-none">
                                     <tr>
@@ -519,100 +272,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
-            </div>
-        </main>
-    </div>
 
-    <div id="aiSearchOverlay" class="fixed inset-0 bg-slate-900/60 z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4 animate-fade-in">
-        <div class="bg-white w-full h-[100dvh] sm:h-[85vh] sm:max-w-4xl sm:rounded-xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="bg-[#00205B] text-white p-4 flex items-center justify-between shrink-0">
-                <div class="flex items-center space-x-2.5">
-                    <i data-lucide="sparkles" class="w-5 h-5 text-[#FF6B00] animate-pulse"></i>
-                    <h4 class="font-extrabold text-sm md:text-base tracking-tight">AtriGuide Clinical Intelligence</h4>
-                </div>
-                <button onclick="window.closeAISearchOverlay()" class="p-2 rounded-lg hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center" title="Close Overlay Window">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 space-y-6">
-                <div id="aiSynthesisBox" class="hidden bg-gradient-to-r from-blue-50 to-orange-50 border border-blue-100 rounded-xl p-4 shadow-sm">
-                    <h5 class="text-xs font-bold text-[#00205B] uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
-                        <i data-lucide="brain" class="w-4 h-4 text-[#FF6B00]"></i> Executive Data Synthesis
-                    </h5>
-                    <p id="aiSynthesisText" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line"></p>
-                </div>
-                <div id="aiCardsContainer" class="space-y-4"></div>
-            </div>
-        </div>
-    </div>
+                </div> ```
 
-    <div id="adminAuthModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden transform scale-95 transition-all border border-slate-200">
-            <div class="bg-[#00205B] text-white p-4 flex items-center space-x-3">
-                <div class="p-2 bg-orange-500 rounded-lg">
-                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm tracking-tight">Administrative Security Check</h4>
-                    <p class="text-[10px] text-slate-300">Authorization required to edit data</p>
-                </div>
-            </div>
-            <div class="p-5 space-y-4">
-                <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Enter Master Access Pin</label>
-                    <input type="password" id="adminPasswordInput" placeholder="••••••••" class="w-full border border-slate-200 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 text-sm bg-slate-50/50 text-center tracking-widest font-bold">
-                    <p id="adminAuthError" class="text-xs text-red-600 mt-1.5 font-semibold hidden flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Access code rejected.
-                    </p>
-                </div>
-                <div class="flex space-x-2 pt-2">
-                    <button onclick="closeAdminAuthModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-colors cursor-pointer">Cancel</button>
-                    <button onclick="verifyAdminAuthPassword()" class="flex-1 bg-[#00205B] hover:bg-orange-600 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow shadow-md cursor-pointer">Validate Key</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200">
-            <div class="bg-red-600 text-white p-4 flex items-center space-x-3">
-                <div class="p-2 bg-white/10 rounded-lg">
-                    <i data-lucide="trash-2" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm">System Database Deletion</h4>
-                    <p class="text-[10px] text-red-100">Permanent data purging process</p>
-                </div>
-            </div>
-            <div class="p-5 space-y-4">
-                <p class="text-xs text-slate-600 leading-relaxed">
-                    You are attempting to purge <strong id="deleteTargetTitle" class="text-slate-800">this entry</strong> from index registers. This operation cannot be reversed.
-                </p>
-                <div class="flex space-x-2 pt-1">
-                    <button onclick="closeDeleteConfirmModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-colors cursor-pointer">Cancel Action</button>
-                    <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow cursor-pointer">Erase Permanently</button>
-                </div>
-            </div>
-        </div>
-    <div id="qrCodeDisplayModal" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center hidden p-4" onclick="window.closeQrCodeModal()">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden border border-slate-200 transform scale-95 transition-all p-6 space-y-4 text-center" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h4 id="qrModalTitle" class="font-bold text-slate-800 text-xs truncate max-w-[240px]">Share Resource Link</h4>
-                <button onclick="window.closeQrCodeModal()" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            
-            <div id="qrCodeCanvasTarget" class="flex justify-center p-4 bg-slate-50 border border-slate-100 rounded-lg mx-auto w-fit"></div>
-            
-            <p class="text-[11px] text-slate-500 font-medium leading-normal">
-                Scan using a smartphone to open this document instantly on your device.
-            </p>
-        </div>
-    </div>
-
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
-
-    <script type="module" src="./app.js"></script>
-</body>
-</html>
