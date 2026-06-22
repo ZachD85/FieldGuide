@@ -1030,16 +1030,41 @@ window.closeAdminAuthModal = function() {
     document.getElementById("adminAuthModal").classList.add("hidden");
 };
 
-window.verifyAdminAuthPassword = function() {
-    const pin = document.getElementById("adminPasswordInput").value;
+window.verifyAdminAuthPassword = async function() {
+    const pinInput = document.getElementById("adminPasswordInput");
+    const pin = pinInput.value.trim();
     const error = document.getElementById("adminAuthError");
     
-    if (pin === "admin") {
-        window.closeAdminAuthModal();
-        window.switchToView("admin");
-        window.showToast("System Access Authorized.", "success");
-    } else {
-        error.classList.remove("hidden");
+    if (!pin) return;
+
+    try {
+        if (!window.isFirebaseActive || !window.db) {
+            window.showToast("Database security linkage offline.", "warning");
+            return;
+        }
+
+        // Fetch secure doc layers straight out of hidden server registers
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'security');
+        const docSnap = await getDoc(docRef);
+
+        let correctCloudPin = "admin"; // Fallback to safe default index state if doc layout drops
+        if (docSnap.exists()) {
+            correctCloudPin = docSnap.data().pin || "admin";
+        }
+
+        if (pin === correctCloudPin) {
+            window.closeAdminAuthModal();
+            window.switchToView("admin");
+            window.showToast("System Access Authorized via Secure Ledger.", "success");
+        } else {
+            error.classList.remove("hidden");
+            pinInput.value = "";
+            pinInput.focus();
+        }
+    } catch (err) {
+        console.error("Administrative credential handshake trace breakdown:", err);
+        window.showToast("Security synchronization timeout fault.", "warning");
     }
 };
 
