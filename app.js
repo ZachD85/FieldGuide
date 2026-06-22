@@ -338,36 +338,73 @@ window.closeAISearchOverlay = function() {
     if (queryArea) queryArea.value = "";
 };
 
-window.askAtriGuide = async function() {
-    const queryArea = document.getElementById("copilotQueryInput");
-    const btn = document.getElementById("copilotSubmitBtn");
-    const query = queryArea.value.trim();
+window.askAtriGuide = async function(customQuery = null) {
+    const searchInput = document.getElementById("globalSearchInput");
+    const query = customQuery || (searchInput ? searchInput.value.trim() : "");
+    if (!query) return;
 
-    if (!query) {
-        window.showToast("Please enter a question or topic for AtriGuide to analyze.", "warning");
-        return;
-    }
-
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-orange-500 animate-spin"></i><span>Analyzing...</span>`;
-    lucide.createIcons();
-
-    document.getElementById("aiSearchOverlay").classList.remove("hidden");
-    const syncBox = document.getElementById("aiSynthesisBox");
-    const cardsContainer = document.getElementById("aiCardsContainer");
+    window.openAISearchOverlay();
     
-    syncBox.classList.remove("hidden");
-    document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against indexed documents...";
-    cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
+    const synthBox = document.getElementById("aiSynthesisBox");
+    const synthText = document.getElementById("aiSynthesisText");
+    const cardsContainer = document.getElementById("aiCardsContainer");
 
-    const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
+    // 1. 🚀 Descriptive Active Loading Sequence (Option C)
+    synthBox.classList.remove("hidden");
+    synthText.innerHTML = "AtriGuide AI is retrieving relevant papers and generating key insights...";
+    
+    // 2. ⚡ Ping Sync Indicator Layout
+    cardsContainer.innerHTML = `
+        <div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-12 justify-center">
+            <span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
+            <span>Extracting trial data...</span>
+        </div>
+    `;
 
-    const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
-    Format exactly like this:
-    {
-        "synthesis": "A direct 2-3 sentence clinical answer compiled from the matching sources.",
-        "matchedIds": ["doc-id-1", "doc-id-2"]
-    }`;
+    try {
+        if (!window.isFirebaseActive || !window.db) {
+            window.showToast("Database linkage required for AI parsing.", "warning");
+            return;
+        }
+
+        // Fetch local clinical database context files
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const querySnapshot = await getDocs(collection(window.db, 'artifacts', window.appId, 'public', 'data', 'clinicalResources'));
+        
+        let docsData = [];
+        querySnapshot.forEach((doc) => {
+            docsData.push(doc.data());
+        });
+
+        if (docsData.length === 0) {
+            synthText.innerHTML = "No indexed clinical documents found in the current master registry.";
+            cardsContainer.innerHTML = "";
+            return;
+        }
+
+        // Send package payload to Gemini core processing registers
+        const aiResponse = await window.queryGeminiEngine(query, docsData);
+        
+        // 3. 🧽 Render Completed Payload with Custom Scrub Sink Branding Header
+        synthBox.innerHTML = `
+            <h5 class="text-xs font-bold text-[#00205B] uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-[#FF6B00]"></i> 🧽 AtriGuide AI Scrub Sink Summary
+            </h5>
+            <p id="aiSynthesisText" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+                ${window.escapeHtml(aiResponse.synthesis)}
+            </p>
+        `;
+        
+        // Map out matching resource cards underneath it
+        window.renderAISourceCards(aiResponse.matchedDocTitles, docsData);
+        lucide.createIcons();
+
+    } catch (err) {
+        console.error("Clinical intelligence search handshake error:", err);
+        synthText.innerHTML = "An extraction fault occurred while analyzing the target documents.";
+        cardsContainer.innerHTML = "";
+    }
+};
 
     const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
 
