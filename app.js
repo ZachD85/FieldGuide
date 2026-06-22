@@ -368,10 +368,9 @@ window.askAtriGuide = async function() {
     
     syncBox.classList.remove("hidden");
     
-    // 🚀 FIXED LOADING TEXT: Perfectly punchy and field-ready
+    // 📢 CLEAN ACTIVE STATE: No extra headers, just the punchy action status
     document.getElementById("aiSynthesisText").innerHTML = "AtriGuide AI is retrieving relevant papers and generating key insights...";
     
-    // The animated pulse target matching your trial logs
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
     const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
@@ -389,8 +388,8 @@ window.askAtriGuide = async function() {
         const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
         const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
-        // 🚀 FIXED OUTPUT TEXT: Formatted explicitly to show the polished terminology
-        document.getElementById("aiSynthesisText").innerHTML = `<strong>Scrub Sink Summary:</strong><br>${parsedResult.synthesis || "No direct executive brief available."}`;
+        // 📢 CLEAN COMPLETED STATE: Title drops the tech jargon and becomes the clean title
+        document.getElementById("aiSynthesisText").innerHTML = `<div class="text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2">🧽 Scrub Sink Summary</div><div class="text-xs md:text-sm font-medium leading-relaxed">${parsedResult.synthesis || "No direct executive brief available."}</div>`;
         
         const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
         
