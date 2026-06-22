@@ -12,14 +12,18 @@ const myPrivateFirebaseConfig = {
     measurementId: "G-S8Y8SL6MTB"
 };
 
-// EXPOSE CORE STATE & GLOBAL LIFECYCLE HANDLERS DIRECTLY TO WINDOW
-window.apiKey = ""; 
-window.db = null;
-window.auth = null;
-window.activeUser = null;
-window.isFirebaseActive = false;
-window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
+let apiKey = ""; 
+let db = null;
+let auth = null;
+let activeUser = null;
+let isFirebaseActive = false;
 
+window.apiKey = apiKey;
+window.db = db;
+window.auth = auth;
+window.activeUser = activeUser;
+window.isFirebaseActive = isFirebaseActive;
+window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
 const fallbackDatabase = [
     {
         id: "seed-1",
@@ -175,8 +179,12 @@ window.attemptInitializeFirebase = async function() {
         if (hasValidPrivateConfig || hasEnvConfig) {
             const finalConfig = hasValidPrivateConfig ? myPrivateFirebaseConfig : JSON.parse(__firebase_config);
             const app = initializeApp(finalConfig);
+            
+            // Explicitly assign variables safely in module scope
             auth = getAuth(app);
             db = getFirestore(app);
+            window.auth = auth;
+            window.db = db;
 
             await signInAnonymously(auth);
 
@@ -184,6 +192,8 @@ window.attemptInitializeFirebase = async function() {
                 if (user) {
                     activeUser = user;
                     isFirebaseActive = true;
+                    window.activeUser = user;
+                    window.isFirebaseActive = true;
                     if (syncIndicator) syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
                     
@@ -191,6 +201,7 @@ window.attemptInitializeFirebase = async function() {
                     window.loadSecureApiKey();
                 } else {
                     isFirebaseActive = false;
+                    window.isFirebaseActive = false;
                     window.loadLocalFallbackData();
                 }
             });
@@ -205,10 +216,12 @@ window.attemptInitializeFirebase = async function() {
 window.loadSecureApiKey = async function() {
     if (!db) return;
     try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gemini');
+        // Added window. right before appId to prevent strict mode errors
+        const docRef = doc(db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
             apiKey = docSnap.data().key || "";
+            window.apiKey = apiKey;
             window.updateApiKeyStatusUI(apiKey ? true : false);
         } else {
             window.updateApiKeyStatusUI(false);
