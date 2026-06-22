@@ -184,10 +184,9 @@ window.attemptInitializeFirebase = async function() {
                 if (user) {
                     activeUser = user;
                     isFirebaseActive = true;
-                    syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
+                    if (syncIndicator) syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
                     
-                    // 🚀 FIXED: Trigger the database streams downstream download execution layout
                     window.subscribeToDatabaseStreams();
                     window.loadSecureApiKey();
                 } else {
@@ -233,11 +232,9 @@ window.updateApiKeyStatusUI = function(isLoaded) {
     }
 };
 
-// 🚀 FIXED: Extracted to the global module layer so execution sequences compile seamlessly
 window.subscribeToDatabaseStreams = function() {
     if (!isFirebaseActive || !activeUser) return;
     
-    // Channel A: Clinical Studies Registry Snapshot Channel
     const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
     onSnapshot(publicDataCollection, (snapshot) => {
         const cloudDocs = [];
@@ -255,17 +252,14 @@ window.subscribeToDatabaseStreams = function() {
         console.error("Firestore subscription snapshot breakdown:", error);
     });
 
-    // Channel B: Live System Broadcast Timeline logs Real-time Data pipeline
     const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
     onSnapshot(broadcastCollection, (snapshot) => {
         const logs = [];
         snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
         
-        // Stabilize descending timeline indices order
         logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         window.activeBroadcastLogs = logs;
         
-        // Execute instant updates to layout layers across standard views and management view frames
         window.renderLiveBroadcastTimeline();
         window.renderAdminBroadcastInventory();
     }, (error) => {
@@ -338,9 +332,11 @@ window.closeAISearchOverlay = function() {
     if (queryArea) queryArea.value = "";
 };
 
+// 🧽 MASTER ATRIGUIDE AI SEARCH HANDSHAKE CORE ENGINE (CLEAN FULL CODES)
 window.askAtriGuide = async function() {
     const queryArea = document.getElementById("copilotQueryInput");
     const btn = document.getElementById("copilotSubmitBtn");
+    if (!queryArea || !btn) return;
     const query = queryArea.value.trim();
 
     if (!query) {
@@ -353,32 +349,83 @@ window.askAtriGuide = async function() {
     lucide.createIcons();
 
     document.getElementById("aiSearchOverlay").classList.remove("hidden");
-    const syncBox = document.getElementById("aiSynthesisBox");
+    const synthBox = document.getElementById("aiSynthesisBox");
+    const synthText = document.getElementById("aiSynthesisText");
     const cardsContainer = document.getElementById("aiCardsContainer");
     
-    syncBox.classList.remove("hidden");
-    document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against indexed documents...";
-    cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
-
-    const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
-
-    const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
-    Format exactly like this:
-    {
-        "synthesis": "A direct 2-3 sentence clinical answer compiled from the matching sources.",
-        "matchedIds": ["doc-id-1", "doc-id-2"]
-    }`;
-
-    const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
+    synthBox.classList.remove("hidden");
+    
+    // 1. Loader Phrasing Configuration (Option C)
+    if (synthText) synthText.innerHTML = "AtriGuide AI is retrieving relevant papers and generating key insights...";
+    cardsContainer.innerHTML = `
+        <div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-12 justify-center">
+            <span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span>
+            <span>Extracting trial data...</span>
+        </div>`;
 
     try {
+        if (!window.isFirebaseActive || !db) {
+            // Offline Fallback Pattern Mapped Loops
+            if (synthText) synthText.innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
+
+            const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies', 'study', 'papers', 'paper', 'data', 'evidence', 'find', 'search', 'how', 'we', 'have'];
+            const searchWords = query.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(word => word.length > 1 && !stopWords.includes(word));
+
+            let scoredMatches = [];
+            if (searchWords.length > 0 && clinicalDatabase.length > 0) {
+                clinicalDatabase.forEach(doc => {
+                    let score = 0;
+                    const titleLower = String(doc.title || "").toLowerCase();
+                    const authorLower = String(doc.author || "").toLowerCase();
+                    const summaryLower = String(doc.summary || "").toLowerCase();
+                    const profileLower = String(doc.searchProfile || "").toLowerCase();
+
+                    searchWords.forEach(word => {
+                        if (titleLower.includes(word)) score += 15;
+                        if (authorLower.includes(word)) score += 15; 
+                        if (profileLower.includes(word)) score += 10; 
+                        if (summaryLower.includes(word)) score += 6;
+                    });
+
+                    if (score > 0) scoredMatches.push({ doc, score });
+                });
+                scoredMatches.sort((a, b) => b.score - a.score);
+            }
+
+            const finalLocalMatches = scoredMatches.map(sm => sm.doc);
+            if (finalLocalMatches.length > 0) {
+                cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
+                window.showToast("Local engine retrieved " + finalLocalMatches.length + " matching papers.", "success");
+            } else {
+                cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No matching items found for "${window.escapeHtml(query)}" offline.</div>`;
+            }
+            return;
+        }
+
+        const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
+
+        const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
+        Format exactly like this:
+        {
+            "synthesis": "A direct 2-3 sentence clinical answer compiled from the matching sources.",
+            "matchedIds": ["doc-id-1", "doc-id-2"]
+        }`;
+
+        const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
         const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
         const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
-        document.getElementById("aiSynthesisText").innerText = parsedResult.synthesis || "No direct executive brief available.";
+        // 2. Render Completed Payload with Custom Scrub Sink Branding Header Badge
+        synthBox.innerHTML = `
+            <h5 class="text-xs font-bold text-[#00205B] uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-[#FF6B00]"></i> 🧽 AtriGuide AI Scrub Sink Summary
+            </h5>
+            <p id="aiSynthesisText" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
+                ${window.escapeHtml(parsedResult.synthesis || "No direct executive brief available.")}
+            </p>
+        `;
         
         const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
-        
         if (matches.length > 0) {
             cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
             window.showToast("Synthesized results populated successfully.", "success");
@@ -386,54 +433,9 @@ window.askAtriGuide = async function() {
             cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
         }
     } catch (err) {
-        console.error("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
-        
-        document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
-
-        const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies', 'study', 'papers', 'paper', 'data', 'evidence', 'find', 'search', 'how', 'we', 'have'];
-        const searchWords = query.toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .split(/\s+/)
-            .filter(word => word.length > 1 && !stopWords.includes(word));
-
-        let scoredMatches = [];
-        if (searchWords.length > 0 && clinicalDatabase.length > 0) {
-            clinicalDatabase.forEach(doc => {
-                let score = 0;
-                const titleLower = String(doc.title || "").toLowerCase();
-                const authorLower = String(doc.author || "").toLowerCase();
-                const summaryLower = String(doc.summary || "").toLowerCase();
-                const mCatLower = String(doc.mainCategory || "").toLowerCase();
-                const sCatLower = String(doc.subCategory || "").toLowerCase();
-                const profileLower = String(doc.searchProfile || "").toLowerCase();
-
-                searchWords.forEach(word => {
-                    if (titleLower.includes(word)) score += 15;
-                    if (authorLower.includes(word)) score += 15; 
-                    if (profileLower.includes(word)) score += 10; 
-                    if (summaryLower.includes(word)) score += 6;
-                    if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
-                });
-
-                if (score > 0) {
-                    scoredMatches.push({ doc, score });
-                }
-            });
-            scoredMatches.sort((a, b) => b.score - a.score);
-        }
-
-        const finalLocalMatches = scoredMatches.map(sm => sm.doc);
-
-        if (finalLocalMatches.length > 0) {
-            cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
-            window.showToast("Local engine retrieved " + finalLocalMatches.length + " matching papers.", "success");
-        } else {
-            cardsContainer.innerHTML = `
-                <div class="text-slate-400 font-semibold p-8 text-center text-xs">
-                    No matching items found for "${window.escapeHtml(query)}" offline.<br>
-                    <span class="text-slate-350 block mt-1 font-normal">Try searching with simplified terms like "Whitlock", "Damiano", "EnCompass", or "LAAOS".</span>
-                </div>`;
-        }
+        console.error("AI routing matrix connection anomaly:", err);
+        if (synthText) synthText.innerHTML = "An extraction fault occurred while analyzing the target documents.";
+        cardsContainer.innerHTML = "";
     } finally {
         btn.disabled = false;
         btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-white"></i><span>✨ Ask AtriGuide</span>`;
@@ -790,7 +792,7 @@ window.renderAtriGuideCard = function(card, index) {
         <div class="bg-white border border-slate-200 rounded-lg p-4 flex flex-col justify-between shadow-sm relative group animate-fade-in">
             <div class="flex flex-col flex-1">
                 <div class="flex items-start justify-between gap-2 mb-2">
-                    <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug">${window.escapeHtml(card.title)}</h4>
+                    <h4 class="font-bold text-xs md:text-sm text-slate-800 tracking-tight leading-snug text-left">${window.escapeHtml(card.title)}</h4>
                     <button onclick="toggleStarItem('${card.id}')" class="text-slate-300 hover:text-amber-500 p-0.5"><i data-lucide="star" class="w-4 h-4 ${isStarred ? 'text-amber-500 fill-amber-400' : ''}"></i></button>
                 </div>
                 
@@ -799,7 +801,7 @@ window.renderAtriGuideCard = function(card, index) {
                     ${actionLinkButtonHtml}
                 </div>
                 
-                <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5 flex-1">
+                <div class="bg-slate-50 border border-slate-100/50 rounded p-2.5 flex-1 text-left">
                     <ul class="space-y-1 list-none pl-0">${cleanSummaryHtml}</ul>
                 </div>
             </div>
@@ -842,7 +844,7 @@ window.renderAdminInventory = function() {
 
             return `
                 <div class="p-3 bg-white flex items-center justify-between border-b border-slate-100 admin-inv-row" data-title="${escapedTitle.toLowerCase()}" data-author="${escapedAuthor.toLowerCase()}">
-                    <div class="min-w-0 flex-1">
+                    <div class="min-w-0 flex-1 text-left">
                         <h5 class="text-xs font-bold text-slate-800 truncate leading-tight">${escapedTitle}</h5>
                         <p class="text-[10px] font-medium text-slate-400 mt-0.5">${escapedMainCat} &gt; ${escapedSubCat}</p>
                     </div>
@@ -1194,8 +1196,8 @@ window.renderSpreadsheetWorkspace = function() {
                         ${subOptionsHtml}
                     </select>
                 </td>
-                <td contenteditable="true" onblur="updateCell('${item.id}', 'title', this.innerText)" class="py-3 px-4 text-xs font-semibold text-slate-800 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.title)}</td>
-                <td contenteditable="true" onblur="updateCell('${item.id}', 'author', this.innerText)" class="py-3 px-4 text-xs text-slate-600 border-b focus:bg-white outline-none cursor-text">${window.escapeHtml(item.author)}</td>
+                <td contenteditable="true" onblur="updateCell('${item.id}', 'title', this.innerText)" class="py-3 px-4 text-xs font-semibold text-slate-800 border-b focus:bg-white outline-none cursor-text text-left">${window.escapeHtml(item.title)}</td>
+                <td contenteditable="true" onblur="updateCell('${item.id}', 'author', this.innerText)" class="py-3 px-4 text-xs text-slate-600 border-b focus:bg-white outline-none cursor-text text-left">${window.escapeHtml(item.author)}</td>
                 <td class="py-3 px-4 text-center border-b">
                     <button onclick="triggerDeleteConfirmModal('${item.id}')" class="p-1.5 text-slate-400 hover:text-red-600 transition-colors cursor-pointer" title="Delete Row"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </td>
@@ -1421,16 +1423,14 @@ window.generateQrCodePopstream = function(url, title) {
     const canvasContainer = document.getElementById("qrCodeCanvasTarget");
     const modalTitle = document.getElementById("qrModalTitle");
     
-    // Clear out any previous matrix drawings inside the canvas target
     canvasContainer.innerHTML = "";
     modalTitle.innerText = title;
 
-    // Fire rendering stream payload onto target viewport wrapper elements
     new QRCode(canvasContainer, {
         text: url,
         width: 180,
         height: 180,
-        colorDark: "#00205B", // AtriGuide deep navy theme code
+        colorDark: "#00205B", 
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
     });
@@ -1446,15 +1446,11 @@ window.closeQrCodeModal = function() {
 // =========================================================================
 // 🚀 DYNAMIC SYSTEM BROADCAST TIMELINE AND ADMINISTRATION CONTROLLER CORE
 // =========================================================================
-window.activeBroadcastLogs = [];
-window.isBroadcastExpanded = false;
-
 window.toggleBroadcastAccordion = function() {
     window.isBroadcastExpanded = !window.isBroadcastExpanded;
     window.renderLiveBroadcastTimeline();
 };
 
-// Interface Paint Routine: Home Accordion Container Box
 window.renderLiveBroadcastTimeline = function() {
     const target = document.getElementById("dynamicSystemBroadcastWrapper");
     if (!target) return;
@@ -1469,7 +1465,7 @@ window.renderLiveBroadcastTimeline = function() {
     }
 
     const latestBuild = items[0];
-    const visibleLogs = items.slice(0, 3); // Restrict window to immediate top 3 records
+    const visibleLogs = items.slice(0, 3);
 
     const timelineHtml = visibleLogs.map((log, idx) => `
         <div class="border-l-2 ${idx === 0 ? 'border-orange-500 bg-orange-50/10' : 'border-slate-200'} pl-4 ml-2 py-2.5 text-left">
@@ -1520,7 +1516,6 @@ window.renderLiveBroadcastTimeline = function() {
     lucide.createIcons();
 };
 
-// Router Intercept: Render Full Historical Archives Timeline Sheet
 window.routeToFullSystemChangelogHistory = function() {
     window.currentMainCategory = null;
     window.currentSubCategory = null;
@@ -1540,9 +1535,9 @@ window.routeToFullSystemChangelogHistory = function() {
         <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2 text-left">
             <div class="flex items-center space-x-3 border-b border-slate-100 pb-2 flex-wrap gap-y-1">
                 <span class="font-mono text-xs font-black uppercase tracking-wider bg-[#00205B] text-white px-2 py-0.5 rounded shadow-sm">${window.escapeHtml(log.version)}</span>
-                <h4 class="font-bold text-slate-800 text-sm tracking-tight leading-snug">${window.escapeHtml(log.title)}</h4>
+                <h4 class="font-bold text-slate-800 text-sm tracking-tight leading-snug text-left">${window.escapeHtml(log.title)}</h4>
             </div>
-            <p class="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line pt-1">${window.escapeHtml(log.message)}</p>
+            <p class="text-xs text-slate-600 leading-relaxed font-medium whitespace-pre-line pt-1 text-left">${window.escapeHtml(log.message)}</p>
         </div>
     `).join('');
 
@@ -1568,7 +1563,6 @@ window.routeToFullSystemChangelogHistory = function() {
     lucide.createIcons();
 };
 
-// Admin UI Broadcast Management Feed Sync Routine
 window.renderAdminBroadcastInventory = function() {
     const target = document.getElementById("adminBroadcastInventoryTarget");
     if (!target) return;
@@ -1584,9 +1578,9 @@ window.renderAdminBroadcastInventory = function() {
             <div class="min-w-0 flex-1">
                 <div class="flex items-center space-x-1.5 mb-1 flex-wrap">
                     <span class="font-mono text-[9px] font-bold bg-slate-100 border border-slate-200 px-1 py-0.2 rounded text-slate-600">${window.escapeHtml(log.version)}</span>
-                    <h6 class="font-bold text-slate-800 text-xs truncate max-w-[240px]">${window.escapeHtml(log.title)}</h6>
+                    <h6 class="font-bold text-slate-800 text-xs truncate max-w-[240px] text-left">${window.escapeHtml(log.title)}</h6>
                 </div>
-                <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium">${window.escapeHtml(log.message)}</p>
+                <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed font-medium text-left">${window.escapeHtml(log.message)}</p>
             </div>
             <div class="flex items-center space-x-1 shrink-0">
                 <button onclick="window.setupBroadcastEditWorkflow('${log.id}')" class="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer" title="Edit fields">
@@ -1638,7 +1632,7 @@ window.publishFieldBroadcast = async function() {
     };
 
     try {
-        if (!window.isFirebaseActive || !window.db) {
+        if (!window.isFirebaseActive || !db) {
             window.showToast("Database write stream offline.", "warning");
             return;
         }
@@ -1646,12 +1640,12 @@ window.publishFieldBroadcast = async function() {
         const { collection, doc, addDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         
         if (editDocId !== "") {
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', editDocId);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements', editDocId);
             await updateDoc(docRef, payload);
             window.showToast("Log entry configurations updated seamlessly!", "success");
         } else {
             payload.timestamp = Date.now();
-            const targetCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements');
+            const targetCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
             await addDoc(targetCollection, payload);
             window.showToast("New system announcement broadcasted live to field!", "success");
         }
@@ -1667,9 +1661,9 @@ window.purgeBroadcastLogEntry = async function(docId) {
     if (!confirm("Are you certain you want to purge this build notice log file entry permanently from network systems?")) return;
 
     try {
-        if (window.isFirebaseActive && window.db) {
+        if (window.isFirebaseActive && db) {
             const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', docId);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements', docId);
             await deleteDoc(docRef);
             
             if (document.getElementById("broadcastEditDocId").value === docId) {
