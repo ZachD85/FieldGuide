@@ -1666,6 +1666,39 @@ window.purgeBroadcastLogEntry = async function(docId) {
     }
 };
 
+// 🔒 SECURE API KEY FIREBASE TRANSMISSION PATH
+window.saveApiKeyToFirestore = async function() {
+    const keyInput = document.getElementById("secureApiKeyInput");
+    if (!keyInput || !window.db) return;
+    const rawKey = keyInput.value.trim();
+
+    if (!rawKey) {
+        window.showToast("Please paste a valid Gemini API key string before saving.", "warning");
+        return;
+    }
+
+    try {
+        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
+        
+        await setDoc(docRef, { 
+            key: rawKey,
+            lastModifiedTimestamp: Date.now()
+        }, { merge: true });
+
+        window.apiKey = rawKey;
+        window.updateApiKeyStatusUI(true);
+        keyInput.value = "";
+        window.showToast("API Key safely locked and synced to secure Firestore collections!", "success");
+        
+        // Instantly refresh the viewboard to bring search online
+        window.renderAppViewboard();
+    } catch (err) {
+        console.error("API key encryption transmission fault:", err);
+        window.showToast("Failed to write credential block to cloud storage.", "warning");
+    }
+};
+
 // 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
 const initApp = async () => {
     window.loadStarredCache();
