@@ -367,7 +367,11 @@ window.askAtriGuide = async function() {
     const cardsContainer = document.getElementById("aiCardsContainer");
     
     syncBox.classList.remove("hidden");
-    document.getElementById("aiSynthesisText").innerHTML = "AtriGuide intelligence engine is evaluating full context matrix against indexed documents...";
+    
+    // 🚀 FIXED LOADING TEXT: Perfectly punchy and field-ready
+    document.getElementById("aiSynthesisText").innerHTML = "AtriGuide AI is retrieving relevant papers and generating key insights...";
+    
+    // The animated pulse target matching your trial logs
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
     const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
@@ -385,13 +389,14 @@ window.askAtriGuide = async function() {
         const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
         const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
-        document.getElementById("aiSynthesisText").innerText = parsedResult.synthesis || "No direct executive brief available.";
+        // 🚀 FIXED OUTPUT TEXT: Formatted explicitly to show the polished terminology
+        document.getElementById("aiSynthesisText").innerHTML = `<strong>Scrub Sink Summary:</strong><br>${parsedResult.synthesis || "No direct executive brief available."}`;
         
         const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
         
         if (matches.length > 0) {
             cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
-            window.showToast("Synthesized results populated successfully.", "success");
+            window.showToast("Scrub Sink Summary populated successfully.", "success");
         } else {
             cardsContainer.innerHTML = `<div class="text-slate-400 font-semibold p-8 text-center text-xs">No explicit evidence cards support this concept. Try phrasing by specific parameters or device tags.</div>`;
         }
