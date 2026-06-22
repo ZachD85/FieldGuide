@@ -13,11 +13,17 @@ const myPrivateFirebaseConfig = {
 };
 
 // EXPOSE CORE STATE & GLOBAL LIFECYCLE HANDLERS DIRECTLY TO WINDOW
-window.apiKey = ""; 
-window.db = null;
-window.auth = null;
-window.activeUser = null;
-window.isFirebaseActive = false;
+let apiKey = ""; 
+let db = null;
+let auth = null;
+let activeUser = null;
+let isFirebaseActive = false;
+
+window.apiKey = apiKey;
+window.db = db;
+window.auth = auth;
+window.activeUser = activeUser;
+window.isFirebaseActive = isFirebaseActive;
 window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
 
 const fallbackDatabase = [
@@ -177,6 +183,8 @@ window.attemptInitializeFirebase = async function() {
             const app = initializeApp(finalConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            window.auth = auth;
+            window.db = db;
 
             await signInAnonymously(auth);
 
@@ -204,13 +212,13 @@ window.attemptInitializeFirebase = async function() {
 };
 
 window.loadSecureApiKey = async function() {
-    if (!db) return;
+    if (!window.db) return;
     try {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'gemini');
+        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            apiKey = docSnap.data().key || "";
-            window.updateApiKeyStatusUI(apiKey ? true : false);
+            window.apiKey = docSnap.data().key || "";
+            window.updateApiKeyStatusUI(window.apiKey ? true : false);
         } else {
             window.updateApiKeyStatusUI(false);
         }
