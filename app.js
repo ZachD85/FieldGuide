@@ -213,27 +213,16 @@ window.attemptInitializeFirebase = async function() {
 
 window.loadSecureApiKey = async function() {
     if (!window.db) return;
-    
-    // DEBUG: Print the exact path and ID being used
-    console.log("Attempting to load key from:", 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
-    
     try {
-        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
+        const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'gemini');
         const docSnap = await getDoc(docRef);
-        
-        // DEBUG: Tell us if the document exists
-        console.log("Document exists:", docSnap.exists());
-        
         if (docSnap.exists()) {
             window.apiKey = docSnap.data().key || "";
             window.updateApiKeyStatusUI(window.apiKey ? true : false);
         } else {
             window.updateApiKeyStatusUI(false);
         }
-    } catch (err) {
-        console.error("Error loading secure API key:", err);
-        window.updateApiKeyStatusUI(false);
-    }
+    } catch (err) { window.updateApiKeyStatusUI(false); }
 };
 
 window.updateApiKeyStatusUI = function(isLoaded) {
@@ -254,7 +243,7 @@ window.subscribeToDatabaseStreams = function() {
     if (!isFirebaseActive || !activeUser) return;
     
     // Channel A: Clinical Studies Registry Snapshot Channel
-    const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+    const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'clinicalResources');
     onSnapshot(publicDataCollection, (snapshot) => {
         const cloudDocs = [];
         snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
@@ -272,7 +261,7 @@ window.subscribeToDatabaseStreams = function() {
     });
 
     // Channel B: Live System Broadcast Timeline logs Real-time Data pipeline
-    const broadcastCollection = collection(db, 'artifacts', appId, 'public', 'data', 'systemAnnouncements');
+    const broadcastCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'systemAnnouncements');
     onSnapshot(broadcastCollection, (snapshot) => {
         const logs = [];
         snapshot.forEach(doc => { logs.push({ id: doc.id, ...doc.data() }); });
@@ -292,9 +281,11 @@ window.subscribeToDatabaseStreams = function() {
 window.seedLocalDataToCloud = async function() {
     if (!isFirebaseActive || !activeUser) return;
     try {
-        const publicDataCollection = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+        const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'clinicalResources');
         for (const item of fallbackDatabase) { await addDoc(publicDataCollection, item); }
-    } catch (err) {}
+    } catch (err) {
+        console.error("Failed to seed cloud registry:", err);
+    }
 };
 
 window.loadLocalFallbackData = function() {
@@ -1637,12 +1628,12 @@ window.publishFieldBroadcast = async function() {
         const { collection, doc, addDoc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
         
         if (editDocId !== "") {
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', editDocId);
+            const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'systemAnnouncements', editDocId);
             await updateDoc(docRef, payload);
             window.showToast("Log entry configurations updated seamlessly!", "success");
         } else {
             payload.timestamp = Date.now();
-            const targetCollection = collection(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements');
+            const targetCollection = collection(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'systemAnnouncements');
             await addDoc(targetCollection, payload);
             window.showToast("New system announcement broadcasted live to field!", "success");
         }
@@ -1660,7 +1651,7 @@ window.purgeBroadcastLogEntry = async function(docId) {
     try {
         if (window.isFirebaseActive && window.db) {
             const { doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-            const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'systemAnnouncements', docId);
+            const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'systemAnnouncements', docId);
             await deleteDoc(docRef);
             
             if (document.getElementById("broadcastEditDocId").value === docId) {
@@ -1679,32 +1670,13 @@ window.saveApiKeyToFirestore = async function() {
     const keyInput = document.getElementById("secureApiKeyInput");
     if (!keyInput || !window.db) return;
     const rawKey = keyInput.value.trim();
-
-    if (!rawKey) {
-        window.showToast("Please paste a valid Gemini API key string before saving.", "warning");
-        return;
-    }
-
     try {
-        const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-        const docRef = doc(window.db, 'artifacts', window.appId, 'public', 'data', 'config', 'gemini');
-        
-        await setDoc(docRef, { 
-            key: rawKey,
-            lastModifiedTimestamp: Date.now()
-        }, { merge: true });
-
+        const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'gemini');
+        await setDoc(docRef, { key: rawKey, lastModifiedTimestamp: Date.now() }, { merge: true });
         window.apiKey = rawKey;
         window.updateApiKeyStatusUI(true);
-        keyInput.value = "";
-        window.showToast("API Key safely locked and synced to secure Firestore collections!", "success");
-        
-        // Instantly refresh the viewboard to bring search online
-        window.renderAppViewboard();
-    } catch (err) {
-        console.error("API key encryption transmission fault:", err);
-        window.showToast("Failed to write credential block to cloud storage.", "warning");
-    }
+        window.showToast("API Key synced to artifacts path!", "success");
+    } catch (err) { window.showToast("Failed to write.", "warning"); }
 };
 
 // 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
