@@ -1704,15 +1704,19 @@ window.saveApiKeyToFirestore = async function() {
     } catch (err) { window.showToast("Failed to write.", "warning"); }
 };
 
-// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
+// =========================================================================
+// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE WITH HIDDEN BACKDOOR ROUTER
+// =========================================================================
 const initApp = async () => {
     window.loadStarredCache();
     await window.attemptInitializeFirebase();
     window.updateSidebarActiveStates();
-    window.renderAppViewboard();
     window.setupLocalEventListeners();
     
-    // 🔒 HIDDEN BACKDOOR: Scan the browser's address bar for the secret mode parameter
+    // 📢 WEVED VIEW ROUTER LATER: Give Firebase a chance to draw the view deck first
+    window.renderAppViewboard();
+    
+    // 🔒 HIDDEN BACKDOOR: Runs dead-last so it takes absolute rendering priority
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('mode') === 'godmode') {
         // Instantly scrub the URL parameter from the browser history so it vanishes from sight
@@ -1722,6 +1726,7 @@ const initApp = async () => {
     }
     
     lucide.createIcons();
+};
 };
 
 if (document.readyState === "loading") {
