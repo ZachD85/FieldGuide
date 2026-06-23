@@ -1713,20 +1713,19 @@ const initApp = async () => {
     window.updateSidebarActiveStates();
     window.setupLocalEventListeners();
     
-    // 📢 WEVED VIEW ROUTER LATER: Give Firebase a chance to draw the view deck first
-    window.renderAppViewboard();
-    
-    // 🔒 HIDDEN BACKDOOR: Runs dead-last so it takes absolute rendering priority
+    // 🔒 HIDDEN BACKDOOR: Wrapped in a minor delay to let Firebase settle views first
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('mode') === 'godmode') {
         // Instantly scrub the URL parameter from the browser history so it vanishes from sight
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Force slide open the password modal challenge
-        window.openAdminAuthModal();
+        
+        // Wait exactly 400 milliseconds for Firebase auth to finish drawing the screen, then strike!
+        setTimeout(() => {
+            window.openAdminAuthModal();
+        }, 400);
     }
     
     lucide.createIcons();
-};
 };
 
 if (document.readyState === "loading") {
