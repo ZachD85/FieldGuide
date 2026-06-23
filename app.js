@@ -1704,25 +1704,21 @@ window.saveApiKeyToFirestore = async function() {
     } catch (err) { window.showToast("Failed to write.", "warning"); }
 };
 
-// =========================================================================
-// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE WITH HIDDEN BACKDOOR ROUTER
-// =========================================================================
+// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
 const initApp = async () => {
     window.loadStarredCache();
     await window.attemptInitializeFirebase();
     window.updateSidebarActiveStates();
+    window.renderAppViewboard();
     window.setupLocalEventListeners();
     
-    // 🔒 HIDDEN BACKDOOR: Wrapped in a minor delay to let Firebase settle views first
+    // 🔒 HIDDEN BACKDOOR: Scan the browser's address bar for the secret mode parameter
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('mode') === 'godmode') {
         // Instantly scrub the URL parameter from the browser history so it vanishes from sight
         window.history.replaceState({}, document.title, window.location.pathname);
-        
-        // Wait exactly 400 milliseconds for Firebase auth to finish drawing the screen, then strike!
-        setTimeout(() => {
-            window.openAdminAuthModal();
-        }, 400);
+        // Force slide open the password modal challenge
+        window.openAdminAuthModal();
     }
     
     lucide.createIcons();
