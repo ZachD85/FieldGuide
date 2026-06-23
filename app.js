@@ -1704,23 +1704,15 @@ window.saveApiKeyToFirestore = async function() {
     } catch (err) { window.showToast("Failed to write.", "warning"); }
 };
 
-// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE
+// =========================================================================
+// 🚀 ENGINE BOOT SEQUENCE LIFECYCLE - STABLE PRODUCTION RESTORE
+// =========================================================================
 const initApp = async () => {
     window.loadStarredCache();
     await window.attemptInitializeFirebase();
     window.updateSidebarActiveStates();
     window.renderAppViewboard();
     window.setupLocalEventListeners();
-    
-    // 🔒 HIDDEN BACKDOOR: Scan the browser's address bar for the secret mode parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('mode') === 'godmode') {
-        // Instantly scrub the URL parameter from the browser history so it vanishes from sight
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Force slide open the password modal challenge
-        window.openAdminAuthModal();
-    }
-    
     lucide.createIcons();
 };
 
