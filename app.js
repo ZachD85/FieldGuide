@@ -1044,16 +1044,34 @@ window.closeAdminAuthModal = function() {
     document.getElementById("adminAuthModal").classList.add("hidden");
 };
 
-window.verifyAdminAuthPassword = function() {
-    const pin = document.getElementById("adminPasswordInput").value;
+window.verifyAdminAuthPassword = async function() {
+    const pin = document.getElementById("adminPasswordInput").value.trim();
     const error = document.getElementById("adminAuthError");
     
-    if (pin === "admin") {
-        window.closeAdminAuthModal();
-        window.switchToView("admin");
-        window.showToast("System Access Authorized.", "success");
-    } else {
-        error.classList.remove("hidden");
+    try {
+        if (!window.isFirebaseActive || !window.db) {
+            window.showToast("Security authentication server offline.", "warning");
+            return;
+        }
+
+        // Dynamically import Firestore doc capabilities for a clean handshake
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+        
+        // Target your secure configuration path in Firestore
+        const securityDocRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'security');
+        const docSnap = await getDoc(securityDocRef);
+
+        // Match the database password field directly with the user input
+        if (docSnap.exists() && docSnap.data().password === pin) {
+            window.closeAdminAuthModal();
+            window.switchToView("admin");
+            window.showToast("System Access Authorized.", "success");
+        } else {
+            error.classList.remove("hidden");
+        }
+    } catch (err) {
+        console.error("Security vault authentication failure:", err);
+        window.showToast("Failed to verify access permissions.", "warning");
     }
 };
 
@@ -1693,6 +1711,16 @@ const initApp = async () => {
     window.updateSidebarActiveStates();
     window.renderAppViewboard();
     window.setupLocalEventListeners();
+    
+    // 🔒 HIDDEN BACKDOOR: Scan the browser's address bar for the secret mode parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'godmode') {
+        // Instantly scrub the URL parameter from the browser history so it vanishes from sight
+        window.history.replaceState({}, document.title, window.location.pathname);
+        // Force slide open the password modal challenge
+        window.openAdminAuthModal();
+    }
+    
     lucide.createIcons();
 };
 
