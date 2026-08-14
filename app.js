@@ -366,7 +366,10 @@ window.getAICandidates = function(query, pinnedIds = []) {
         author: item.author,
         category: `${item.mainCategory || ''} > ${item.subCategory || ''}`,
         summary: item.summary,
-        keywords: item.searchProfile || ''
+        keywords: item.searchProfile || '',
+        evidence: Array.isArray(item.evidence) && item.evidence.length
+            ? item.evidence.slice(0, 8)
+            : [{ claim: item.summary || "Document-level evidence summary", page: null, locator: "", kind: "legacy_summary", excerpt: "" }]
     }));
 };
 
@@ -474,8 +477,15 @@ window.renderStructuredSSS = function(result) {
             sourceTitle.className = "block text-[#00205B]";
             sourceTitle.textContent = source.card.title;
             row.appendChild(sourceTitle);
+            if (source.page || source.locator) {
+                const locator = document.createElement("span");
+                locator.className = "inline-flex mt-1 mb-1 mr-2 text-[10px] font-extrabold uppercase tracking-wider text-orange-800 bg-orange-100 rounded-full px-2 py-0.5";
+                locator.textContent = source.page ? `Page ${source.page}` : source.locator;
+                row.appendChild(locator);
+            }
             if (source.supports) {
                 const support = document.createElement("span");
+                support.className = "block";
                 support.textContent = source.supports;
                 row.appendChild(support);
             }

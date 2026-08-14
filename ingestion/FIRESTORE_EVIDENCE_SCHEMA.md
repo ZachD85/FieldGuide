@@ -1,4 +1,4 @@
-# AtriGuide compact evidence schema (v2)
+# AtriGuide compact evidence schema (v3)
 
 One Firestore document per source PDF, keyed by a stable hash of the Drive file ID.
 
@@ -6,7 +6,7 @@ One Firestore document per source PDF, keyed by a stable hash of the Drive file 
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "source": {
     "driveFileId": "...", "driveUrl": "...", "fileName": "...", "contentHash": "...",
     "identity": {"doi": "...", "pmid": "...", "titleCandidates": ["..."], "passageFingerprints": ["..."]}
@@ -29,7 +29,7 @@ One Firestore document per source PDF, keyed by a stable hash of the Drive file 
   "cardBullets": ["..."],
   "clinicalTags": ["..."],
   "searchTerms": ["..."],
-  "evidence": [{"claim": "...", "locator": "page 4", "kind": "result"}],
+  "evidence": [{"claim": "...", "page": 4, "locator": "page 4", "kind": "result", "excerpt": "short supporting source text"}],
   "details": {},
   "review": {"status": "ready", "reasons": []},
   "ingestion": {"pipelineVersion": "2.0", "processedAt": "...", "model": "...", "inputCharacters": 0}
@@ -54,6 +54,13 @@ Allowed website placements are fixed:
 - `brochure_other`: `resourceKind`, `intendedAudience`, `keyMessages`; authority is `manufacturer_resource` or `other`
 
 Arrays are deliberately bounded in code: up to 5 card bullets, 8 evidence claims, 12 clinical tags, and 12 search terms. The full PDF remains the source of truth; Firestore stores retrieval-ready evidence, not a second copy of the document.
+
+Page numbers come only from the page markers added during local PDF extraction. The
+conversational AI selects a stored evidence claim by index; the server supplies its
+validated page label. This prevents the chat response from inventing citations.
+
+Existing v2 and legacy records remain valid. A citation backfill enriches them in
+place and does not delete the collection or overwrite Admin category overrides.
 
 ## Duplicate identity
 

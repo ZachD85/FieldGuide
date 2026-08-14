@@ -44,14 +44,24 @@ async function enforceRateLimit(uid) {
 
 function cleanCandidates(value) {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 12).map((item) => ({
-    id: String(item.id || "").slice(0, 80),
-    title: String(item.title || "").slice(0, 300),
-    author: String(item.author || "").slice(0, 300),
-    category: String(item.category || "").slice(0, 120),
-    summary: String(item.summary || "").slice(0, 1400),
-    keywords: String(item.keywords || "").slice(0, 600),
-  })).filter((item) => item.id && item.title);
+  return value.slice(0, 12).map((item) => {
+    const evidence = Array.isArray(item.evidence) ? item.evidence.slice(0, 8).map((claim) => ({
+      claim: String(claim?.claim || "").slice(0, 700),
+      page: Number.isInteger(claim?.page) && claim.page > 0 ? claim.page : null,
+      locator: String(claim?.locator || "").slice(0, 80),
+      kind: String(claim?.kind || "").slice(0, 40),
+      excerpt: String(claim?.excerpt || "").slice(0, 500),
+    })).filter((claim) => claim.claim) : [];
+    return {
+      id: String(item.id || "").slice(0, 80),
+      title: String(item.title || "").slice(0, 300),
+      author: String(item.author || "").slice(0, 300),
+      category: String(item.category || "").slice(0, 120),
+      summary: String(item.summary || "").slice(0, 1400),
+      keywords: String(item.keywords || "").slice(0, 600),
+      evidence,
+    };
+  }).filter((item) => item.id && item.title);
 }
 
 function cleanHistory(value) {
@@ -101,8 +111,10 @@ exports.askAtriGuide = onCall({
     `Apply that same caution to the headline and synthesis: do not say an intervention is proven safe, improves ` +
     `survival, or applies to all low-EF patients unless the supplied evidence directly establishes that claim. ` +
     `Prefer wording such as "supports considering" or "was associated with" and name the studied population. ` +
-    `For every central point, include a source mapping using only ` +
-    `a supplied card ID. Return exactly two short follow-up questions that can be answered from the cards.\n` +
+    `For every central point, include a source mapping using only a supplied card ID and the zero-based ` +
+    `evidenceIndex of the supplied evidence claim that supports it. Never invent a page or locator. If a card ` +
+    `has no suitable evidence claim, omit that source mapping. Return exactly two short follow-up questions ` +
+    `that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
     model: "gemini-2.5-flash",
@@ -125,8 +137,8 @@ exports.askAtriGuide = onCall({
             type: "array",
             items: {
               type: "object",
-              properties: {id: {type: "string"}, supports: {type: "string"}},
-              required: ["id", "supports"],
+              properties: {id: {type: "string"}, evidenceIndex: {type: "integer"}, supports: {type: "string"}},
+              required: ["id", "evidenceIndex", "supports"],
               additionalProperties: false,
             },
           },
@@ -150,6 +162,7 @@ exports.askAtriGuide = onCall({
     throw new HttpsError("internal", "The AI response could not be validated.");
   }
   const allowedIds = new Set(candidates.map((item) => item.id));
+  const candidateById = new Map(candidates.map((item) => [item.id, item]));
   const suggestedFollowUps = Array.isArray(parsed.suggestedFollowUps) ?
     parsed.suggestedFollowUps.map((value) => String(value).trim().slice(0, 160)).filter(Boolean).slice(0, 2) : [];
   const safeFallbacks = [
@@ -169,7 +182,21 @@ exports.askAtriGuide = onCall({
     matchedIds: Array.isArray(parsed.matchedIds) ? parsed.matchedIds.filter((id) => allowedIds.has(id)).slice(0, 8) : [],
     sources: Array.isArray(parsed.sources) ? parsed.sources
       .filter((source) => allowedIds.has(source?.id))
-      .map((source) => ({id: source.id, supports: String(source.supports || "").slice(0, 300)}))
+      .map((source) => {
+        const card = candidateById.get(source.id);
+        const evidenceIndex = Number.isInteger(source.evidenceIndex) ? source.evidenceIndex : -1;
+        const evidence = card?.evidence?.[evidenceIndex];
+        if (!evidence) return null;
+        return {
+          id: source.id,
+          evidenceIndex,
+          supports: String(source.supports || evidence.claim).slice(0, 300),
+          page: evidence.page,
+          locator: evidence.locator,
+          claim: evidence.claim,
+        };
+      })
+      .filter(Boolean)
       .slice(0, 6) : [],
     suggestedFollowUps,
   };

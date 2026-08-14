@@ -1,4 +1,4 @@
-"""Safe, cost-conscious AtriGuide ingestion v2.
+"""Safe, cost-conscious AtriGuide ingestion v3.
 
 Dry-run is the default. Production mutation requires BOTH --apply and the exact
 environment acknowledgement ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES.
@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PIPELINE_VERSION = "2.0"
+PIPELINE_VERSION = "3.0"
 MAX_AI_INPUT_CHARACTERS = 48000
 MAX_AI_OUTPUT_TOKENS = 2048
 MAX_AI_RESPONSE_BYTES = 262144
@@ -33,6 +33,35 @@ class DuplicateMatch:
 
 def stable_id(drive_file_id: str) -> str:
     return hashlib.sha256(drive_file_id.encode()).hexdigest()[:32]
+
+def evidence_page(value: Any) -> int | None:
+    """Return a trustworthy positive page number from model output."""
+    if isinstance(value, int) and value > 0:
+        return value
+    match = re.search(r"(?:\[?page\s+|\[PAGE\s+)(\d+)\]?", str(value or ""), re.I)
+    return int(match.group(1)) if match and int(match.group(1)) > 0 else None
+
+def normalize_evidence(items: Any) -> list[dict[str, Any]]:
+    """Keep compact claim citations and derive page labels without inventing pages."""
+    normalized = []
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict): continue
+        claim = str(item.get("claim") or "").strip()[:700]
+        if not claim: continue
+        page = evidence_page(item.get("page")) or evidence_page(item.get("locator"))
+        locator = f"page {page}" if page else str(item.get("locator") or "").strip()[:80]
+        normalized.append({
+            "claim": claim,
+            "page": page,
+            "locator": locator,
+            "kind": str(item.get("kind") or "result").strip()[:40],
+            "excerpt": str(item.get("excerpt") or "").strip()[:500],
+        })
+    return normalized[:8]
+
+def has_page_citations(record: dict[str, Any]) -> bool:
+    evidence = normalize_evidence(record.get("evidence"))
+    return bool(evidence) and all(item.get("page") for item in evidence)
 
 def normalize_identity_text(value: str) -> str:
     value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode()
@@ -206,7 +235,7 @@ def build_skeleton(file_id: str, name: str, url: str, text: str, folder_hint: st
     selected = select_text(text, doc_type)
     needs_review = placement.confidence < .70 or type_conf < .70
     return {
-        "id": stable_id(file_id), "schemaVersion": 2,
+        "id": stable_id(file_id), "schemaVersion": 3,
         "source": {"driveFileId": file_id, "driveUrl": url, "fileName": name,
                    "contentHash": hashlib.sha256(text.encode()).hexdigest(),
                    "identity": build_source_identity(name, text)},
@@ -395,7 +424,8 @@ def validate_record(record: dict[str, Any]) -> None:
     if record["documentType"] not in {"research_paper","meta_analysis","guideline_consensus","ifu","article_summary","brochure_other"}:
         raise ValueError("Invalid document type")
 
-def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str) -> dict[str, Any]:
+def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
+                   evidence_only: bool = False) -> dict[str, Any]:
     """One bounded structured extraction call; never reads a key from source code."""
     if len(selected_text) > MAX_AI_INPUT_CHARACTERS:
         raise ValueError("AI input exceeds the hard character budget")
@@ -403,15 +433,17 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str) 
     if not api_key: raise RuntimeError("GEMINI_API_KEY is not set")
     from urllib.parse import quote
     from urllib.request import Request, urlopen
-    shape = {
+    full_shape = {
         "title":"", "citation":"", "year":None, "summary":"",
         "cardBullets":["3-5 concise evidence bullets"], "clinicalTags":[], "searchTerms":[],
-        "evidence":[{"claim":"numerical or authoritative claim", "locator":"[PAGE n]", "kind":"result|safety|recommendation|labeling"}],
+        "evidence":[{"claim":"numerical or authoritative claim", "page":4, "locator":"page 4", "kind":"result|safety|recommendation|labeling", "excerpt":"short supporting source text"}],
         "details":{"typeSpecificFields":"Use only fields defined for this documentType"}
     }
+    shape = {"evidence": full_shape["evidence"]} if evidence_only else full_shape
     prompt = (
         "Extract only facts explicitly supported by the supplied text for an AtriGuide evidence card. "
-        "Do not infer missing numbers. Preserve page markers in evidence locators. Return raw JSON only. "
+        "Do not infer missing numbers or page numbers. Every evidence claim must use the [PAGE n] marker "
+        "that contains its supporting text and include a short verbatim supporting excerpt. Return raw JSON only. "
         f"Document type: {record['documentType']}. Required compact shape: {json.dumps(shape)}\n\n{selected_text}"
     )
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{quote(model_name)}:generateContent?key={quote(api_key)}"
@@ -430,12 +462,13 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str) 
     raw_response = json.loads(response_bytes.decode("utf-8"))
     response_text = raw_response["candidates"][0]["content"]["parts"][0]["text"]
     parsed = json.loads(response_text.replace("```json", "").replace("```", "").strip())
-    for key in ("title","citation","year","summary","cardBullets","clinicalTags","searchTerms","evidence","details"):
+    allowed_keys = ("evidence",) if evidence_only else ("title","citation","year","summary","cardBullets","clinicalTags","searchTerms","evidence","details")
+    for key in allowed_keys:
         if key in parsed: record[key] = parsed[key]
     record["cardBullets"] = record.get("cardBullets", [])[:5]
     record["clinicalTags"] = record.get("clinicalTags", [])[:12]
     record["searchTerms"] = record.get("searchTerms", [])[:12]
-    record["evidence"] = record.get("evidence", [])[:8]
+    record["evidence"] = normalize_evidence(record.get("evidence"))
     record["ingestion"]["model"] = model_name
     usage = raw_response.get("usageMetadata", {})
     if usage:
@@ -519,6 +552,59 @@ def scan_drive(args: argparse.Namespace) -> int:
     print(f"{mode}: {len(previews)} results written to {args.output}")
     return 0
 
+def backfill_citations(args: argparse.Namespace) -> int:
+    """Enrich existing records in place; never delete or replace the library."""
+    if not args.use_ai:
+        raise SystemExit("BLOCKED: citation backfill requires --use-ai")
+    drive = load_drive_client(args.credentials)
+    db, firestore_module = load_firestore_client(args.credentials)
+    collection = firestore_path(db, args.app_id, shadow=args.shadow)
+    write_enabled = shadow_writes_allowed(args.apply, args.shadow) or production_writes_allowed(args.apply, args.shadow)
+    records = load_existing_records(collection)
+    if args.limit: records = records[:args.limit]
+    previews = []
+    for record_id, existing in records:
+        try:
+            if has_page_citations(existing):
+                previews.append({"id": record_id, "status": "already_page_cited", "action": "unchanged"})
+                continue
+            source = existing.get("source") or {}
+            file_id = source.get("driveFileId")
+            if not file_id:
+                previews.append({"id": record_id, "status": "needs_review", "error": "missing source.driveFileId"})
+                continue
+            raw = download_pdf(drive, file_id)
+            text = extract_pdf_text(raw)
+            doc_type = existing.get("documentType") or detect_document_type(source.get("fileName", ""), text)[0]
+            selected = select_text(text, doc_type)
+            enrichment = {
+                "documentType": doc_type,
+                "evidence": [],
+                "ingestion": dict(existing.get("ingestion") or {}),
+            }
+            enrich_with_ai(enrichment, selected, args.model, evidence_only=True)
+            if not enrichment["evidence"]:
+                raise ValueError("No page-linked evidence was extracted")
+            update = {
+                "schemaVersion": 3,
+                "evidence": enrichment["evidence"],
+                "ingestion.citationModel": args.model,
+                "ingestion.citationBackfilledAt": datetime.now(timezone.utc).isoformat(),
+            }
+            previews.append({"id": record_id, "title": existing.get("title", ""),
+                             "status": "citation_preview", "update": update,
+                             "action": "update_in_place" if write_enabled else "dry_run_no_write"})
+            if write_enabled:
+                collection.document(record_id).update(update)
+        except Exception as exc:
+            previews.append({"id": record_id, "title": existing.get("title", ""),
+                             "status": "needs_review", "error": str(exc), "action": "unchanged"})
+        Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
+    Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
+    mode = "SHADOW APPLY" if write_enabled and args.shadow else "PRODUCTION APPLY" if write_enabled else "DRY RUN"
+    print(f"{mode}: {len(previews)} citation-backfill results written to {args.output}")
+    return 0
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("input_json", nargs="?", help="local JSON containing fileId, name, url and extractedText")
@@ -526,6 +612,7 @@ def main() -> int:
     p.add_argument("--apply", action="store_true", help="request production writes (still requires environment acknowledgement)")
     p.add_argument("--shadow", action="store_true", help="write only to the isolated ingestion-test collection; never move Drive files")
     p.add_argument("--scan-drive", action="store_true", help="scan the configured Pending folder")
+    p.add_argument("--backfill-citations", action="store_true", help="enrich existing records in place with page-linked evidence")
     p.add_argument("--credentials", default=os.getenv("ATRIGUIDE_CREDENTIALS", "credentials.json"))
     p.add_argument("--app-id", default=os.getenv("ATRIGUIDE_APP_ID", "atricure-clinical-hub"))
     p.add_argument("--pending-folder", default=os.getenv("ATRIGUIDE_PENDING_FOLDER_ID", "1BOC7ooYHACcEmsVcfJJ3pZOFV-rQueBk"))
@@ -542,8 +629,9 @@ def main() -> int:
         raise SystemExit("BLOCKED: production apply also requires ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES")
     if args.apply and not args.use_ai:
         raise SystemExit("BLOCKED: --apply requires --use-ai so incomplete records cannot be published")
+    if args.backfill_citations: return backfill_citations(args)
     if args.scan_drive: return scan_drive(args)
-    if not args.input_json: p.error("provide input_json or --scan-drive")
+    if not args.input_json: p.error("provide input_json, --scan-drive, or --backfill-citations")
     source = json.loads(Path(args.input_json).read_text(encoding="utf-8"))
     record = build_skeleton(source["fileId"], source["name"], source.get("url", ""), source["extractedText"], source.get("folderHint", ""))
     selected = record.pop("_selectedText")
