@@ -98,6 +98,9 @@ exports.askAtriGuide = onCall({
     `major complication, and study-design limitations alongside benefits. The caveat must identify material ` +
     `population mismatch, retrospective design, small sample size, and harms when those appear in the cards. ` +
     `Use cautious association language for observational evidence, not causal promises. ` +
+    `Apply that same caution to the headline and synthesis: do not say an intervention is proven safe, improves ` +
+    `survival, or applies to all low-EF patients unless the supplied evidence directly establishes that claim. ` +
+    `Prefer wording such as "supports considering" or "was associated with" and name the studied population. ` +
     `For every central point, include a source mapping using only ` +
     `a supplied card ID. Return exactly two short follow-up questions that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
