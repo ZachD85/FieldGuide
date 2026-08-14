@@ -19,6 +19,10 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
 - Drive archival happens only after a successful Firestore publish.
 - Identical PDFs are reported as explicit duplicates and are neither published
   nor moved. A rerun of the same Drive file remains an idempotent update.
+- Different files representing the same study are checked by DOI, PMID,
+  normalized study title, and substantive passage fingerprints before AI is
+  called. Definite matches are skipped; uncertain matches are held for Admin
+  review with no write or Drive move.
 - AI input is capped at 48,000 selected characters, output at 2,048 tokens,
   and the raw response at 256 KiB.
 - Credentials and generated preview files must remain local and must never be
