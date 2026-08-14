@@ -1,0 +1,55 @@
+# AtriGuide compact evidence schema (v2)
+
+One Firestore document per source PDF, keyed by a stable hash of the Drive file ID.
+
+## Common fields
+
+```json
+{
+  "schemaVersion": 2,
+  "source": {"driveFileId": "...", "driveUrl": "...", "fileName": "...", "contentHash": "..."},
+  "title": "...",
+  "citation": "...",
+  "year": 2026,
+  "documentType": "research_paper",
+  "authority": "primary_research",
+  "website": {
+    "mainCategory": "MAZE",
+    "subCategory": "Survival Benefits",
+    "suggestedMainCategory": "MAZE",
+    "suggestedSubCategory": "Survival Benefits",
+    "classificationConfidence": 0.94,
+    "classificationReason": "survival and surgical ablation terms",
+    "manualOverride": false
+  },
+  "summary": "...",
+  "cardBullets": ["..."],
+  "clinicalTags": ["..."],
+  "searchTerms": ["..."],
+  "evidence": [{"claim": "...", "locator": "page 4", "kind": "result"}],
+  "details": {},
+  "review": {"status": "ready", "reasons": []},
+  "ingestion": {"pipelineVersion": "2.0", "processedAt": "...", "model": "...", "inputCharacters": 0}
+}
+```
+
+`mainCategory` and `subCategory` are the website's effective values. On re-ingestion, an existing record with `manualOverride: true` keeps those effective values; the script only refreshes the suggested values.
+
+Allowed website placements are fixed:
+
+- MAZE: Rhythm Outcomes, Survival Benefits, Other
+- LAA: Outcomes and Safety, Stroke Reduction, Prophylactic Data
+- Device Resources: IFUs, Product Brochures, Other Media
+- MISC: Other Research, Helpful Documents
+
+## Document types and compact `details`
+
+- `research_paper` / `meta_analysis`: `studyDesign`, `population`, `sampleSize`, `intervention`, `comparator`, `followUp`, `endpoints`, `keyResults`, `safetyResults`, `limitations`
+- `guideline_consensus`: `organization`, `recommendations[]` (`text`, `class`, `level`, `context`, `locator`)
+- `ifu`: `device`, `revision`, `indications`, `contraindications`, `warnings`, `precautions`, `operatingParameters`, `use`, `troubleshooting`
+- `article_summary`: `underlyingSources`, `talkingPoints`, `limitations`; authority is `secondary_summary`
+- `brochure_other`: `resourceKind`, `intendedAudience`, `keyMessages`; authority is `manufacturer_resource` or `other`
+
+Arrays are deliberately bounded in code: up to 5 card bullets, 8 evidence claims, 12 clinical tags, and 12 search terms. The full PDF remains the source of truth; Firestore stores retrieval-ready evidence, not a second copy of the document.
+
+
