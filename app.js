@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
 const myPrivateFirebaseConfig = {
     apiKey: "AIzaSyDmLx4dkZHzUGjc0BGMmBzUmh9Nm0EbJYg",
@@ -18,12 +19,14 @@ let db = null;
 let auth = null;
 let activeUser = null;
 let isFirebaseActive = false;
+let secureFunctions = null;
 
 window.apiKey = apiKey;
 window.db = db;
 window.auth = auth;
 window.activeUser = activeUser;
 window.isFirebaseActive = isFirebaseActive;
+window.secureFunctions = secureFunctions;
 window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
 const isLocalShadowMode = ["localhost", "127.0.0.1"].includes(window.location.hostname)
     && new URLSearchParams(window.location.search).get("dataSource") === "shadow";
@@ -203,10 +206,23 @@ window.attemptInitializeFirebase = async function() {
             const app = initializeApp(finalConfig);
             auth = getAuth(app);
             db = getFirestore(app);
+            secureFunctions = getFunctions(app, "us-central1");
             window.auth = auth;
             window.db = db;
+            window.secureFunctions = secureFunctions;
 
-            await signInAnonymously(auth);
+            await auth.authStateReady();
+            if (!auth.currentUser) await signInAnonymously(auth);
+
+            const pendingAdminLogin = sessionStorage.getItem("atricure_admin_login_pending") === "1";
+            const isGoogleUser = auth.currentUser?.providerData?.some(provider => provider.providerId === "google.com");
+            if (pendingAdminLogin && isGoogleUser) {
+                const bootstrap = httpsCallable(secureFunctions, "bootstrapAdmin");
+                await bootstrap();
+                await auth.currentUser.getIdTokenResult(true);
+                sessionStorage.removeItem("atricure_admin_login_pending");
+                window.pendingAdminView = true;
+            }
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
@@ -220,6 +236,13 @@ window.attemptInitializeFirebase = async function() {
                     // 🚀 FIXED: Trigger the database streams downstream download execution layout
                     window.subscribeToDatabaseStreams();
                     window.updateApiKeyStatusUI(false);
+                    if (window.pendingAdminView) {
+                        window.pendingAdminView = false;
+                        setTimeout(() => {
+                            window.switchToView("admin");
+                            window.showToast("Secure Admin access authorized.", "success");
+                        }, 0);
+                    }
                 } else {
                     isFirebaseActive = false;
                     window.activeUser = null;
@@ -243,8 +266,8 @@ window.loadSecureApiKey = async function() {
 window.updateApiKeyStatusUI = function(isLoaded) {
     const badge = document.getElementById("apiKeyStatusBadge");
     if (badge) {
-        badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1";
-        badge.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span><span>Secure Backend Pending</span>`;
+        badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span><span>Secure Server Active</span>`;
     }
 };
 
@@ -321,7 +344,40 @@ window.cleanAndParseJSON = function(rawStr) {
 };
 
 window.callGeminiAPI = async function(systemPrompt, userQuery) {
-    throw new Error("AtriGuide AI is temporarily unavailable while its secure server connection is completed. Manual search and browsing remain available.");
+    if (!window.secureFunctions || !window.activeUser) throw new Error("Secure AI service is not connected.");
+    const askSecurely = httpsCallable(window.secureFunctions, "askAtriGuide");
+    const result = await askSecurely({query: systemPrompt, candidates: userQuery});
+    return JSON.stringify(result.data);
+};
+
+window.getAICandidates = function(query) {
+    const stopWords = new Set(['what','show','me','is','are','the','a','an','and','or','for','with','to','in','on','at','of','by','this','that','about','results','studies','study','papers','paper','data','evidence','find','search','how','we','have']);
+    const words = query.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
+        .filter(word => word.length > 1 && !stopWords.has(word));
+    const scored = window.clinicalDatabase.map(item => {
+        const title = String(item.title || '').toLowerCase();
+        const author = String(item.author || '').toLowerCase();
+        const summary = String(item.summary || '').toLowerCase();
+        const profile = String(item.searchProfile || '').toLowerCase();
+        const category = `${item.mainCategory || ''} ${item.subCategory || ''}`.toLowerCase();
+        let score = 0;
+        words.forEach(word => {
+            if (title.includes(word)) score += 15;
+            if (author.includes(word)) score += 12;
+            if (profile.includes(word)) score += 10;
+            if (summary.includes(word)) score += 6;
+            if (category.includes(word)) score += 3;
+        });
+        return {item, score};
+    }).filter(entry => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
+    return scored.map(({item}) => ({
+        id: item.id,
+        title: item.title,
+        author: item.author,
+        category: `${item.mainCategory || ''} > ${item.subCategory || ''}`,
+        summary: item.summary,
+        keywords: item.searchProfile || ''
+    }));
 };
 
 window.closeAISearchOverlay = function() {
@@ -355,23 +411,15 @@ window.askAtriGuide = async function() {
     
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
-    const catalogContext = clinicalDatabase.map(d => `ID: ${d.id} | Title: ${d.title} | Author: ${d.author} | SubCategory: ${d.subCategory} | Summary Elements: ${d.summary} | Keywords: ${d.searchProfile || ""}`).join("\n");
-
-    const systemPrompt = `You are a precision clinical data router for AtriCure medical reps. Your job is to read the field query and return a valid JSON object containing an executive synthesis answer and an array of matching doc IDs. Scan the provided keywords and deep summary elements thoroughly to find matches. If no studies match, return an empty array. Do not return markdown wraps or prose outside the JSON blocks. 
-    Format exactly like this:
-    {
-        "synthesis": "A direct 2-3 sentence clinical answer compiled from the matching sources.",
-        "matchedIds": ["doc-id-1", "doc-id-2"]
-    }`;
-
-    const userPrompt = `Database Catalog:\n${catalogContext}\n\nRep Query: ${query}`;
+    const aiCandidates = window.getAICandidates(query);
 
     try {
-        const apiRawResult = await window.callGeminiAPI(systemPrompt, userPrompt);
+        const apiRawResult = await window.callGeminiAPI(query, aiCandidates);
         const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
         // 📢 CLEAN COMPLETED STATE: Title drops the tech jargon and becomes the clean title
-        document.getElementById("aiSynthesisText").innerHTML = `<div class="text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2">🧽 Scrub Sink Summary</div><div class="text-xs md:text-sm font-medium leading-relaxed">${parsedResult.synthesis || "No direct executive brief available."}</div>`;
+        const safeSynthesis = window.escapeHtml(parsedResult.synthesis || "No direct executive brief available.");
+        document.getElementById("aiSynthesisText").innerHTML = `<div class="text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2">🧽 Scrub Sink Summary</div><div class="text-xs md:text-sm font-medium leading-relaxed">${safeSynthesis}</div>`;
         
         const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
         
@@ -1024,16 +1072,28 @@ window.executeResourceDeletion = async function() {
 };
 
 window.openAdminAuthModal = function() {
-    window.showToast("Admin editing is temporarily unavailable while secure account authentication is completed.", "info");
+    window.authorizeAdminAccount();
+};
+
+window.authorizeAdminAccount = async function() {
+    if (!window.auth || !window.secureFunctions) {
+        window.showToast("Secure Admin authentication is not connected yet.", "warning");
+        return;
+    }
+    try {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({prompt: "select_account"});
+        sessionStorage.setItem("atricure_admin_login_pending", "1");
+        await signInWithRedirect(window.auth, provider);
+    } catch (err) {
+        sessionStorage.removeItem("atricure_admin_login_pending");
+        console.error("Secure Admin authentication failed:", err);
+        window.showToast("This Google account is not authorized for Admin access.", "warning");
+    }
 };
 
 window.closeAdminAuthModal = function() {
     document.getElementById("adminAuthModal").classList.add("hidden");
-};
-
-window.verifyAdminAuthPassword = async function() {
-    window.closeAdminAuthModal();
-    window.showToast("PIN authentication has been retired. Secure account authentication is being prepared.", "info");
 };
 
 window.updateFormSubCategories = function() {
