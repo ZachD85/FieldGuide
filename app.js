@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithRedirect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
 
@@ -214,16 +214,6 @@ window.attemptInitializeFirebase = async function() {
             await auth.authStateReady();
             if (!auth.currentUser) await signInAnonymously(auth);
 
-            const pendingAdminLogin = sessionStorage.getItem("atricure_admin_login_pending") === "1";
-            const isGoogleUser = auth.currentUser?.providerData?.some(provider => provider.providerId === "google.com");
-            if (pendingAdminLogin && isGoogleUser) {
-                const bootstrap = httpsCallable(secureFunctions, "bootstrapAdmin");
-                await bootstrap();
-                await auth.currentUser.getIdTokenResult(true);
-                sessionStorage.removeItem("atricure_admin_login_pending");
-                window.pendingAdminView = true;
-            }
-
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     activeUser = user;
@@ -236,13 +226,6 @@ window.attemptInitializeFirebase = async function() {
                     // 🚀 FIXED: Trigger the database streams downstream download execution layout
                     window.subscribeToDatabaseStreams();
                     window.updateApiKeyStatusUI(false);
-                    if (window.pendingAdminView) {
-                        window.pendingAdminView = false;
-                        setTimeout(() => {
-                            window.switchToView("admin");
-                            window.showToast("Secure Admin access authorized.", "success");
-                        }, 0);
-                    }
                 } else {
                     isFirebaseActive = false;
                     window.activeUser = null;
@@ -1083,10 +1066,15 @@ window.authorizeAdminAccount = async function() {
     try {
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({prompt: "select_account"});
-        sessionStorage.setItem("atricure_admin_login_pending", "1");
-        await signInWithRedirect(window.auth, provider);
+        const result = await signInWithPopup(window.auth, provider);
+        const bootstrap = httpsCallable(window.secureFunctions, "bootstrapAdmin");
+        await bootstrap();
+        const token = await result.user.getIdTokenResult(true);
+        if (token.claims.admin !== true) throw new Error("Admin claim was not issued.");
+        window.activeUser = result.user;
+        window.switchToView("admin");
+        window.showToast("Secure Admin access authorized.", "success");
     } catch (err) {
-        sessionStorage.removeItem("atricure_admin_login_pending");
         console.error("Secure Admin authentication failed:", err);
         window.showToast("This Google account is not authorized for Admin access.", "warning");
     }
