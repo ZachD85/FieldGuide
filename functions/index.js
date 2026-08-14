@@ -92,7 +92,13 @@ exports.askAtriGuide = onCall({
     `spoken-style synthesis, up to three supporting talkingPoints, and one honest caveat. For ordinary questions ` +
     `use answerMode standard. If a missing distinction would materially change the evidence, use clarification ` +
     `and state what must be clarified. Never present catheter-ablation evidence as proof for surgical ablation, ` +
-    `or vice versa; label indirect evidence plainly. For every central point, include a source mapping using only ` +
+    `or vice versa; label indirect evidence plainly. Never generalize a narrow population (for example, ` +
+    `tachycardia-induced cardiomyopathy) to all patients with a similar feature (for example, low EF). ` +
+    `When the concern is that a patient is too sick or high risk, include any supplied perioperative mortality, ` +
+    `major complication, and study-design limitations alongside benefits. The caveat must identify material ` +
+    `population mismatch, retrospective design, small sample size, and harms when those appear in the cards. ` +
+    `Use cautious association language for observational evidence, not causal promises. ` +
+    `For every central point, include a source mapping using only ` +
     `a supplied card ID. Return exactly two short follow-up questions that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
