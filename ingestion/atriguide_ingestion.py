@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any
 
 PIPELINE_VERSION = "2.0"
+MAX_AI_INPUT_CHARACTERS = 48000
+MAX_AI_OUTPUT_TOKENS = 2048
+MAX_AI_RESPONSE_BYTES = 262144
 CATEGORIES = {
     "MAZE": {"Rhythm Outcomes", "Survival Benefits", "Other"},
     "LAA": {"Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"},
@@ -76,7 +79,7 @@ def classify(name: str, text: str, doc_type: str, folder_hint: str = "") -> Plac
     sub = "Helpful Documents" if doc_type in {"guideline_consensus", "article_summary"} else "Other Research"
     return Placement("MISC", sub, .58, "no reliable specialist category signal")
 
-def select_text(text: str, doc_type: str, max_chars: int = 48000) -> str:
+def select_text(text: str, doc_type: str, max_chars: int = MAX_AI_INPUT_CHARACTERS) -> str:
     """Bound model input; prefer useful sections and avoid repeated IFU translations."""
     text = re.sub(r"\n{3,}", "\n\n", text)
     if doc_type == "ifu":
@@ -246,6 +249,26 @@ def publish_record(collection: Any, record: dict[str, Any], firestore_module: An
     # Deterministic ID makes reruns update rather than add duplicate records.
     collection.document(record["id"]).set(clean, merge=True)
 
+def find_existing_duplicate(collection: Any, content_hash: str, candidate_id: str) -> str | None:
+    """Return another record ID with identical PDF bytes, preserving reruns."""
+    matches = collection.where("source.contentHash", "==", content_hash).limit(2).stream()
+    for snapshot in matches:
+        if snapshot.id != candidate_id:
+            return snapshot.id
+    return None
+
+def duplicate_result(item: dict[str, Any], status: str, content_hash: str,
+                     duplicate_of: str) -> dict[str, Any]:
+    """Create an explicit, reviewable duplicate outcome with no publish action."""
+    return {
+        "file": item["name"],
+        "fileId": item["id"],
+        "status": status,
+        "duplicateOf": duplicate_of,
+        "contentHash": content_hash,
+        "action": "skipped_no_write_no_move",
+    }
+
 def validate_record(record: dict[str, Any]) -> None:
     website = record["website"]
     if website["mainCategory"] not in CATEGORIES or website["subCategory"] not in CATEGORIES[website["mainCategory"]]:
@@ -255,6 +278,8 @@ def validate_record(record: dict[str, Any]) -> None:
 
 def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str) -> dict[str, Any]:
     """One bounded structured extraction call; never reads a key from source code."""
+    if len(selected_text) > MAX_AI_INPUT_CHARACTERS:
+        raise ValueError("AI input exceeds the hard character budget")
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key: raise RuntimeError("GEMINI_API_KEY is not set")
     from urllib.parse import quote
@@ -273,10 +298,17 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str) 
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{quote(model_name)}:generateContent?key={quote(api_key)}"
     request_body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.1},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.1,
+            "maxOutputTokens": MAX_AI_OUTPUT_TOKENS,
+        },
     }).encode("utf-8")
     with urlopen(Request(endpoint, data=request_body, headers={"Content-Type": "application/json"}), timeout=120) as response:
-        raw_response = json.loads(response.read().decode("utf-8"))
+        response_bytes = response.read(MAX_AI_RESPONSE_BYTES + 1)
+    if len(response_bytes) > MAX_AI_RESPONSE_BYTES:
+        raise ValueError("AI response exceeds the hard byte budget")
+    raw_response = json.loads(response_bytes.decode("utf-8"))
     response_text = raw_response["candidates"][0]["content"]["parts"][0]["text"]
     parsed = json.loads(response_text.replace("```json", "").replace("```", "").strip())
     for key in ("title","citation","year","summary","cardBullets","clinicalTags","searchTerms","evidence","details"):
@@ -304,15 +336,25 @@ def scan_drive(args: argparse.Namespace) -> int:
         db, firestore_module = load_firestore_client(args.credentials)
         collection = firestore_path(db, args.app_id)
     files = list_pdfs(drive, args.pending_folder)
-    previews, seen_hashes = [], set()
+    previews, seen_hashes = [], {}
     for item in files[:args.limit] if args.limit else files:
         try:
             raw = download_pdf(drive, item["id"])
             content_hash = hashlib.sha256(raw).hexdigest()
             if content_hash in seen_hashes:
-                previews.append({"file": item["name"], "status": "duplicate_in_batch"})
+                previews.append(duplicate_result(
+                    item, "duplicate_in_batch", content_hash, seen_hashes[content_hash]
+                ))
                 continue
-            seen_hashes.add(content_hash)
+            seen_hashes[content_hash] = item["id"]
+            candidate_id = stable_id(item["id"])
+            if collection:
+                duplicate_id = find_existing_duplicate(collection, content_hash, candidate_id)
+                if duplicate_id:
+                    previews.append(duplicate_result(
+                        item, "duplicate_existing", content_hash, duplicate_id
+                    ))
+                    continue
             text = extract_pdf_text(raw)
             record = build_skeleton(item["id"], item["name"], f"https://drive.google.com/file/d/{item['id']}/view", text, item.get("folderHint", ""))
             record["source"]["contentHash"] = content_hash

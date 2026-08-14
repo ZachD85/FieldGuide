@@ -1,5 +1,14 @@
 import os, unittest
-from atriguide_ingestion import add_fieldguide_compatibility, build_skeleton, merge_manual_override, select_text, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, duplicate_result, find_existing_duplicate, merge_manual_override, select_text, validate_publishable, validate_record, writes_allowed
+
+class FakeSnapshot:
+    def __init__(self, record_id): self.id = record_id
+
+class FakeQuery:
+    def __init__(self, ids): self.ids = ids
+    def where(self, *args): return self
+    def limit(self, value): return self
+    def stream(self): return [FakeSnapshot(value) for value in self.ids]
 
 class PipelineTests(unittest.TestCase):
     def test_ifu(self):
@@ -58,6 +67,16 @@ class PipelineTests(unittest.TestCase):
     def test_empty_record_cannot_publish(self):
         with self.assertRaises(ValueError):
             validate_publishable(build_skeleton("5", "study.pdf", "u", "Methods Results research"))
+    def test_ai_selection_never_exceeds_hard_budget(self):
+        selected = select_text("Results\n" + ("evidence " * 20000), "research_paper")
+        self.assertLessEqual(len(selected), MAX_AI_INPUT_CHARACTERS)
+    def test_existing_duplicate_excludes_same_record_rerun(self):
+        self.assertEqual(find_existing_duplicate(FakeQuery(["same", "other"]), "hash", "same"), "other")
+        self.assertIsNone(find_existing_duplicate(FakeQuery(["same"]), "hash", "same"))
+    def test_duplicate_result_is_explicit_and_non_mutating(self):
+        result = duplicate_result({"id":"drive-2", "name":"copy.pdf"}, "duplicate_in_batch", "hash", "drive-1")
+        self.assertEqual(result["action"], "skipped_no_write_no_move")
+        self.assertEqual(result["duplicateOf"], "drive-1")
 
 if __name__ == "__main__": unittest.main()
 
