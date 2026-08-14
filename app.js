@@ -368,7 +368,7 @@ window.getAICandidates = function(query, pinnedIds = []) {
         summary: item.summary,
         keywords: item.searchProfile || '',
         evidence: Array.isArray(item.evidence) && item.evidence.length
-            ? item.evidence.slice(0, 8)
+            ? item.evidence.slice(0, 4)
             : [{ claim: item.summary || "Document-level evidence summary", page: null, locator: "", kind: "legacy_summary", excerpt: "" }]
     }));
 };
