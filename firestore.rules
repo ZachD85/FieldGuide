@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // The public website may display the curated catalog and announcements.
+    match /artifacts/{appId}/public/data/clinicalResources/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /artifacts/{appId}/public/data/systemAnnouncements/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Configuration, test collections, Admin writes, and every unspecified
+    // path are server-only. Firebase Admin/service accounts bypass these rules.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

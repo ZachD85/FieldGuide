@@ -219,7 +219,7 @@ window.attemptInitializeFirebase = async function() {
                     
                     // 🚀 FIXED: Trigger the database streams downstream download execution layout
                     window.subscribeToDatabaseStreams();
-                    window.loadSecureApiKey();
+                    window.updateApiKeyStatusUI(false);
                 } else {
                     isFirebaseActive = false;
                     window.activeUser = null;
@@ -236,30 +236,15 @@ window.attemptInitializeFirebase = async function() {
 };
 
 window.loadSecureApiKey = async function() {
-    if (!window.db) return;
-    try {
-        const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'gemini');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            window.apiKey = docSnap.data().key || "";
-            window.updateApiKeyStatusUI(window.apiKey ? true : false);
-        } else {
-            window.updateApiKeyStatusUI(false);
-        }
-    } catch (err) { window.updateApiKeyStatusUI(false); }
+    window.apiKey = "";
+    window.updateApiKeyStatusUI(false);
 };
 
 window.updateApiKeyStatusUI = function(isLoaded) {
     const badge = document.getElementById("apiKeyStatusBadge");
     if (badge) {
-        // FIXED: Now checking window.apiKey instead of the dead local variable
-        if (isLoaded && window.apiKey) {
-            badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1";
-            badge.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Key Safe & Active</span>`;
-        } else {
-            badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800 flex items-center gap-1";
-            badge.innerHTML = `<span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span><span>No Key Loaded</span>`;
-        }
+        badge.className = "text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 flex items-center gap-1";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span><span>Secure Backend Pending</span>`;
     }
 };
 
@@ -336,35 +321,7 @@ window.cleanAndParseJSON = function(rawStr) {
 };
 
 window.callGeminiAPI = async function(systemPrompt, userQuery) {
-    // FIXED: Now checking window.apiKey
-    if (!window.apiKey) {
-        throw new Error("No Gemini API key supplied in database configuration.");
-    }
-    const models = ["gemini-2.5-flash", "gemini-2.5-flash-preview-09-2025", "gemini-1.5-flash"];
-    let lastError = null;
-
-    for (const model of models) {
-        try {
-            // FIXED: Injecting window.apiKey into the fetch URL
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${window.apiKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
-                })
-            });
-            
-            if (response.ok) {
-                const payload = await response.json();
-                const resultText = payload.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (resultText) return resultText;
-            }
-        } catch (err) {
-            lastError = err;
-        }
-    }
-    throw lastError || new Error("AI Routing timed out on all system matrices.");
+    throw new Error("AtriGuide AI is temporarily unavailable while its secure server connection is completed. Manual search and browsing remain available.");
 };
 
 window.closeAISearchOverlay = function() {
@@ -1067,15 +1024,7 @@ window.executeResourceDeletion = async function() {
 };
 
 window.openAdminAuthModal = function() {
-    const modal = document.getElementById("adminAuthModal");
-    const input = document.getElementById("adminPasswordInput");
-    const error = document.getElementById("adminAuthError");
-    
-    error.classList.add("hidden");
-    input.value = "";
-    modal.classList.remove("hidden");
-    setTimeout(() => input.focus(), 100);
-    lucide.createIcons();
+    window.showToast("Admin editing is temporarily unavailable while secure account authentication is completed.", "info");
 };
 
 window.closeAdminAuthModal = function() {
@@ -1083,34 +1032,8 @@ window.closeAdminAuthModal = function() {
 };
 
 window.verifyAdminAuthPassword = async function() {
-    const pin = document.getElementById("adminPasswordInput").value.trim();
-    const error = document.getElementById("adminAuthError");
-
-    try {
-        if (!window.isFirebaseActive || !window.db) {
-            window.showToast("Security authentication server offline.", "warning");
-            return;
-        }
-
-        // Dynamically import Firestore doc capabilities for a clean handshake
-        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-        
-        // Target your secure configuration path in Firestore
-        const securityDocRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'security');
-        const docSnap = await getDoc(securityDocRef);
-
-        // Match the database password field directly with the user input
-        if (docSnap.exists() && docSnap.data().password === pin) {
-            window.closeAdminAuthModal();
-            window.switchToView("admin");
-            window.showToast("System Access Authorized.", "success");
-        } else {
-            error.classList.remove("hidden");
-        }
-    } catch (err) {
-        console.error("Security vault authentication failure:", err);
-        window.showToast("Failed to verify access permissions.", "warning");
-    }
+    window.closeAdminAuthModal();
+    window.showToast("PIN authentication has been retired. Secure account authentication is being prepared.", "info");
 };
 
 window.updateFormSubCategories = function() {
@@ -1759,16 +1682,7 @@ window.purgeBroadcastLogEntry = async function(docId) {
 
 // 🔒 SECURE API KEY FIREBASE TRANSMISSION PATH
 window.saveApiKeyToFirestore = async function() {
-    const keyInput = document.getElementById("secureApiKeyInput");
-    if (!keyInput || !window.db) return;
-    const rawKey = keyInput.value.trim();
-    try {
-        const docRef = doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'config', 'gemini');
-        await setDoc(docRef, { key: rawKey, lastModifiedTimestamp: Date.now() }, { merge: true });
-        window.apiKey = rawKey;
-        window.updateApiKeyStatusUI(true);
-        window.showToast("API Key synced to artifacts path!", "success");
-    } catch (err) { window.showToast("Failed to write.", "warning"); }
+    window.showToast("Browser-side key storage is disabled. Keys must be managed by the secure backend.", "info");
 };
 
 // =========================================================================
