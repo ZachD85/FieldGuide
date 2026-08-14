@@ -54,6 +54,14 @@ function cleanCandidates(value) {
   })).filter((item) => item.id && item.title);
 }
 
+function cleanHistory(value) {
+  if (!Array.isArray(value)) return [];
+  return value.slice(-6).map((turn) => ({
+    role: turn?.role === "assistant" ? "assistant" : "user",
+    text: String(turn?.text || "").slice(0, turn?.role === "assistant" ? 1800 : 500),
+  })).filter((turn) => turn.text);
+}
+
 exports.askAtriGuide = onCall({
   region,
   cors: allowedOrigins,
@@ -65,6 +73,7 @@ exports.askAtriGuide = onCall({
   await enforceRateLimit(auth.uid);
   const query = String(request.data?.query || "").trim().slice(0, 500);
   const candidates = cleanCandidates(request.data?.candidates);
+  const history = cleanHistory(request.data?.history);
   if (!query) throw new HttpsError("invalid-argument", "A question is required.");
   if (!candidates.length) return {synthesis: "No matching evidence cards were found.", matchedIds: []};
 
@@ -75,9 +84,12 @@ exports.askAtriGuide = onCall({
     project: process.env.GCLOUD_PROJECT,
     location: "us-central1",
   });
-  const prompt = `You are a clinical evidence router. Use only the supplied public evidence cards. ` +
-    `Return JSON with a concise 2-3 sentence synthesis and matchedIds. Do not invent claims or IDs.\n` +
-    `Question: ${query}\nEvidence cards: ${catalog}`;
+  const prompt = `You are AtriGuide, an evidence-grounded clinical evidence assistant. ` +
+    `Use only the supplied public evidence cards for factual claims. Conversation history provides intent only; ` +
+    `it is not evidence. If the cards do not support an answer, say so clearly. Do not invent claims or IDs. ` +
+    `Return JSON with a concise conversational synthesis, matchedIds, and exactly two short follow-up questions ` +
+    `that can be answered from the supplied cards and help the user probe deeper.\n` +
+    `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
@@ -91,8 +103,9 @@ exports.askAtriGuide = onCall({
         properties: {
           synthesis: {type: "string"},
           matchedIds: {type: "array", items: {type: "string"}},
+          suggestedFollowUps: {type: "array", items: {type: "string"}},
         },
-        required: ["synthesis", "matchedIds"],
+        required: ["synthesis", "matchedIds", "suggestedFollowUps"],
         additionalProperties: false,
       },
     },
@@ -110,9 +123,20 @@ exports.askAtriGuide = onCall({
     throw new HttpsError("internal", "The AI response could not be validated.");
   }
   const allowedIds = new Set(candidates.map((item) => item.id));
+  const suggestedFollowUps = Array.isArray(parsed.suggestedFollowUps) ?
+    parsed.suggestedFollowUps.map((value) => String(value).trim().slice(0, 160)).filter(Boolean).slice(0, 2) : [];
+  const safeFallbacks = [
+    "Which evidence card most directly supports this answer?",
+    "What additional details or limitations are available in these evidence cards?",
+  ];
+  for (const fallback of safeFallbacks) {
+    if (suggestedFollowUps.length >= 2) break;
+    if (!suggestedFollowUps.includes(fallback)) suggestedFollowUps.push(fallback);
+  }
   return {
     synthesis: String(parsed.synthesis || "").slice(0, 1800),
     matchedIds: Array.isArray(parsed.matchedIds) ? parsed.matchedIds.filter((id) => allowedIds.has(id)).slice(0, 8) : [],
+    suggestedFollowUps,
   };
 });
 

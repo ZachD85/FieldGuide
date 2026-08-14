@@ -533,6 +533,15 @@
                     <p id="aiSynthesisText" class="text-xs md:text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
                         AtriGuide intelligence engine is evaluating full context matrix against indexed documents...
                     </p>
+                    <div id="aiFollowUpArea" class="hidden mt-4 pt-4 border-t border-orange-100 space-y-3">
+                        <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Probe the evidence deeper</p>
+                        <div id="aiSuggestedFollowUps" class="flex flex-wrap gap-2"></div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input id="aiFollowUpInput" type="text" maxlength="500" placeholder="Ask a follow-up about this evidence..." onkeydown="if(event.key === 'Enter'){ event.preventDefault(); window.submitAIFollowUp(); }" class="flex-1 text-xs border border-slate-200 rounded-lg px-3 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400">
+                            <button id="aiFollowUpSubmit" onclick="window.submitAIFollowUp()" class="bg-[#00205B] hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors cursor-pointer">Ask follow-up</button>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Replies remain limited to the displayed AtriGuide evidence.</p>
+                    </div>
                 </div>
 
                 <div class="space-y-3">

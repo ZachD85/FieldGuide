@@ -59,6 +59,9 @@ window.editingResourceId = null;
 window.activeAdminTab = 'single'; 
 window.bulkSortField = 'title'; 
 window.bulkSortAsc = true;
+window.aiConversationTurns = [];
+window.aiConversationEvidenceIds = [];
+window.currentSuggestedFollowUps = [];
 
 // GLOBAL BROADCAST TIMELINE APP STATE REGISTER VARIABLES
 window.activeBroadcastLogs = [];
@@ -326,14 +329,14 @@ window.cleanAndParseJSON = function(rawStr) {
     return JSON.parse(jsonText);
 };
 
-window.callGeminiAPI = async function(systemPrompt, userQuery) {
+window.callGeminiAPI = async function(query, candidates, history = []) {
     if (!window.secureFunctions || !window.activeUser) throw new Error("Secure AI service is not connected.");
     const askSecurely = httpsCallable(window.secureFunctions, "askAtriGuide");
-    const result = await askSecurely({query: systemPrompt, candidates: userQuery});
+    const result = await askSecurely({query, candidates, history});
     return JSON.stringify(result.data);
 };
 
-window.getAICandidates = function(query) {
+window.getAICandidates = function(query, pinnedIds = []) {
     const stopWords = new Set(['what','show','me','is','are','the','a','an','and','or','for','with','to','in','on','at','of','by','this','that','about','results','studies','study','papers','paper','data','evidence','find','search','how','we','have']);
     const words = query.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
         .filter(word => word.length > 1 && !stopWords.has(word));
@@ -353,7 +356,11 @@ window.getAICandidates = function(query) {
         });
         return {item, score};
     }).filter(entry => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
-    return scored.map(({item}) => ({
+    const pinned = pinnedIds.map(id => window.clinicalDatabase.find(item => item.id === id)).filter(Boolean);
+    const combined = [...pinned, ...scored.map(({item}) => item)]
+        .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
+        .slice(0, 12);
+    return combined.map((item) => ({
         id: item.id,
         title: item.title,
         author: item.author,
@@ -367,20 +374,63 @@ window.closeAISearchOverlay = function() {
     document.getElementById("aiSearchOverlay").classList.add("hidden");
     const queryArea = document.getElementById("copilotQueryInput");
     if (queryArea) queryArea.value = "";
+    const followUpInput = document.getElementById("aiFollowUpInput");
+    if (followUpInput) followUpInput.value = "";
+    window.aiConversationTurns = [];
+    window.aiConversationEvidenceIds = [];
+    window.currentSuggestedFollowUps = [];
 };
 
-window.askAtriGuide = async function() {
+window.renderSuggestedFollowUps = function(values) {
+    const area = document.getElementById("aiFollowUpArea");
+    const container = document.getElementById("aiSuggestedFollowUps");
+    window.currentSuggestedFollowUps = Array.isArray(values) ? values.slice(0, 2) : [];
+    container.replaceChildren();
+    window.currentSuggestedFollowUps.forEach((question, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "text-left text-xs font-semibold text-[#00205B] bg-white hover:bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 transition-colors cursor-pointer";
+        button.textContent = question;
+        button.addEventListener("click", () => window.askSuggestedFollowUp(index));
+        container.appendChild(button);
+    });
+    area.classList.remove("hidden");
+};
+
+window.askSuggestedFollowUp = function(index) {
+    const question = window.currentSuggestedFollowUps[index];
+    if (!question) return;
+    document.getElementById("aiFollowUpInput").value = question;
+    window.askAtriGuide(question, true);
+};
+
+window.submitAIFollowUp = function() {
+    const input = document.getElementById("aiFollowUpInput");
+    const question = input.value.trim();
+    if (!question) {
+        window.showToast("Enter a follow-up question first.", "warning");
+        return;
+    }
+    window.askAtriGuide(question, true);
+};
+
+window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
     const queryArea = document.getElementById("copilotQueryInput");
     const btn = document.getElementById("copilotSubmitBtn");
-    const query = queryArea.value.trim();
+    const query = String(queryOverride || queryArea.value).trim();
 
     if (!query) {
         window.showToast("Please enter a question or topic for AtriGuide to analyze.", "warning");
         return;
     }
 
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-orange-500 animate-spin"></i><span>Analyzing...</span>`;
+    if (!isFollowUp) {
+        window.aiConversationTurns = [];
+        window.aiConversationEvidenceIds = [];
+    }
+    const activeButton = isFollowUp ? document.getElementById("aiFollowUpSubmit") : btn;
+    activeButton.disabled = true;
+    if (!isFollowUp) btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-orange-500 animate-spin"></i><span>Analyzing...</span>`;
     lucide.createIcons();
 
     document.getElementById("aiSearchOverlay").classList.remove("hidden");
@@ -394,16 +444,26 @@ window.askAtriGuide = async function() {
     
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
-    const aiCandidates = window.getAICandidates(query);
+    const aiCandidates = window.getAICandidates(query, window.aiConversationEvidenceIds);
 
     try {
-        const apiRawResult = await window.callGeminiAPI(query, aiCandidates);
+        const apiRawResult = await window.callGeminiAPI(query, aiCandidates, window.aiConversationTurns);
         const parsedResult = window.cleanAndParseJSON(apiRawResult);
 
         // 📢 CLEAN COMPLETED STATE: Title drops the tech jargon and becomes the clean title
         const safeSynthesis = window.escapeHtml(parsedResult.synthesis || "No direct executive brief available.");
         document.getElementById("aiSynthesisText").innerHTML = `<div class="text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2">🧽 Scrub Sink Summary</div><div class="text-xs md:text-sm font-medium leading-relaxed">${safeSynthesis}</div>`;
         
+        window.aiConversationTurns.push({role: "user", text: query});
+        window.aiConversationTurns.push({role: "assistant", text: parsedResult.synthesis || ""});
+        window.aiConversationTurns = window.aiConversationTurns.slice(-6);
+        window.aiConversationEvidenceIds = [...new Set([
+            ...window.aiConversationEvidenceIds,
+            ...(parsedResult.matchedIds || [])
+        ])].slice(-12);
+        window.renderSuggestedFollowUps(parsedResult.suggestedFollowUps || []);
+        document.getElementById("aiFollowUpInput").value = "";
+
         const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
         
         if (matches.length > 0) {
@@ -414,6 +474,7 @@ window.askAtriGuide = async function() {
         }
     } catch (err) {
         console.error("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
+        document.getElementById("aiFollowUpArea").classList.add("hidden");
         
         document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
 
@@ -462,6 +523,7 @@ window.askAtriGuide = async function() {
                 </div>`;
         }
     } finally {
+        activeButton.disabled = false;
         btn.disabled = false;
         btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-white"></i><span>✨ Ask AtriGuide</span>`;
         lucide.createIcons();
