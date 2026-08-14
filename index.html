@@ -281,24 +281,18 @@
                                     <i data-lucide="key" class="w-5 h-5"></i>
                                 </div>
                                 <div class="text-left">
-                                    <h4 class="font-bold text-sm text-slate-800">Secure Gemini API Key Manager</h4>
-                                    <p class="text-[11px] text-slate-400">Stores API keys safely inside Firestore. No keys are committed inside plain-text files.</p>
+                                    <h4 class="font-bold text-sm text-slate-800">Secure AI Service</h4>
+                                    <p class="text-[11px] text-slate-400">Browser-side keys have been retired. AI will return through a server-managed secret connection.</p>
                                 </div>
                             </div>
                             <div>
                                 <span id="apiKeyStatusBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-800 flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                                    <span>No Key Loaded</span>
+                                    <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                    <span>Secure Backend Pending</span>
                                 </span>
                             </div>
                         </div>
-                        <div class="mt-4 flex flex-col sm:flex-row gap-2 max-w-2xl">
-                            <input type="password" id="secureApiKeyInput" placeholder="Paste Gemini API Key here (starts with AIza...)" class="flex-1 text-xs border border-slate-200 p-2.5 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500 bg-slate-50/50">
-                            <button onclick="saveApiKeyToFirestore()" class="bg-[#00205B] hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer">
-                                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                                <span>Save Safe Key</span>
-                            </button>
-                        </div>
+                        <p class="mt-4 text-xs text-slate-500">No API key can be entered, retrieved, or displayed in the public website.</p>
                     </div>
 
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mt-6 w-full">
