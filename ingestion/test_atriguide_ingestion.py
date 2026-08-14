@@ -1,5 +1,5 @@
 import os, unittest
-from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, duplicate_result, find_existing_duplicate, merge_manual_override, select_text, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, duplicate_result, find_existing_duplicate, merge_manual_override, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
 
 class FakeSnapshot:
     def __init__(self, record_id): self.id = record_id
@@ -46,6 +46,14 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(writes_allowed(True))
         os.environ["ATRIGUIDE_ENABLE_PRODUCTION_WRITES"] = "YES"
         self.assertTrue(writes_allowed(True))
+    def test_shadow_and_production_acknowledgements_are_separate(self):
+        os.environ.pop("ATRIGUIDE_ENABLE_SHADOW_WRITES", None)
+        os.environ["ATRIGUIDE_ENABLE_PRODUCTION_WRITES"] = "YES"
+        self.assertFalse(shadow_writes_allowed(True, True))
+        self.assertFalse(production_writes_allowed(True, True))
+        os.environ["ATRIGUIDE_ENABLE_SHADOW_WRITES"] = "YES"
+        self.assertTrue(shadow_writes_allowed(True, True))
+        self.assertFalse(production_writes_allowed(True, True))
     def test_schema_is_valid(self):
         validate_record(build_skeleton("4", "consensus.pdf", "u", "Clinical practice guideline and consensus statement"))
     def test_ifu_stops_before_bulgarian_translation(self):
