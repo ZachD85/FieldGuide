@@ -550,21 +550,15 @@
                     <i data-lucide="shield-alert" class="w-5 h-5"></i>
                 </div>
                 <div class="text-left">
-                    <h4 class="font-bold text-sm tracking-tight">Administrative Security Check</h4>
-                    <p class="text-[10px] text-slate-300">Authorization required to edit data</p>
+                    <h4 class="font-bold text-sm tracking-tight">Secure Admin Sign-In</h4>
+                    <p class="text-[10px] text-slate-300">Authorized Google account required</p>
                 </div>
             </div>
             <div class="p-5 space-y-4">
-                <div class="text-left">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Enter Master Access Pin</label>
-                    <input type="password" id="adminPasswordInput" placeholder="••••••••" class="w-full border border-slate-200 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 text-sm bg-slate-50/50 text-center tracking-widest font-bold">
-                    <p id="adminAuthError" class="text-xs text-red-600 mt-1.5 font-semibold hidden flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> Access code rejected.
-                    </p>
-                </div>
+                <p class="text-sm text-slate-600">Continue with the authorized project-owner Google account. No PIN or browser-stored secret is used.</p>
                 <div class="flex space-x-2 pt-2">
                     <button onclick="closeAdminAuthModal()" class="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold py-2.5 rounded-lg transition-colors cursor-pointer">Cancel</button>
-                    <button onclick="verifyAdminAuthPassword()" class="flex-1 bg-[#00205B] hover:bg-orange-600 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow shadow-md cursor-pointer">Validate Key</button>
+                    <button onclick="authorizeAdminAccount()" class="flex-1 bg-[#00205B] hover:bg-orange-600 text-white text-xs font-semibold py-2.5 rounded-lg transition-all shadow shadow-md cursor-pointer">Continue with Google</button>
                 </div>
             </div>
         </div>
