@@ -7,6 +7,9 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
 
 - Every run is a dry run unless both `--apply` and
   `ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES` are supplied.
+- A private shadow run instead requires `--apply --shadow` and the separate
+  `ATRIGUIDE_ENABLE_SHADOW_WRITES=YES` acknowledgement. It writes only to the
+  isolated test collection and never moves Drive files.
 - Apply mode also requires AI extraction so incomplete skeleton records cannot
   be published.
 - The pipeline writes a local preview after every document, preserving partial
@@ -22,6 +25,15 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
   committed.
 
 Production apply mode is intentionally not approved for the POC yet.
+
+## Controlled shadow test
+
+```powershell
+$env:ATRIGUIDE_ENABLE_SHADOW_WRITES="YES"
+python atriguide_ingestion.py --scan-drive --limit 3 --use-ai --apply --shadow --output shadow_preview.json
+```
+
+This test cannot publish to the public library or archive the source PDFs.
 
 ## Document support
 
@@ -61,6 +73,7 @@ Supply configuration through local environment variables or command options:
 - `ATRIGUIDE_ARCHIVE_FOLDER_ID`
 - `GEMINI_API_KEY`
 - `ATRIGUIDE_INGESTION_MODEL` (optional)
+- `ATRIGUIDE_ENABLE_SHADOW_WRITES` (required only for isolated shadow writes)
 
 Do not add credential JSON files, API keys, preview output, or service-account
 material to Git.

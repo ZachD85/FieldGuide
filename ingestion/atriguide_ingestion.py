@@ -239,8 +239,16 @@ def move_to_archive(drive: Any, file_id: str, parents: list[str], archive_folder
     drive.files().update(fileId=file_id, addParents=archive_folder_id,
                          removeParents=",".join(parents), fields="id,parents").execute()
 
-def firestore_path(db: Any, app_id: str):
-    return db.collection("artifacts").document(app_id).collection("public").document("data").collection("clinicalResources")
+def firestore_path(db: Any, app_id: str, shadow: bool = False):
+    collection_name = "clinicalResources_ingestionTest" if shadow else "clinicalResources"
+    return db.collection("artifacts").document(app_id).collection("public").document("data").collection(collection_name)
+
+def shadow_writes_allowed(apply: bool, shadow: bool) -> bool:
+    """Require a separate acknowledgement so a shadow test cannot enable production."""
+    return bool(apply and shadow and os.getenv("ATRIGUIDE_ENABLE_SHADOW_WRITES") == "YES")
+
+def production_writes_allowed(apply: bool, shadow: bool) -> bool:
+    return bool(apply and not shadow and writes_allowed(apply))
 
 def publish_record(collection: Any, record: dict[str, Any], firestore_module: Any) -> None:
     add_fieldguide_compatibility(record)
@@ -332,9 +340,10 @@ def validate_publishable(record: dict[str, Any]) -> None:
 def scan_drive(args: argparse.Namespace) -> int:
     drive = load_drive_client(args.credentials)
     db = firestore_module = collection = None
-    if writes_allowed(args.apply):
+    write_enabled = shadow_writes_allowed(args.apply, args.shadow) or production_writes_allowed(args.apply, args.shadow)
+    if write_enabled:
         db, firestore_module = load_firestore_client(args.credentials)
-        collection = firestore_path(db, args.app_id)
+        collection = firestore_path(db, args.app_id, shadow=args.shadow)
     files = list_pdfs(drive, args.pending_folder)
     previews, seen_hashes = [], {}
     for item in files[:args.limit] if args.limit else files:
@@ -364,19 +373,21 @@ def scan_drive(args: argparse.Namespace) -> int:
                 enrich_with_ai(record, selected, args.model)
             previews.append({"file": item["name"], "status": "preview", "record": record,
                              "modelInputPreview": selected, "estimatedInputCharacters": len(selected)})
-            if writes_allowed(args.apply):
+            if write_enabled:
                 validate_publishable(record)
                 existing_snap = collection.document(record["id"]).get()
                 existing = existing_snap.to_dict() if existing_snap.exists else None
                 merge_manual_override(record, existing)
                 publish_record(collection, record, firestore_module)
-                move_to_archive(drive, item["id"], item.get("parents") or [], args.archive_folder)
+                if not args.shadow:
+                    move_to_archive(drive, item["id"], item.get("parents") or [], args.archive_folder)
         except Exception as exc:
             previews.append({"file": item.get("name"), "status": "needs_review", "error": str(exc)})
         # Preserve partial work and error details after every document.
         Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
     Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
-    print(f"{'APPLY' if writes_allowed(args.apply) else 'DRY RUN'}: {len(previews)} results written to {args.output}")
+    mode = "SHADOW APPLY" if write_enabled and args.shadow else "PRODUCTION APPLY" if write_enabled else "DRY RUN"
+    print(f"{mode}: {len(previews)} results written to {args.output}")
     return 0
 
 def main() -> int:
@@ -384,6 +395,7 @@ def main() -> int:
     p.add_argument("input_json", nargs="?", help="local JSON containing fileId, name, url and extractedText")
     p.add_argument("--output", default="ingestion_preview.json")
     p.add_argument("--apply", action="store_true", help="request production writes (still requires environment acknowledgement)")
+    p.add_argument("--shadow", action="store_true", help="write only to the isolated ingestion-test collection; never move Drive files")
     p.add_argument("--scan-drive", action="store_true", help="scan the configured Pending folder")
     p.add_argument("--credentials", default=os.getenv("ATRIGUIDE_CREDENTIALS", "credentials.json"))
     p.add_argument("--app-id", default=os.getenv("ATRIGUIDE_APP_ID", "atricure-clinical-hub"))
@@ -393,8 +405,12 @@ def main() -> int:
     p.add_argument("--use-ai", action="store_true", help="perform one bounded extraction call per unique PDF")
     p.add_argument("--model", default=os.getenv("ATRIGUIDE_INGESTION_MODEL", "gemini-2.5-flash"))
     args = p.parse_args()
-    if args.apply and not writes_allowed(args.apply):
-        raise SystemExit("BLOCKED: --apply also requires ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES")
+    if args.shadow and not args.apply:
+        raise SystemExit("BLOCKED: --shadow also requires --apply")
+    if args.apply and args.shadow and not shadow_writes_allowed(args.apply, args.shadow):
+        raise SystemExit("BLOCKED: shadow apply also requires ATRIGUIDE_ENABLE_SHADOW_WRITES=YES")
+    if args.apply and not args.shadow and not production_writes_allowed(args.apply, args.shadow):
+        raise SystemExit("BLOCKED: production apply also requires ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES")
     if args.apply and not args.use_ai:
         raise SystemExit("BLOCKED: --apply requires --use-ai so incomplete records cannot be published")
     if args.scan_drive: return scan_drive(args)
@@ -403,7 +419,7 @@ def main() -> int:
     record = build_skeleton(source["fileId"], source["name"], source.get("url", ""), source["extractedText"], source.get("folderHint", ""))
     selected = record.pop("_selectedText")
     Path(args.output).write_text(json.dumps({"record": record, "modelInputPreview": selected}, indent=2), encoding="utf-8")
-    if writes_allowed(args.apply):
+    if args.apply:
         raise SystemExit("Use --scan-drive for an approved cloud apply")
     print(f"DRY RUN: preview written to {args.output}; no Firestore or Drive changes")
     return 0
