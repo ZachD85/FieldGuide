@@ -1,5 +1,5 @@
 import os, unittest
-from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, duplicate_result, find_existing_duplicate, merge_manual_override, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, duplicate_result, find_existing_duplicate, identity_from_existing, merge_manual_override, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
 
 class FakeSnapshot:
     def __init__(self, record_id): self.id = record_id
@@ -85,6 +85,32 @@ class PipelineTests(unittest.TestCase):
         result = duplicate_result({"id":"drive-2", "name":"copy.pdf"}, "duplicate_in_batch", "hash", "drive-1")
         self.assertEqual(result["action"], "skipped_no_write_no_move")
         self.assertEqual(result["duplicateOf"], "drive-1")
+    def test_same_doi_matches_full_paper_and_abstract(self):
+        full = build_source_identity("full-paper.pdf", "A complete article. doi:10.1016/j.athoracsur.2018.06.022 Methods Results")
+        abstract = build_source_identity("conference abstract.pdf", "Short abstract DOI 10.1016/J.ATHORACSUR.2018.06.022")
+        confidence, reason, definite = compare_duplicate_identity(full, abstract)
+        self.assertTrue(definite)
+        self.assertEqual(reason, "same DOI")
+        self.assertEqual(confidence, 1.0)
+    def test_same_study_title_matches_different_filenames(self):
+        title = "Surgical Atrial Fibrillation Ablation Improves Long Term Survival A Multicenter Analysis"
+        candidate = build_source_identity("PM-US-0369C.pdf", title + "\nAlexander Iribarne and colleagues")
+        legacy = identity_from_existing({"title": title, "summary": "A legacy evidence card"})
+        confidence, reason, definite = compare_duplicate_identity(candidate, legacy)
+        self.assertTrue(definite)
+        self.assertGreaterEqual(confidence, .94)
+    def test_shared_substantive_passages_detect_reformatted_copy(self):
+        passage_one = "This multicenter cohort included patients with documented preoperative atrial fibrillation and compared concomitant surgical ablation with no surgical ablation across seven centers."
+        passage_two = "After risk adjustment surgical ablation was associated with improved five year survival and the effect was observed across all operative groups in the analysis."
+        first = build_source_identity("one.pdf", passage_one + "\n\n" + passage_two)
+        second = build_source_identity("renamed.pdf", "HEADER\n\n" + passage_one + "\n\n" + passage_two + "\n\nReferences")
+        confidence, reason, definite = compare_duplicate_identity(first, second)
+        self.assertTrue(definite)
+        self.assertIn("identical substantive passages", reason)
+    def test_unrelated_studies_do_not_match(self):
+        one = build_source_identity("maze survival.pdf", "Surgical ablation long term survival cohort results")
+        two = build_source_identity("atrial clip ifu.pdf", "Instructions for use warnings and device handling")
+        self.assertIsNone(compare_duplicate_identity(one, two))
 
 if __name__ == "__main__": unittest.main()
 

@@ -5,7 +5,8 @@ environment acknowledgement ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES.
 """
 from __future__ import annotations
 
-import argparse, hashlib, io, json, os, re, time
+import argparse, hashlib, io, json, os, re, time, unicodedata
+from difflib import SequenceMatcher
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,8 +27,94 @@ CATEGORIES = {
 class Placement:
     main: str; sub: str; confidence: float; reason: str
 
+@dataclass(frozen=True)
+class DuplicateMatch:
+    record_id: str; confidence: float; reason: str; definite: bool
+
 def stable_id(drive_file_id: str) -> str:
     return hashlib.sha256(drive_file_id.encode()).hexdigest()[:32]
+
+def normalize_identity_text(value: str) -> str:
+    value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode()
+    value = re.sub(r"\b(?:pdf|full text|abstract|article summary|printed article|publication)\b", " ", value, flags=re.I)
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+def extract_identifiers(text: str) -> dict[str, str]:
+    doi_match = re.search(r"\b10\.\d{4,9}/[-._;()/:A-Z0-9]+", text or "", re.I)
+    pmid_match = re.search(r"\bPMID\s*[:#]?\s*(\d{6,9})\b", text or "", re.I)
+    doi = doi_match.group(0).rstrip(".,;)").lower() if doi_match else ""
+    return {"doi": doi, "pmid": pmid_match.group(1) if pmid_match else ""}
+
+def extract_title_candidates(name: str, text: str) -> list[str]:
+    candidates = [Path(name).stem]
+    for raw in (text or "")[:6000].splitlines()[:80]:
+        line = re.sub(r"\s+", " ", raw).strip()
+        normalized = normalize_identity_text(line)
+        if 35 <= len(line) <= 260 and len(normalized.split()) >= 6 and not re.search(r"[.!?]$", line):
+            if not re.search(r"copyright|doi|pmid|journal|volume|page \d|instructions for use", line, re.I):
+                candidates.append(line)
+    unique = []
+    for candidate in candidates:
+        normalized = normalize_identity_text(candidate)
+        if normalized and normalized not in unique: unique.append(normalized)
+    return unique[:12]
+
+def content_passage_fingerprints(text: str) -> list[str]:
+    """Compact exact-content signals; catches abstracts embedded in full papers."""
+    blocks = re.split(r"\n\s*\n|(?<=[.!?])\s+(?=[A-Z])", (text or "")[:30000])
+    hashes, seen = [], set()
+    for block in blocks:
+        normalized = normalize_identity_text(block)
+        words = normalized.split()
+        if 18 <= len(words) <= 220:
+            fingerprint = hashlib.sha256(" ".join(words).encode()).hexdigest()[:20]
+            if fingerprint not in seen:
+                seen.add(fingerprint); hashes.append(fingerprint)
+    # Preserve document order so front-matter/abstract passages are retained.
+    return hashes[:120]
+
+def build_source_identity(name: str, text: str) -> dict[str, Any]:
+    identifiers = extract_identifiers(f"{name}\n{text[:30000]}")
+    return {
+        **identifiers,
+        "titleCandidates": extract_title_candidates(name, text),
+        "passageFingerprints": content_passage_fingerprints(text),
+    }
+
+def identity_from_existing(record: dict[str, Any]) -> dict[str, Any]:
+    source = record.get("source") or {}
+    saved = source.get("identity") or {}
+    combined = "\n".join(str(record.get(key, "")) for key in ("title", "citation", "author", "summary", "url"))
+    identifiers = extract_identifiers(combined)
+    title = normalize_identity_text(str(record.get("title", "")))
+    return {
+        "doi": saved.get("doi") or identifiers["doi"],
+        "pmid": saved.get("pmid") or identifiers["pmid"],
+        "titleCandidates": saved.get("titleCandidates") or ([title] if title else []),
+        "passageFingerprints": saved.get("passageFingerprints") or content_passage_fingerprints(str(record.get("summary", ""))),
+    }
+
+def compare_duplicate_identity(candidate: dict[str, Any], existing: dict[str, Any]) -> tuple[float, str, bool] | None:
+    for identifier, label in (("doi", "DOI"), ("pmid", "PMID")):
+        if candidate.get(identifier) and candidate.get(identifier) == existing.get(identifier):
+            return 1.0, f"same {label}", True
+    candidate_titles = candidate.get("titleCandidates") or []
+    existing_titles = existing.get("titleCandidates") or []
+    best_title = max((SequenceMatcher(None, a, b).ratio() for a in candidate_titles for b in existing_titles), default=0.0)
+    if any(a == b and len(a.split()) >= 6 for a in candidate_titles for b in existing_titles):
+        return .99, "same normalized study title", True
+    candidate_passages = set(candidate.get("passageFingerprints") or [])
+    existing_passages = set(existing.get("passageFingerprints") or [])
+    shared_passages = len(candidate_passages & existing_passages)
+    if shared_passages >= 2:
+        return .98, f"{shared_passages} identical substantive passages", True
+    if best_title >= .94:
+        return .96, "near-identical study title", True
+    if best_title >= .82 and shared_passages >= 1:
+        return .90, "similar study title plus identical content passage", False
+    if best_title >= .88:
+        return .86, "highly similar study title", False
+    return None
 
 def detect_document_type(name: str, text: str) -> tuple[str, float]:
     normalized_name = re.sub(r"[_-]+", " ", name.lower())
@@ -121,7 +208,8 @@ def build_skeleton(file_id: str, name: str, url: str, text: str, folder_hint: st
     return {
         "id": stable_id(file_id), "schemaVersion": 2,
         "source": {"driveFileId": file_id, "driveUrl": url, "fileName": name,
-                   "contentHash": hashlib.sha256(text.encode()).hexdigest()},
+                   "contentHash": hashlib.sha256(text.encode()).hexdigest(),
+                   "identity": build_source_identity(name, text)},
         "title": Path(name).stem, "citation": "", "year": None,
         "documentType": doc_type,
         "authority": {"ifu":"regulatory_labeling", "guideline_consensus":"professional_guidance", "article_summary":"secondary_summary", "brochure_other":"manufacturer_resource"}.get(doc_type, "primary_research"),
@@ -265,14 +353,37 @@ def find_existing_duplicate(collection: Any, content_hash: str, candidate_id: st
             return snapshot.id
     return None
 
+def load_existing_records(collection: Any) -> list[tuple[str, dict[str, Any]]]:
+    return [(snapshot.id, snapshot.to_dict() or {}) for snapshot in collection.stream()]
+
+def find_content_duplicate(existing_records: list[tuple[str, dict[str, Any]]],
+                           candidate: dict[str, Any]) -> DuplicateMatch | None:
+    candidate_id = candidate["id"]
+    candidate_hash = candidate.get("source", {}).get("contentHash", "")
+    candidate_identity = candidate.get("source", {}).get("identity", {})
+    best = None
+    for record_id, existing in existing_records:
+        if record_id == candidate_id: continue
+        if candidate_hash and candidate_hash == (existing.get("source") or {}).get("contentHash"):
+            return DuplicateMatch(record_id, 1.0, "identical extracted content", True)
+        comparison = compare_duplicate_identity(candidate_identity, identity_from_existing(existing))
+        if comparison:
+            confidence, reason, definite = comparison
+            match = DuplicateMatch(record_id, confidence, reason, definite)
+            if best is None or match.confidence > best.confidence: best = match
+    return best
+
 def duplicate_result(item: dict[str, Any], status: str, content_hash: str,
-                     duplicate_of: str) -> dict[str, Any]:
+                     duplicate_of: str, reason: str = "identical PDF content",
+                     confidence: float = 1.0) -> dict[str, Any]:
     """Create an explicit, reviewable duplicate outcome with no publish action."""
     return {
         "file": item["name"],
         "fileId": item["id"],
         "status": status,
         "duplicateOf": duplicate_of,
+        "duplicateReason": reason,
+        "duplicateConfidence": confidence,
         "contentHash": content_hash,
         "action": "skipped_no_write_no_move",
     }
@@ -340,10 +451,14 @@ def validate_publishable(record: dict[str, Any]) -> None:
 def scan_drive(args: argparse.Namespace) -> int:
     drive = load_drive_client(args.credentials)
     db = firestore_module = collection = None
+    existing_records = []
     write_enabled = shadow_writes_allowed(args.apply, args.shadow) or production_writes_allowed(args.apply, args.shadow)
     if write_enabled:
         db, firestore_module = load_firestore_client(args.credentials)
         collection = firestore_path(db, args.app_id, shadow=args.shadow)
+        # One bounded collection read supports legacy records that predate
+        # content hashes/DOIs, without repeating the read for every PDF.
+        existing_records = load_existing_records(collection)
     files = list_pdfs(drive, args.pending_folder)
     previews, seen_hashes = [], {}
     for item in files[:args.limit] if args.limit else files:
@@ -357,17 +472,29 @@ def scan_drive(args: argparse.Namespace) -> int:
                 continue
             seen_hashes[content_hash] = item["id"]
             candidate_id = stable_id(item["id"])
-            if collection:
-                duplicate_id = find_existing_duplicate(collection, content_hash, candidate_id)
-                if duplicate_id:
-                    previews.append(duplicate_result(
-                        item, "duplicate_existing", content_hash, duplicate_id
-                    ))
-                    continue
             text = extract_pdf_text(raw)
             record = build_skeleton(item["id"], item["name"], f"https://drive.google.com/file/d/{item['id']}/view", text, item.get("folderHint", ""))
             record["source"]["contentHash"] = content_hash
             validate_record(record)
+            if collection:
+                duplicate_match = find_content_duplicate(existing_records, record)
+                if duplicate_match:
+                    if duplicate_match.definite:
+                        previews.append(duplicate_result(
+                            item, "duplicate_existing", content_hash,
+                            duplicate_match.record_id, duplicate_match.reason,
+                            duplicate_match.confidence,
+                        ))
+                    else:
+                        previews.append({
+                            "file": item["name"], "fileId": item["id"],
+                            "status": "possible_duplicate_needs_review",
+                            "duplicateOf": duplicate_match.record_id,
+                            "duplicateReason": duplicate_match.reason,
+                            "duplicateConfidence": duplicate_match.confidence,
+                            "action": "held_no_write_no_move",
+                        })
+                    continue
             selected = record.pop("_selectedText")
             if args.use_ai:
                 enrich_with_ai(record, selected, args.model)
@@ -379,6 +506,8 @@ def scan_drive(args: argparse.Namespace) -> int:
                 existing = existing_snap.to_dict() if existing_snap.exists else None
                 merge_manual_override(record, existing)
                 publish_record(collection, record, firestore_module)
+                existing_records = [(record_id, value) for record_id, value in existing_records if record_id != record["id"]]
+                existing_records.append((record["id"], record))
                 if not args.shadow:
                     move_to_archive(drive, item["id"], item.get("parents") or [], args.archive_folder)
         except Exception as exc:

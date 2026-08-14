@@ -7,7 +7,10 @@ One Firestore document per source PDF, keyed by a stable hash of the Drive file 
 ```json
 {
   "schemaVersion": 2,
-  "source": {"driveFileId": "...", "driveUrl": "...", "fileName": "...", "contentHash": "..."},
+  "source": {
+    "driveFileId": "...", "driveUrl": "...", "fileName": "...", "contentHash": "...",
+    "identity": {"doi": "...", "pmid": "...", "titleCandidates": ["..."], "passageFingerprints": ["..."]}
+  },
   "title": "...",
   "citation": "...",
   "year": 2026,
@@ -51,5 +54,15 @@ Allowed website placements are fixed:
 - `brochure_other`: `resourceKind`, `intendedAudience`, `keyMessages`; authority is `manufacturer_resource` or `other`
 
 Arrays are deliberately bounded in code: up to 5 card bullets, 8 evidence claims, 12 clinical tags, and 12 search terms. The full PDF remains the source of truth; Firestore stores retrieval-ready evidence, not a second copy of the document.
+
+## Duplicate identity
+
+Duplicate checks run before the paid AI extraction. Exact PDF/content matches,
+matching DOI or PMID values, the same normalized study title, and multiple
+identical substantive passages are automatically skipped. A likely but
+uncertain match is held as `possible_duplicate_needs_review`; it is never
+published or moved automatically. This catches a full paper, abstract, article
+summary, renamed PDF, or differently formatted copy of the same study while
+keeping genuinely ambiguous pairs for Admin review.
 
 
