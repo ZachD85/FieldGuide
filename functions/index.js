@@ -44,21 +44,21 @@ async function enforceRateLimit(uid) {
 
 function cleanCandidates(value) {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 12).map((item) => {
-    const evidence = Array.isArray(item.evidence) ? item.evidence.slice(0, 8).map((claim) => ({
-      claim: String(claim?.claim || "").slice(0, 700),
+  return value.slice(0, 8).map((item) => {
+    const evidence = Array.isArray(item.evidence) ? item.evidence.slice(0, 4).map((claim) => ({
+      claim: String(claim?.claim || "").slice(0, 500),
       page: Number.isInteger(claim?.page) && claim.page > 0 ? claim.page : null,
       locator: String(claim?.locator || "").slice(0, 80),
       kind: String(claim?.kind || "").slice(0, 40),
-      excerpt: String(claim?.excerpt || "").slice(0, 500),
+      excerpt: String(claim?.excerpt || "").slice(0, 240),
     })).filter((claim) => claim.claim) : [];
     return {
       id: String(item.id || "").slice(0, 80),
       title: String(item.title || "").slice(0, 300),
       author: String(item.author || "").slice(0, 300),
       category: String(item.category || "").slice(0, 120),
-      summary: String(item.summary || "").slice(0, 1400),
-      keywords: String(item.keywords || "").slice(0, 600),
+      summary: String(item.summary || "").slice(0, 1100),
+      keywords: String(item.keywords || "").slice(0, 400),
       evidence,
     };
   }).filter((item) => item.id && item.title);
@@ -88,7 +88,7 @@ exports.askAtriGuide = onCall({
   if (!candidates.length) return {synthesis: "No matching evidence cards were found.", matchedIds: []};
 
   const catalog = JSON.stringify(candidates);
-  if (catalog.length > 24000) throw new HttpsError("invalid-argument", "Evidence context is too large.");
+  if (catalog.length > 48000) throw new HttpsError("invalid-argument", "Evidence context is too large.");
   const ai = new GoogleGenAI({
     vertexai: true,
     project: process.env.GCLOUD_PROJECT,
