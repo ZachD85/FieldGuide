@@ -1,5 +1,5 @@
 import os, unittest
-from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, duplicate_result, find_existing_duplicate, identity_from_existing, merge_manual_override, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, duplicate_result, evidence_page, find_existing_duplicate, has_page_citations, identity_from_existing, merge_manual_override, normalize_evidence, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
 
 class FakeSnapshot:
     def __init__(self, record_id): self.id = record_id
@@ -55,7 +55,20 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(shadow_writes_allowed(True, True))
         self.assertFalse(production_writes_allowed(True, True))
     def test_schema_is_valid(self):
-        validate_record(build_skeleton("4", "consensus.pdf", "u", "Clinical practice guideline and consensus statement"))
+        record = build_skeleton("4", "consensus.pdf", "u", "Clinical practice guideline and consensus statement")
+        validate_record(record)
+        self.assertEqual(record["schemaVersion"], 3)
+    def test_evidence_page_parses_markers_without_invention(self):
+        self.assertEqual(evidence_page("[PAGE 14]"), 14)
+        self.assertEqual(evidence_page("page 7"), 7)
+        self.assertIsNone(evidence_page("Results section"))
+    def test_evidence_normalization_adds_validated_page_label(self):
+        evidence = normalize_evidence([{"claim":"Mortality was 3%.", "locator":"[PAGE 9]", "kind":"safety", "excerpt":"30-day mortality was 3%."}])
+        self.assertEqual(evidence[0]["page"], 9)
+        self.assertEqual(evidence[0]["locator"], "page 9")
+        self.assertTrue(has_page_citations({"evidence": evidence}))
+    def test_legacy_evidence_without_page_needs_backfill(self):
+        self.assertFalse(has_page_citations({"evidence":[{"claim":"A finding", "locator":"Results"}]}))
     def test_ifu_stops_before_bulgarian_translation(self):
         text = "INSTRUCTIONS FOR USE en\nEnglish warnings\nÐ˜ÐÐ¡Ð¢Ð Ð£ÐšÐ¦Ð˜Ð˜ Ð—Ð Ð£ÐŸÐžÐ¢Ð Ð•Ð‘Ð bg\nTranslated warnings"
         selected = select_text(text, "ifu")

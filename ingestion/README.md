@@ -16,6 +16,8 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
   progress and failures for review.
 - Existing Admin Portal category overrides remain authoritative during
   re-ingestion.
+- Existing library records can be enriched with page-linked citations in place;
+  no database purge or replacement is required.
 - Drive archival happens only after a successful Firestore publish.
 - Identical PDFs are reported as explicit duplicates and are neither published
   nor moved. A rerun of the same Drive file remains an idempotent update.
@@ -66,6 +68,20 @@ python atriguide_ingestion.py input.json --output ingestion_preview.json
 ```
 
 This command is dry-run only and performs no Firestore writes or Drive moves.
+
+## Existing-library citation backfill
+
+Preview a small batch first:
+
+```powershell
+python atriguide_ingestion.py --backfill-citations --use-ai --limit 3 --output citation_backfill_preview.json
+```
+
+The preview reads the current records and their Drive PDFs but performs no
+Firestore writes. An approved production update additionally requires `--apply`
+and `ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES`. It updates only `schemaVersion`,
+`evidence`, and citation-processing metadata. It never deletes records, moves
+Drive files, or changes Admin Portal categories.
 
 ## Cloud configuration
 
