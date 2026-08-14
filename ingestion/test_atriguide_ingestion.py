@@ -1,5 +1,5 @@
 import os, unittest
-from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, duplicate_result, evidence_page, find_existing_duplicate, has_page_citations, identity_from_existing, merge_manual_override, normalize_evidence, production_writes_allowed, select_text, shadow_writes_allowed, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, drive_file_id_from_record, duplicate_result, evidence_page, filter_grounded_evidence, find_existing_duplicate, has_page_citations, identity_from_existing, merge_manual_override, normalize_evidence, production_writes_allowed, select_text, shadow_writes_allowed, validate_evidence_grounding, validate_publishable, validate_record, writes_allowed
 
 class FakeSnapshot:
     def __init__(self, record_id): self.id = record_id
@@ -69,6 +69,23 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(has_page_citations({"evidence": evidence}))
     def test_legacy_evidence_without_page_needs_backfill(self):
         self.assertFalse(has_page_citations({"evidence":[{"claim":"A finding", "locator":"Results"}]}))
+    def test_legacy_drive_url_recovers_file_id(self):
+        record = {"url":"https://drive.google.com/file/d/1AbC_def-234/view"}
+        self.assertEqual(drive_file_id_from_record(record), "1AbC_def-234")
+    def test_page_grounding_accepts_pdf_spacing_and_hyphenation(self):
+        text = "\n[PAGE 1]\nRisk-adjusted mor-\ntality was significantly lower."
+        validate_evidence_grounding([{"page": 1, "excerpt": "Risk adjusted mortality was significantly lower."}], text)
+    def test_page_grounding_rejects_wrong_page(self):
+        text = "\n[PAGE 1]\nMortality was significantly lower.\n[PAGE 2]\nMethods only."
+        with self.assertRaisesRegex(ValueError, "not found on PDF page 2"):
+            validate_evidence_grounding([{"page": 2, "excerpt": "Mortality was significantly lower."}], text)
+    def test_grounding_filter_drops_only_bad_claim(self):
+        text = "\n[PAGE 1]\nMortality was significantly lower in the treated group."
+        kept, rejected = filter_grounded_evidence([
+            {"page": 1, "excerpt": "Mortality was significantly lower in the treated group."},
+            {"page": 1, "excerpt": "This statement does not occur anywhere in the paper."},
+        ], text)
+        self.assertEqual((len(kept), rejected), (1, 1))
     def test_ifu_stops_before_bulgarian_translation(self):
         text = "INSTRUCTIONS FOR USE en\nEnglish warnings\nÐ˜ÐÐ¡Ð¢Ð Ð£ÐšÐ¦Ð˜Ð˜ Ð—Ð Ð£ÐŸÐžÐ¢Ð Ð•Ð‘Ð bg\nTranslated warnings"
         selected = select_text(text, "ifu")

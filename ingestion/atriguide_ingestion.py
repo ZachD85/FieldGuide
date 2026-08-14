@@ -63,6 +63,17 @@ def has_page_citations(record: dict[str, Any]) -> bool:
     evidence = normalize_evidence(record.get("evidence"))
     return bool(evidence) and all(item.get("page") for item in evidence)
 
+def drive_file_id_from_record(record: dict[str, Any]) -> str:
+    """Read v3 source identity or recover it from a legacy Google Drive URL."""
+    source = record.get("source") or {}
+    direct = str(source.get("driveFileId") or "").strip()
+    if direct: return direct
+    url = str(source.get("driveUrl") or record.get("url") or "")
+    match = re.search(r"drive\.google\.com/(?:file/d/|open\?id=)([A-Za-z0-9_-]+)", url)
+    if not match:
+        match = re.search(r"[?&]id=([A-Za-z0-9_-]+)", url)
+    return match.group(1) if match else ""
+
 def normalize_identity_text(value: str) -> str:
     value = unicodedata.normalize("NFKD", value or "").encode("ascii", "ignore").decode()
     value = re.sub(r"\b(?:pdf|full text|abstract|article summary|printed article|publication)\b", " ", value, flags=re.I)
@@ -351,6 +362,53 @@ def extract_pdf_text(pdf_bytes: bytes, max_pages: int = 160) -> str:
     if len(text.strip()) < 50: raise ValueError("PDF has too little extractable text; OCR/review required")
     return text
 
+def _citation_match_text(value: str) -> str:
+    """Normalize common PDF extraction quirks without weakening grounding."""
+    value = unicodedata.normalize("NFKD", str(value or ""))
+    value = re.sub(r"(?<=[A-Za-z])-\s*(?=[A-Za-z])", "", value)
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+def page_texts(extracted_text: str) -> dict[int, str]:
+    parts = re.split(r"\n\[PAGE\s+(\d+)\]\n", extracted_text)
+    return {int(parts[index]): parts[index + 1] for index in range(1, len(parts) - 1, 2)}
+
+def _ordered_excerpt_match(excerpt: str, page_text: str) -> bool:
+    """Allow a small number of OCR-split words while preserving word order."""
+    wanted = excerpt.split()
+    available = page_text.split()
+    if not wanted or not available: return False
+    blocks = [block for block in SequenceMatcher(None, wanted, available, autojunk=False).get_matching_blocks()
+              if block.size]
+    matched = sum(block.size for block in blocks)
+    required = max(6, int(len(wanted) * 0.88 + 0.999))
+    span = blocks[-1].b + blocks[-1].size - blocks[0].b if blocks else 0
+    return matched >= required and span <= len(wanted) * 2
+
+def validate_evidence_grounding(evidence: list[dict[str, Any]], extracted_text: str) -> None:
+    """Reject model citations unless their excerpt occurs on the stated PDF page."""
+    pages = page_texts(extracted_text)
+    for number, item in enumerate(evidence, start=1):
+        page = evidence_page(item.get("page") or item.get("locator"))
+        excerpt = _citation_match_text(item.get("excerpt", ""))
+        page_text = _citation_match_text(pages.get(page or -1, ""))
+        if not page or page not in pages:
+            raise ValueError(f"Evidence claim {number} cites a missing PDF page")
+        compact_match = excerpt.replace(" ", "") in page_text.replace(" ", "")
+        if len(excerpt) < 20 or (excerpt not in page_text and not compact_match and
+                                 not _ordered_excerpt_match(excerpt, page_text)):
+            raise ValueError(f"Evidence claim {number} excerpt was not found on PDF page {page}")
+
+def filter_grounded_evidence(evidence: list[dict[str, Any]], extracted_text: str) -> tuple[list[dict[str, Any]], int]:
+    """Keep independently verified claims and count model claims that were rejected."""
+    accepted = []
+    for item in evidence:
+        try:
+            validate_evidence_grounding([item], extracted_text)
+            accepted.append(item)
+        except ValueError:
+            pass
+    return accepted, len(evidence) - len(accepted)
+
 def move_to_archive(drive: Any, file_id: str, parents: list[str], archive_folder_id: str) -> None:
     if not parents: raise ValueError("Refusing move without verified current parent")
     drive.files().update(fileId=file_id, addParents=archive_folder_id,
@@ -430,7 +488,6 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
     if len(selected_text) > MAX_AI_INPUT_CHARACTERS:
         raise ValueError("AI input exceeds the hard character budget")
     api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key: raise RuntimeError("GEMINI_API_KEY is not set")
     from urllib.parse import quote
     from urllib.request import Request, urlopen
     full_shape = {
@@ -446,17 +503,67 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
         "that contains its supporting text and include a short verbatim supporting excerpt. Return raw JSON only. "
         f"Document type: {record['documentType']}. Required compact shape: {json.dumps(shape)}\n\n{selected_text}"
     )
-    endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{quote(model_name)}:generateContent?key={quote(api_key)}"
+    headers = {"Content-Type": "application/json"}
+    if api_key:
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{quote(model_name)}:generateContent?key={quote(api_key)}"
+        provider = "gemini_api_key"
+    else:
+        credentials_file = os.getenv("ATRIGUIDE_CREDENTIALS")
+        if not credentials_file:
+            raise RuntimeError("Set ATRIGUIDE_CREDENTIALS for Vertex AI or GEMINI_API_KEY")
+        from google.auth.transport.requests import Request as AuthRequest
+        from google.oauth2 import service_account
+        credentials = service_account.Credentials.from_service_account_file(
+            credentials_file, scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
+        credentials.refresh(AuthRequest())
+        project = os.getenv("ATRIGUIDE_GCP_PROJECT") or credentials.project_id or "atricure-app"
+        location = os.getenv("ATRIGUIDE_VERTEX_LOCATION", "us-central1")
+        endpoint = (f"https://{location}-aiplatform.googleapis.com/v1/projects/{quote(project)}/"
+                    f"locations/{quote(location)}/publishers/google/models/{quote(model_name)}:generateContent")
+        headers["Authorization"] = f"Bearer {credentials.token}"
+        provider = "vertex_ai"
+    generation_config = {
+        "responseMimeType": "application/json",
+        "temperature": 0.1,
+        "maxOutputTokens": 4096 if evidence_only else MAX_AI_OUTPUT_TOKENS,
+        "thinkingConfig": {"thinkingBudget": 0},
+    }
+    if evidence_only:
+        generation_config["responseJsonSchema"] = {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "array", "maxItems": 8,
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "claim": {"type": "string"},
+                            "page": {"type": "integer", "minimum": 1},
+                            "locator": {"type": "string"},
+                            "kind": {"type": "string"},
+                            "excerpt": {"type": "string"},
+                        },
+                        "required": ["claim", "page", "locator", "kind", "excerpt"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
+            "required": ["evidence"],
+            "additionalProperties": False,
+        }
     request_body = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "temperature": 0.1,
-            "maxOutputTokens": MAX_AI_OUTPUT_TOKENS,
-        },
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": generation_config,
     }).encode("utf-8")
-    with urlopen(Request(endpoint, data=request_body, headers={"Content-Type": "application/json"}), timeout=120) as response:
-        response_bytes = response.read(MAX_AI_RESPONSE_BYTES + 1)
+    try:
+        with urlopen(Request(endpoint, data=request_body, headers=headers), timeout=120) as response:
+            response_bytes = response.read(MAX_AI_RESPONSE_BYTES + 1)
+    except Exception as exc:
+        detail = ""
+        if hasattr(exc, "read"):
+            detail = exc.read(4096).decode("utf-8", errors="replace")
+        raise RuntimeError(f"AI extraction request failed: {exc}; {detail}".strip()) from exc
     if len(response_bytes) > MAX_AI_RESPONSE_BYTES:
         raise ValueError("AI response exceeds the hard byte budget")
     raw_response = json.loads(response_bytes.decode("utf-8"))
@@ -470,6 +577,7 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
     record["searchTerms"] = record.get("searchTerms", [])[:12]
     record["evidence"] = normalize_evidence(record.get("evidence"))
     record["ingestion"]["model"] = model_name
+    record["ingestion"]["aiProvider"] = provider
     usage = raw_response.get("usageMetadata", {})
     if usage:
         record["ingestion"]["inputTokens"] = usage.get("promptTokenCount")
@@ -561,18 +669,22 @@ def backfill_citations(args: argparse.Namespace) -> int:
     collection = firestore_path(db, args.app_id, shadow=args.shadow)
     write_enabled = shadow_writes_allowed(args.apply, args.shadow) or production_writes_allowed(args.apply, args.shadow)
     records = load_existing_records(collection)
-    if args.limit: records = records[:args.limit]
     previews = []
+    eligible_attempts = 0
     for record_id, existing in records:
+        enrichment = None
         try:
             if has_page_citations(existing):
-                previews.append({"id": record_id, "status": "already_page_cited", "action": "unchanged"})
                 continue
             source = existing.get("source") or {}
-            file_id = source.get("driveFileId")
+            file_id = drive_file_id_from_record(existing)
             if not file_id:
                 previews.append({"id": record_id, "status": "needs_review", "error": "missing source.driveFileId"})
                 continue
+            if args.limit and eligible_attempts >= args.limit:
+                break
+            eligible_attempts += 1
+            print(f"Citation check {eligible_attempts}: {existing.get('title', record_id)}", flush=True)
             raw = download_pdf(drive, file_id)
             text = extract_pdf_text(raw)
             doc_type = existing.get("documentType") or detect_document_type(source.get("fileName", ""), text)[0]
@@ -583,13 +695,18 @@ def backfill_citations(args: argparse.Namespace) -> int:
                 "ingestion": dict(existing.get("ingestion") or {}),
             }
             enrich_with_ai(enrichment, selected, args.model, evidence_only=True)
+            print(f"  AI returned {len(enrichment['evidence'])} claims; verifying page excerpts", flush=True)
             if not enrichment["evidence"]:
                 raise ValueError("No page-linked evidence was extracted")
+            enrichment["evidence"], rejected = filter_grounded_evidence(enrichment["evidence"], text)
+            if len(enrichment["evidence"]) < 3:
+                raise ValueError("Fewer than three evidence claims passed page verification")
             update = {
                 "schemaVersion": 3,
                 "evidence": enrichment["evidence"],
                 "ingestion.citationModel": args.model,
                 "ingestion.citationBackfilledAt": datetime.now(timezone.utc).isoformat(),
+                "ingestion.rejectedCitationCount": rejected,
             }
             previews.append({"id": record_id, "title": existing.get("title", ""),
                              "status": "citation_preview", "update": update,
@@ -597,8 +714,11 @@ def backfill_citations(args: argparse.Namespace) -> int:
             if write_enabled:
                 collection.document(record_id).update(update)
         except Exception as exc:
-            previews.append({"id": record_id, "title": existing.get("title", ""),
-                             "status": "needs_review", "error": str(exc), "action": "unchanged"})
+            review = {"id": record_id, "title": existing.get("title", ""),
+                      "status": "needs_review", "error": str(exc), "action": "unchanged"}
+            if enrichment and enrichment.get("evidence"):
+                review["candidateEvidence"] = enrichment["evidence"]
+            previews.append(review)
         Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
     Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
     mode = "SHADOW APPLY" if write_enabled and args.shadow else "PRODUCTION APPLY" if write_enabled else "DRY RUN"
