@@ -1,0 +1,10 @@
+credentials.json
+*credentials*.json
+*service-account*.json
+*service_account*.json
+*_preview*.json
+ingestion_preview.json
+__pycache__/
+*.pyc
+.env
+.env.*
