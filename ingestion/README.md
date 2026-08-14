@@ -93,7 +93,12 @@ Supply configuration through local environment variables or command options:
 - `ATRIGUIDE_ARCHIVE_FOLDER_ID`
 - `GEMINI_API_KEY`
 - `ATRIGUIDE_INGESTION_MODEL` (optional)
+- `ATRIGUIDE_GCP_PROJECT` and `ATRIGUIDE_VERTEX_LOCATION` (optional; Vertex AI defaults to the credential project and `us-central1`)
 - `ATRIGUIDE_ENABLE_SHADOW_WRITES` (required only for isolated shadow writes)
 
 Do not add credential JSON files, API keys, preview output, or service-account
 material to Git.
+
+When `GEMINI_API_KEY` is absent, the pipeline uses Vertex AI through the
+service account in `ATRIGUIDE_CREDENTIALS`. This is the preferred production
+path because it does not require a locally stored model API key.
