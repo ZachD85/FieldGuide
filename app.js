@@ -414,6 +414,77 @@ window.submitAIFollowUp = function() {
     window.askAtriGuide(question, true);
 };
 
+window.renderStructuredSSS = function(result) {
+    const root = document.getElementById("aiSynthesisText");
+    root.replaceChildren();
+    const title = document.createElement("div");
+    title.className = "text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2";
+    title.textContent = "🧽 Scrub Sink Summary";
+    root.appendChild(title);
+    if (result.answerMode === "quick_pitch") {
+        const badge = document.createElement("div");
+        badge.className = "inline-flex mb-2 text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-800 px-2 py-1 rounded-full";
+        badge.textContent = "30-second evidence brief";
+        root.appendChild(badge);
+    }
+    const headline = document.createElement("div");
+    headline.className = "text-sm md:text-base font-extrabold text-slate-900 mb-2";
+    headline.textContent = result.headline || "Evidence summary";
+    root.appendChild(headline);
+    const synthesis = document.createElement("div");
+    synthesis.className = "text-xs md:text-sm font-medium leading-relaxed text-slate-700";
+    synthesis.textContent = result.synthesis || "No directly supported answer is available.";
+    root.appendChild(synthesis);
+    if (Array.isArray(result.talkingPoints) && result.talkingPoints.length) {
+        const list = document.createElement("ul");
+        list.className = "mt-3 space-y-1.5 list-disc pl-5 text-xs md:text-sm text-slate-700";
+        result.talkingPoints.slice(0, 3).forEach(point => {
+            const item = document.createElement("li");
+            item.textContent = point;
+            list.appendChild(item);
+        });
+        root.appendChild(list);
+    }
+    if (result.caveat) {
+        const caveat = document.createElement("div");
+        caveat.className = "mt-3 border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900";
+        caveat.textContent = `Important context: ${result.caveat}`;
+        root.appendChild(caveat);
+    }
+    const validSources = (result.sources || []).map(source => ({
+        ...source,
+        card: window.clinicalDatabase.find(item => item.id === source.id)
+    })).filter(source => source.card);
+    if (validSources.length) {
+        const sourceBox = document.createElement("div");
+        sourceBox.className = "mt-3 pt-3 border-t border-orange-100 space-y-2";
+        const label = document.createElement("div");
+        label.className = "text-[10px] font-extrabold uppercase tracking-wider text-slate-500";
+        label.textContent = "Evidence used";
+        sourceBox.appendChild(label);
+        validSources.slice(0, 6).forEach(source => {
+            const row = document.createElement(source.card.url ? "a" : "div");
+            row.className = "block text-xs bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700";
+            if (source.card.url) {
+                row.href = source.card.url;
+                row.target = "_blank";
+                row.rel = "noopener noreferrer";
+            }
+            const sourceTitle = document.createElement("strong");
+            sourceTitle.className = "block text-[#00205B]";
+            sourceTitle.textContent = source.card.title;
+            row.appendChild(sourceTitle);
+            if (source.supports) {
+                const support = document.createElement("span");
+                support.textContent = source.supports;
+                row.appendChild(support);
+            }
+            sourceBox.appendChild(row);
+        });
+        root.appendChild(sourceBox);
+    }
+};
+
 window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
     const queryArea = document.getElementById("copilotQueryInput");
     const btn = document.getElementById("copilotSubmitBtn");
@@ -454,8 +525,9 @@ window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
         const safeSynthesis = window.escapeHtml(parsedResult.synthesis || "No direct executive brief available.");
         document.getElementById("aiSynthesisText").innerHTML = `<div class="text-sm font-bold text-[#00205B] uppercase tracking-wider mb-2">🧽 Scrub Sink Summary</div><div class="text-xs md:text-sm font-medium leading-relaxed">${safeSynthesis}</div>`;
         
+        window.renderStructuredSSS(parsedResult);
         window.aiConversationTurns.push({role: "user", text: query});
-        window.aiConversationTurns.push({role: "assistant", text: parsedResult.synthesis || ""});
+        window.aiConversationTurns.push({role: "assistant", text: [parsedResult.headline, parsedResult.synthesis, parsedResult.caveat].filter(Boolean).join(" ")});
         window.aiConversationTurns = window.aiConversationTurns.slice(-6);
         window.aiConversationEvidenceIds = [...new Set([
             ...window.aiConversationEvidenceIds,

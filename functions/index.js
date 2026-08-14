@@ -87,8 +87,13 @@ exports.askAtriGuide = onCall({
   const prompt = `You are AtriGuide, an evidence-grounded clinical evidence assistant. ` +
     `Use only the supplied public evidence cards for factual claims. Conversation history provides intent only; ` +
     `it is not evidence. If the cards do not support an answer, say so clearly. Do not invent claims or IDs. ` +
-    `Return JSON with a concise conversational synthesis, matchedIds, and exactly two short follow-up questions ` +
-    `that can be answered from the supplied cards and help the user probe deeper.\n` +
+    `Recognize practical clinical scenarios, time pressure, objections, and the answer format the user needs. ` +
+    `For requests such as a 30-second discussion, return answerMode quick_pitch, a direct headline, a brief ` +
+    `spoken-style synthesis, up to three supporting talkingPoints, and one honest caveat. For ordinary questions ` +
+    `use answerMode standard. If a missing distinction would materially change the evidence, use clarification ` +
+    `and state what must be clarified. Never present catheter-ablation evidence as proof for surgical ablation, ` +
+    `or vice versa; label indirect evidence plainly. For every central point, include a source mapping using only ` +
+    `a supplied card ID. Return exactly two short follow-up questions that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
     model: "gemini-2.5-flash",
@@ -101,11 +106,24 @@ exports.askAtriGuide = onCall({
       responseJsonSchema: {
         type: "object",
         properties: {
+          answerMode: {type: "string", enum: ["quick_pitch", "standard", "clarification"]},
+          headline: {type: "string"},
           synthesis: {type: "string"},
+          talkingPoints: {type: "array", items: {type: "string"}},
+          caveat: {type: "string"},
           matchedIds: {type: "array", items: {type: "string"}},
+          sources: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {id: {type: "string"}, supports: {type: "string"}},
+              required: ["id", "supports"],
+              additionalProperties: false,
+            },
+          },
           suggestedFollowUps: {type: "array", items: {type: "string"}},
         },
-        required: ["synthesis", "matchedIds", "suggestedFollowUps"],
+        required: ["answerMode", "headline", "synthesis", "talkingPoints", "caveat", "matchedIds", "sources", "suggestedFollowUps"],
         additionalProperties: false,
       },
     },
@@ -134,8 +152,16 @@ exports.askAtriGuide = onCall({
     if (!suggestedFollowUps.includes(fallback)) suggestedFollowUps.push(fallback);
   }
   return {
+    answerMode: ["quick_pitch", "standard", "clarification"].includes(parsed.answerMode) ? parsed.answerMode : "standard",
+    headline: String(parsed.headline || "Evidence summary").slice(0, 180),
     synthesis: String(parsed.synthesis || "").slice(0, 1800),
+    talkingPoints: Array.isArray(parsed.talkingPoints) ? parsed.talkingPoints.map((value) => String(value).slice(0, 500)).slice(0, 3) : [],
+    caveat: String(parsed.caveat || "").slice(0, 700),
     matchedIds: Array.isArray(parsed.matchedIds) ? parsed.matchedIds.filter((id) => allowedIds.has(id)).slice(0, 8) : [],
+    sources: Array.isArray(parsed.sources) ? parsed.sources
+      .filter((source) => allowedIds.has(source?.id))
+      .map((source) => ({id: source.id, supports: String(source.supports || "").slice(0, 300)}))
+      .slice(0, 6) : [],
     suggestedFollowUps,
   };
 });
