@@ -1064,6 +1064,15 @@ window.authorizeAdminAccount = async function() {
         return;
     }
     try {
+        if (window.auth.currentUser) {
+            const existingToken = await window.auth.currentUser.getIdTokenResult(true);
+            if (existingToken.claims.admin === true) {
+                window.activeUser = window.auth.currentUser;
+                window.switchToView("admin");
+                window.showToast("Secure Admin access authorized.", "success");
+                return;
+            }
+        }
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({prompt: "select_account"});
         const result = await signInWithPopup(window.auth, provider);
