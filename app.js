@@ -25,6 +25,11 @@ window.auth = auth;
 window.activeUser = activeUser;
 window.isFirebaseActive = isFirebaseActive;
 window.appId = typeof __app_id !== 'undefined' ? __app_id : 'atricure-clinical-hub';
+const isLocalShadowMode = ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    && new URLSearchParams(window.location.search).get("dataSource") === "shadow";
+window.clinicalResourcesCollectionName = isLocalShadowMode
+    ? "clinicalResources_ingestionTest"
+    : "clinicalResources";
 
 const fallbackDatabase = [
     {
@@ -102,8 +107,9 @@ window.formatGoogleDriveLink = function(url) {
 };
 
 window.normalizeDocument = function(doc) {
-    let mCat = String(doc.mainCategory || "").trim();
-    let sCat = String(doc.subCategory || "").trim();
+    const website = doc.website || {};
+    let mCat = String(doc.mainCategory || website.mainCategory || "").trim();
+    let sCat = String(doc.subCategory || website.subCategory || "").trim();
     let normalizedMain = "MAZE";
     let mCatLower = mCat.toLowerCase();
     
@@ -151,7 +157,21 @@ window.normalizeDocument = function(doc) {
             normalizedSub = "Helpful Documents";
         }
     }
-    return { ...doc, mainCategory: normalizedMain, subCategory: normalizedSub };
+    return {
+        ...doc,
+        author: doc.author || doc.citation || "",
+        url: doc.url || doc.source?.driveUrl || "",
+        linkType: doc.linkType || "pdf",
+        mainCategory: normalizedMain,
+        subCategory: normalizedSub,
+        manualOverride: doc.manualOverride === true || website.manualOverride === true,
+        website: {
+            ...website,
+            mainCategory: normalizedMain,
+            subCategory: normalizedSub,
+            manualOverride: doc.manualOverride === true || website.manualOverride === true
+        }
+    };
 };
 
 window.startPlaceholderRotation = function() {
@@ -192,6 +212,8 @@ window.attemptInitializeFirebase = async function() {
                 if (user) {
                     activeUser = user;
                     isFirebaseActive = true;
+                    window.activeUser = user;
+                    window.isFirebaseActive = true;
                     syncIndicator.innerHTML = `<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span><span>Cloud Synced</span>`;
                     window.showToast("Cloud database connected successfully.", "success");
                     
@@ -200,6 +222,8 @@ window.attemptInitializeFirebase = async function() {
                     window.loadSecureApiKey();
                 } else {
                     isFirebaseActive = false;
+                    window.activeUser = null;
+                    window.isFirebaseActive = false;
                     window.loadLocalFallbackData();
                 }
             });
@@ -244,12 +268,12 @@ window.subscribeToDatabaseStreams = function() {
     if (!isFirebaseActive || !activeUser) return;
     
     // Channel A: Clinical Studies Registry Snapshot Channel
-    const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'clinicalResources');
+    const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', window.clinicalResourcesCollectionName);
     onSnapshot(publicDataCollection, (snapshot) => {
         const cloudDocs = [];
         snapshot.forEach(doc => { cloudDocs.push(window.normalizeDocument({ id: doc.id, ...doc.data() })); });
         if (cloudDocs.length === 0) {
-            window.seedLocalDataToCloud();
+            if (!isLocalShadowMode) window.seedLocalDataToCloud();
         } else {
             clinicalDatabase = cloudDocs;
             window.updateSidebarActiveStates();
@@ -281,8 +305,9 @@ window.subscribeToDatabaseStreams = function() {
 
 window.seedLocalDataToCloud = async function() {
     if (!isFirebaseActive || !activeUser) return;
+    if (isLocalShadowMode) return;
     try {
-        const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'clinicalResources');
+        const publicDataCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', window.clinicalResourcesCollectionName);
         for (const item of fallbackDatabase) { await addDoc(publicDataCollection, item); }
     } catch (err) {
         console.error("Failed to seed cloud registry:", err);
@@ -772,8 +797,10 @@ window.renderWelcomeScreen = function(container) {
 
 window.renderAtriGuideCard = function(card, index) {
     const isStarred = window.bookmarkedResourceIds.includes(card.id);
-    const cleanSummaryHtml = String(card.summary || "")
-        .split('\n')
+    const displayBullets = Array.isArray(card.cardBullets) && card.cardBullets.length > 0
+        ? card.cardBullets
+        : String(card.summary || "").split('\n');
+    const cleanSummaryHtml = displayBullets
         .filter(line => line.trim().length > 0)
         .map(line => `<li class="flex items-start space-x-1.5"><span class="text-[#FF6B00] font-bold">•</span><span class="text-slate-600 text-xs leading-normal">${window.escapeHtml(line.replace(/^[•\-\*]\s*/, ''))}</span></li>`)
         .join('');
@@ -935,6 +962,10 @@ window.processFormSubmission = async function() {
     const linkType = document.getElementById("formLinkType").value || "journal";
     const summary = document.getElementById("formSummary").value;
 
+    const existingResource = window.editingResourceId
+        ? window.clinicalDatabase.find(item => item.id === window.editingResourceId)
+        : null;
+    const existingWebsite = existingResource?.website || {};
     const resourceObject = {
         title: title.trim(),
         author: author.trim(),
@@ -944,17 +975,24 @@ window.processFormSubmission = async function() {
         url: url.trim(),
         linkType: linkType,
         summary: summary.trim(),
+        manualOverride: true,
+        website: {
+            ...existingWebsite,
+            mainCategory: mainCategory,
+            subCategory: subCategory,
+            manualOverride: true
+        },
         lastModifiedTimestamp: Date.now()
     };
 
     try {
         if (window.isFirebaseActive && db) {
             if (window.editingResourceId) {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', window.editingResourceId);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, window.editingResourceId);
                 await updateDoc(docRef, resourceObject);
             } else {
                 resourceObject.createdTimestamp = Date.now();
-                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'clinicalResources');
+                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName);
                 await addDoc(collectionRef, resourceObject);
             }
         } else {
@@ -1007,7 +1045,7 @@ window.executeResourceDeletion = async function() {
 
     try {
         if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', window.activeDeletionTargetId);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, window.activeDeletionTargetId);
             await deleteDoc(docRef);
         } else {
             const index = window.clinicalDatabase.findIndex(d => d.id === window.activeDeletionTargetId);
@@ -1047,7 +1085,7 @@ window.closeAdminAuthModal = function() {
 window.verifyAdminAuthPassword = async function() {
     const pin = document.getElementById("adminPasswordInput").value.trim();
     const error = document.getElementById("adminAuthError");
-    
+
     try {
         if (!window.isFirebaseActive || !window.db) {
             window.showToast("Security authentication server offline.", "warning");
@@ -1232,7 +1270,7 @@ window.updateCell = async function(id, field, value) {
     item[field] = cleanVal;
     try {
         if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
             await updateDoc(docRef, { [field]: cleanVal, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
@@ -1256,11 +1294,21 @@ window.updateCellCategory = async function(id, value) {
 
     item.mainCategory = value;
     item.subCategory = subDefault;
+    item.manualOverride = true;
+    item.website = { ...(item.website || {}), mainCategory: value, subCategory: subDefault, manualOverride: true };
 
     try {
         if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
-            await updateDoc(docRef, { mainCategory: value, subCategory: subDefault, lastModifiedTimestamp: Date.now() });
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
+            await updateDoc(docRef, {
+                mainCategory: value,
+                subCategory: subDefault,
+                manualOverride: true,
+                "website.mainCategory": value,
+                "website.subCategory": subDefault,
+                "website.manualOverride": true,
+                lastModifiedTimestamp: Date.now()
+            });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
         }
@@ -1278,10 +1326,19 @@ window.updateCellSubCategory = async function(id, value) {
     if (!item) return;
 
     item.subCategory = value;
+    item.manualOverride = true;
+    item.website = { ...(item.website || {}), mainCategory: item.mainCategory, subCategory: value, manualOverride: true };
     try {
         if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
-            await updateDoc(docRef, { subCategory: value, lastModifiedTimestamp: Date.now() });
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
+            await updateDoc(docRef, {
+                subCategory: value,
+                manualOverride: true,
+                "website.mainCategory": item.mainCategory,
+                "website.subCategory": value,
+                "website.manualOverride": true,
+                lastModifiedTimestamp: Date.now()
+            });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
         }
@@ -1309,9 +1366,19 @@ window.executeBulkMove = async function() {
             if (item) {
                 item.mainCategory = mainCat;
                 item.subCategory = subCat;
+                item.manualOverride = true;
+                item.website = { ...(item.website || {}), mainCategory: mainCat, subCategory: subCat, manualOverride: true };
                 if (window.isFirebaseActive && db) {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
-                    await updateDoc(docRef, { mainCategory: mainCat, subCategory: subCat, lastModifiedTimestamp: Date.now() });
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
+                    await updateDoc(docRef, {
+                        mainCategory: mainCat,
+                        subCategory: subCat,
+                        manualOverride: true,
+                        "website.mainCategory": mainCat,
+                        "website.subCategory": subCat,
+                        "website.manualOverride": true,
+                        lastModifiedTimestamp: Date.now()
+                    });
                 }
             }
         }
@@ -1339,7 +1406,7 @@ window.executeBulkDelete = async function() {
     try {
         for (const id of selected) {
             if (window.isFirebaseActive && db) {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
                 await deleteDoc(docRef);
             } else {
                 const idx = window.clinicalDatabase.findIndex(d => d.id === id);
@@ -1393,7 +1460,7 @@ window.executeBulkMerge = async function() {
                 }
                 
                 if (window.isFirebaseActive && db) {
-                  const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', id);
+                  const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, id);
                   await deleteDoc(docRef);
                 } else {
                   const idx = window.clinicalDatabase.findIndex(d => d.id === id);
@@ -1408,7 +1475,7 @@ window.executeBulkMerge = async function() {
         }
 
         if (window.isFirebaseActive && db) {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinicalResources', masterId);
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', window.clinicalResourcesCollectionName, masterId);
             await updateDoc(docRef, { summary: consolidatedSummary, url: masterItem.url, lastModifiedTimestamp: Date.now() });
         } else {
             localStorage.setItem("atricure_local_resources", JSON.stringify(window.clinicalDatabase));
