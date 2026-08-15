@@ -18,9 +18,16 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
   re-ingestion.
 - Existing library records can be enriched with page-linked citations in place;
   no database purge or replacement is required.
-- Drive archival happens only after a successful Firestore publish.
-- Identical PDFs are reported as explicit duplicates and are neither published
-  nor moved. A rerun of the same Drive file remains an idempotent update.
+- Clicking **Process Pending PDFs** performs duplicate detection, AI extraction,
+  and Admin review-queue creation in one run. It never publishes a new card.
+- Obvious duplicates are automatically moved to Google Drive trash (recoverable),
+  while uncertain matches remain in Pending for an Admin decision.
+- Admins can edit the suggested title, citation, summary, bullets, tags, search
+  terms, and website category before approval.
+- Approving a normal new document publishes its card and then moves its PDF to
+  Archive. Publishing is idempotent, so a failed Drive move is safe to retry.
+- Choosing **Treat as New** for a possible duplicate performs the full AI scrub
+  and returns the resulting card to Admin review; it does not auto-publish.
 - Different files representing the same study are checked by DOI, PMID,
   normalized study title, and substantive passage fingerprints before AI is
   called. Definite matches are skipped; uncertain matches are held for Admin
@@ -30,7 +37,7 @@ Google Drive PDFs into compact Firestore evidence records for FieldGuide.
 - Credentials and generated preview files must remain local and must never be
   committed.
 
-Production apply mode is intentionally not approved for the POC yet.
+Production publishing remains gated by an explicit authenticated Admin approval.
 
 ## Controlled shadow test
 

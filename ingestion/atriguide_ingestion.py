@@ -414,6 +414,10 @@ def move_to_archive(drive: Any, file_id: str, parents: list[str], archive_folder
     drive.files().update(fileId=file_id, addParents=archive_folder_id,
                          removeParents=",".join(parents), fields="id,parents").execute()
 
+def trash_drive_file(drive: Any, file_id: str) -> None:
+    """Remove a confirmed duplicate from Pending using Drive's recoverable trash."""
+    drive.files().update(fileId=file_id, body={"trashed": True}, fields="id,trashed").execute()
+
 def firestore_path(db: Any, app_id: str, shadow: bool = False):
     collection_name = "clinicalResources_ingestionTest" if shadow else "clinicalResources"
     return db.collection("artifacts").document(app_id).collection("public").document("data").collection(collection_name)
@@ -846,14 +850,15 @@ def cleanup_inventory(args: argparse.Namespace) -> int:
         if row.get("status") not in safe_statuses or not row.get("fileId"):
             continue
         try:
-            metadata = drive.files().get(fileId=row["fileId"], fields="id,name,parents").execute()
-            move_to_archive(drive, row["fileId"], metadata.get("parents") or [], args.archive_folder)
-            receipts.append({"fileId": row["fileId"], "file": metadata.get("name"), "status": "archived_existing"})
-            print(f"Archived existing/duplicate: {metadata.get('name')}", flush=True)
+            metadata = drive.files().get(fileId=row["fileId"], fields="id,name,trashed").execute()
+            if not metadata.get("trashed"):
+                trash_drive_file(drive, row["fileId"])
+            receipts.append({"fileId": row["fileId"], "file": metadata.get("name"), "status": "duplicate_trashed"})
+            print(f"Removed obvious duplicate: {metadata.get('name')}", flush=True)
         except Exception as exc:
             receipts.append({"fileId": row.get("fileId"), "file": row.get("file"), "status": "needs_review", "error": str(exc)})
         Path(args.output).write_text(json.dumps(receipts, indent=2), encoding="utf-8")
-    print(f"CLEANUP: {sum(1 for item in receipts if item['status'] == 'archived_existing')} file(s) moved to Archive.")
+    print(f"CLEANUP: {sum(1 for item in receipts if item['status'] == 'duplicate_trashed')} obvious duplicate(s) moved to Drive trash.")
     return 0
 
 def apply_review_decisions(args: argparse.Namespace) -> int:
@@ -885,10 +890,26 @@ def apply_review_decisions(args: argparse.Namespace) -> int:
                 record["evidence"], rejected = filter_grounded_evidence(record.get("evidence") or [], text)
                 record["ingestion"]["rejectedCitationCount"] = rejected
                 validate_publishable(record)
-                publish_record(collection, record, firestore_module)
-                final_status = "published_and_archived"
+                snapshot.reference.update({
+                    "candidate": record,
+                    "queueStatus": "pending_review",
+                    "decision": "pending",
+                    "decisionApplied": False,
+                    "duplicateOf": None,
+                    "duplicateReason": None,
+                    "duplicateConfidence": None,
+                    "updatedAt": firestore_module.SERVER_TIMESTAMP,
+                })
+                receipts.append({"queueId": snapshot.id, "file": metadata.get("name"), "status": "returned_to_review"})
+                print(f"Processed as new and returned to review: {metadata.get('name')}", flush=True)
+                continue
             else:
-                final_status = "duplicate_archived"
+                trash_drive_file(drive, file_id)
+                final_status = "duplicate_trashed"
+                snapshot.reference.update({"queueStatus": final_status, "decisionApplied": True, "appliedAt": firestore_module.SERVER_TIMESTAMP})
+                receipts.append({"queueId": snapshot.id, "file": metadata.get("name"), "status": final_status})
+                print(f"Removed confirmed duplicate: {metadata.get('name')}", flush=True)
+                continue
             move_to_archive(drive, file_id, metadata.get("parents") or [], args.archive_folder)
             snapshot.reference.update({"queueStatus": final_status, "decisionApplied": True, "appliedAt": firestore_module.SERVER_TIMESTAMP})
             receipts.append({"queueId": snapshot.id, "file": metadata.get("name"), "status": final_status})

@@ -1,5 +1,5 @@
 import os, unittest
-from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, drive_file_id_from_record, duplicate_result, evidence_page, filter_grounded_evidence, find_existing_duplicate, has_page_citations, identity_from_existing, merge_manual_override, normalize_evidence, production_writes_allowed, select_text, shadow_writes_allowed, validate_evidence_grounding, validate_publishable, validate_record, writes_allowed
+from atriguide_ingestion import MAX_AI_INPUT_CHARACTERS, add_fieldguide_compatibility, build_skeleton, build_source_identity, compare_duplicate_identity, drive_file_id_from_record, duplicate_result, evidence_page, filter_grounded_evidence, find_existing_duplicate, has_page_citations, identity_from_existing, merge_manual_override, normalize_evidence, production_writes_allowed, select_text, shadow_writes_allowed, trash_drive_file, validate_evidence_grounding, validate_publishable, validate_record, writes_allowed
 
 class FakeSnapshot:
     def __init__(self, record_id): self.id = record_id
@@ -9,6 +9,17 @@ class FakeQuery:
     def where(self, *args): return self
     def limit(self, value): return self
     def stream(self): return [FakeSnapshot(value) for value in self.ids]
+
+class FakeDriveUpdate:
+    def __init__(self): self.calls = []
+    def update(self, **kwargs):
+        self.calls.append(kwargs)
+        return self
+    def execute(self): return {"trashed": True}
+
+class FakeDrive:
+    def __init__(self): self.file_api = FakeDriveUpdate()
+    def files(self): return self.file_api
 
 class PipelineTests(unittest.TestCase):
     def test_ifu(self):
@@ -115,6 +126,11 @@ class PipelineTests(unittest.TestCase):
         result = duplicate_result({"id":"drive-2", "name":"copy.pdf"}, "duplicate_in_batch", "hash", "drive-1")
         self.assertEqual(result["action"], "skipped_no_write_no_move")
         self.assertEqual(result["duplicateOf"], "drive-1")
+    def test_obvious_duplicate_uses_recoverable_drive_trash(self):
+        drive = FakeDrive()
+        trash_drive_file(drive, "duplicate-file")
+        self.assertEqual(drive.file_api.calls[0]["fileId"], "duplicate-file")
+        self.assertEqual(drive.file_api.calls[0]["body"], {"trashed": True})
     def test_same_doi_matches_full_paper_and_abstract(self):
         full = build_source_identity("full-paper.pdf", "A complete article. doi:10.1016/j.athoracsur.2018.06.022 Methods Results")
         abstract = build_source_identity("conference abstract.pdf", "Short abstract DOI 10.1016/J.ATHORACSUR.2018.06.022")

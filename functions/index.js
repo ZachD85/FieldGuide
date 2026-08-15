@@ -6,6 +6,7 @@ const {getAuth} = require("firebase-admin/auth");
 const {getFirestore} = require("firebase-admin/firestore");
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const {GoogleGenAI} = require("@google/genai");
+const {GoogleAuth} = require("google-auth-library");
 
 initializeApp();
 const db = getFirestore();
@@ -21,6 +22,55 @@ const adminEmailHash = "57fc3c90f11335058e03af076dc4460ee4fa25a55550f2052ae250bf
 function requireSignedIn(request) {
   if (!request.auth) throw new HttpsError("unauthenticated", "Sign-in is required.");
   return request.auth;
+}
+
+function requireAdmin(request) {
+  const auth = requireSignedIn(request);
+  if (auth.token.admin !== true) throw new HttpsError("permission-denied", "Admin access is required.");
+  return auth;
+}
+
+function validateReviewCandidate(value) {
+  if (!value || typeof value !== "object") throw new HttpsError("invalid-argument", "The review card is missing.");
+  const candidate = JSON.parse(JSON.stringify(value));
+  const allowedCategories = {
+    MAZE: ["Rhythm Outcomes", "Survival Benefits", "Other"],
+    LAA: ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"],
+    "Device Resources": ["IFUs", "Product Brochures", "Other Media"],
+    MISC: ["Other Research", "Helpful Documents"],
+  };
+  const website = candidate.website || {};
+  if (!candidate.id || !candidate.title || !candidate.summary || !Array.isArray(candidate.evidence) || !candidate.evidence.length) {
+    throw new HttpsError("failed-precondition", "Title, summary, and verified evidence are required before approval.");
+  }
+  if (!allowedCategories[website.mainCategory]?.includes(website.subCategory)) {
+    throw new HttpsError("invalid-argument", "Choose a valid website category.");
+  }
+  candidate.title = String(candidate.title).trim().slice(0, 300);
+  candidate.summary = String(candidate.summary).trim().slice(0, 2000);
+  candidate.citation = String(candidate.citation || "").trim().slice(0, 700);
+  candidate.cardBullets = (candidate.cardBullets || []).map((x) => String(x).trim().slice(0, 500)).filter(Boolean).slice(0, 5);
+  candidate.clinicalTags = (candidate.clinicalTags || []).map((x) => String(x).trim().slice(0, 80)).filter(Boolean).slice(0, 12);
+  candidate.searchTerms = (candidate.searchTerms || []).map((x) => String(x).trim().slice(0, 80)).filter(Boolean).slice(0, 12);
+  candidate.website = {...website, manualOverride: true};
+  candidate.mainCategory = website.mainCategory;
+  candidate.subCategory = website.subCategory;
+  candidate.manualOverride = true;
+  return candidate;
+}
+
+async function driveRequest(fileId, method = "GET", query = {}, body = null) {
+  const auth = new GoogleAuth({scopes: ["https://www.googleapis.com/auth/drive"]});
+  const client = await auth.getClient();
+  const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
+  });
+  const headers = await client.getRequestHeaders(url.toString());
+  if (body) headers["Content-Type"] = "application/json";
+  const response = await fetch(url, {method, headers, body: body ? JSON.stringify(body) : undefined});
+  if (!response.ok) throw new Error(`Drive API ${response.status}: ${(await response.text()).slice(0, 300)}`);
+  return response.json();
 }
 
 async function enforceRateLimit(uid) {
@@ -213,4 +263,69 @@ exports.bootstrapAdmin = onCall({region, cors: allowedOrigins, maxInstances: 2},
   const user = await getAuth().getUser(auth.uid);
   await getAuth().setCustomUserClaims(auth.uid, {...(user.customClaims || {}), admin: true});
   return {admin: true};
+});
+
+exports.applyIngestionReview = onCall({
+  region,
+  cors: allowedOrigins,
+  timeoutSeconds: 60,
+  memory: "256MiB",
+  maxInstances: 2,
+}, async (request) => {
+  requireAdmin(request);
+  const queueId = String(request.data?.queueId || "").trim();
+  const decision = String(request.data?.decision || "");
+  if (!queueId || !["approved", "duplicate_confirmed"].includes(decision)) {
+    throw new HttpsError("invalid-argument", "A valid review decision is required.");
+  }
+  const queueRef = db.doc(`artifacts/atricure-clinical-hub/public/data/ingestionReviewQueue/${queueId}`);
+  const snapshot = await queueRef.get();
+  if (!snapshot.exists) throw new HttpsError("not-found", "This review item no longer exists.");
+  const item = snapshot.data() || {};
+  const fileId = String(item.fileId || "");
+  if (!fileId) throw new HttpsError("failed-precondition", "The source PDF is missing its Drive ID.");
+
+  let candidate = null;
+  if (decision === "approved") {
+    candidate = validateReviewCandidate(request.data?.candidate || item.candidate);
+    if (!item.candidate?.id || candidate.id !== item.candidate.id) {
+      throw new HttpsError("invalid-argument", "The approved card does not match this review item.");
+    }
+    if (candidate.source?.driveFileId && candidate.source.driveFileId !== fileId) {
+      throw new HttpsError("invalid-argument", "The approved card does not match its source PDF.");
+    }
+    const clean = Object.fromEntries(Object.entries(candidate).filter(([key]) => !key.startsWith("_") && key !== "id"));
+    clean.ingestion = {...(clean.ingestion || {}), publishedAt: Date.now(), approvedFromReview: true};
+    await db.doc(`artifacts/atricure-clinical-hub/public/data/clinicalResources/${candidate.id}`).set(clean, {merge: true});
+  }
+
+  try {
+    const file = await driveRequest(fileId, "GET", {fields: "id,name,parents,trashed", supportsAllDrives: true});
+    if (decision === "duplicate_confirmed") {
+      if (!file.trashed) await driveRequest(fileId, "PATCH", {fields: "id,trashed", supportsAllDrives: true}, {trashed: true});
+    } else {
+      const parents = file.parents || [];
+      await driveRequest(fileId, "PATCH", {
+        addParents: "1wl-qyPmjlr9eBBUFhhvD8diVk9mJp8ZH",
+        removeParents: parents.join(","),
+        fields: "id,parents",
+        supportsAllDrives: true,
+      }, {});
+    }
+  } catch (error) {
+    console.error("Drive finalization failed", {queueId, decision, message: error?.message});
+    await queueRef.set({queueStatus: "apply_failed", applyError: "The database was updated, but the PDF could not be moved.", updatedAt: Date.now()}, {merge: true});
+    throw new HttpsError("internal", "The card was saved, but the PDF could not be moved. It is safe to retry.");
+  }
+
+  const finalStatus = decision === "approved" ? "published_and_archived" : "duplicate_trashed";
+  await queueRef.set({
+    candidate: candidate || item.candidate || null,
+    decision,
+    decisionApplied: true,
+    queueStatus: finalStatus,
+    appliedAt: Date.now(),
+    updatedAt: Date.now(),
+  }, {merge: true});
+  return {status: finalStatus};
 });
