@@ -21,6 +21,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // Real ingestion candidates and duplicate-review decisions are visible
+    // only inside the authenticated Admin Portal.
+    match /artifacts/{appId}/public/data/ingestionReviewQueue/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     // Configuration, test collections, Admin writes, and every unspecified
     // path are server-only. Firebase Admin/service accounts bypass these rules.
     match /{document=**} {

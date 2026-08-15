@@ -57,6 +57,7 @@ window.isStarredFilterActive = false;
 window.activeDeletionTargetId = null;
 window.editingResourceId = null; 
 window.activeAdminTab = 'single'; 
+window.ingestionReviewQueue = [];
 window.bulkSortField = 'title'; 
 window.bulkSortAsc = true;
 window.aiConversationTurns = [];
@@ -294,6 +295,16 @@ window.subscribeToDatabaseStreams = function() {
         window.renderAdminBroadcastInventory();
     }, (error) => {
         console.error("System announcement log channel sync fault:", error);
+    });
+
+    const reviewCollection = collection(db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'ingestionReviewQueue');
+    onSnapshot(reviewCollection, (snapshot) => {
+        window.ingestionReviewQueue = [];
+        snapshot.forEach(item => window.ingestionReviewQueue.push({id: item.id, ...item.data()}));
+        window.ingestionReviewQueue.sort((a, b) => String(a.fileName || '').localeCompare(String(b.fileName || '')));
+        window.renderIngestionReviewQueue();
+    }, (error) => {
+        if (window.activeUser && !window.activeUser.isAnonymous) console.error("Ingestion review queue sync fault:", error);
     });
 };
 
@@ -1274,12 +1285,96 @@ window.showToast = function(message, type = "info") {
     setTimeout(() => toast.remove(), 3000);
 };
 
+window.reviewCategoryOptions = function(selectedMain, selectedSub) {
+    const categories = {
+        "MAZE": ["Rhythm Outcomes", "Survival Benefits", "Other"],
+        "LAA": ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"],
+        "Device Resources": ["IFUs", "Product Brochures", "Other Media"],
+        "MISC": ["Other Research", "Helpful Documents"]
+    };
+    return Object.entries(categories).flatMap(([main, subs]) => subs.map(sub => {
+        const value = `${main}|||${sub}`;
+        return `<option value="${window.escapeHtml(value)}" ${main === selectedMain && sub === selectedSub ? 'selected' : ''}>${window.escapeHtml(main)} &gt; ${window.escapeHtml(sub)}</option>`;
+    })).join('');
+};
+
+window.renderIngestionReviewQueue = function() {
+    const target = document.getElementById("ingestionReviewQueueList");
+    if (!target) return;
+    const openStatuses = new Set(["pending_review", "possible_duplicate", "needs_review", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply", "held", "apply_failed"]);
+    const filter = document.getElementById("reviewQueueFilter")?.value || "open";
+    let rows = window.ingestionReviewQueue || [];
+    const openCount = rows.filter(item => openStatuses.has(item.queueStatus)).length;
+    const badge = document.getElementById("reviewQueueCount");
+    if (badge) badge.textContent = String(openCount);
+    if (filter === "open") rows = rows.filter(item => openStatuses.has(item.queueStatus));
+    else if (filter !== "all") rows = rows.filter(item => item.queueStatus === filter);
+    if (!rows.length) {
+        target.innerHTML = `<p class="text-center text-slate-400 text-xs py-8">No review items match this filter.</p>`;
+        return;
+    }
+    target.innerHTML = rows.map(item => {
+        const candidate = item.candidate || {};
+        const website = candidate.website || {};
+        const title = candidate.title || item.fileName || "Untitled document";
+        const summary = candidate.summary || item.error || item.duplicateReason || "Awaiting review.";
+        const evidenceCount = Array.isArray(candidate.evidence) ? candidate.evidence.length : 0;
+        const sourceUrl = candidate.source?.driveUrl || (item.fileId ? `https://drive.google.com/file/d/${item.fileId}/view` : "");
+        const possibleDuplicate = item.queueStatus === "possible_duplicate" || item.decision === "reprocess_as_new" || item.decision === "duplicate_confirmed";
+        const actionable = !["published_and_archived", "duplicate_archived"].includes(item.queueStatus);
+        return `<article class="border border-slate-200 rounded-xl p-4 text-left" data-review-id="${window.escapeHtml(item.id)}">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0 flex-1"><h4 class="font-bold text-sm text-slate-800">${window.escapeHtml(title)}</h4>
+                <p class="text-[11px] text-slate-500 mt-1">${window.escapeHtml(item.fileName || '')}</p></div>
+                <span class="text-[10px] font-bold rounded-full px-2.5 py-1 bg-orange-50 text-orange-700">${window.escapeHtml(item.queueStatus || 'pending')}</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-3">${window.escapeHtml(summary)}</p>
+            ${item.duplicateReason ? `<div class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900"><strong>Possible duplicate:</strong> ${window.escapeHtml(item.duplicateReason)} (${Math.round(Number(item.duplicateConfidence || 0) * 100)}% match)</div>` : ''}
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-500"><span>${evidenceCount} verified evidence claim(s)</span>${sourceUrl ? `<a class="font-bold text-blue-700 hover:underline" target="_blank" href="${window.escapeHtml(sourceUrl)}">Open PDF</a>` : ''}</div>
+            ${candidate.title && actionable ? `<div class="mt-3"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Website placement</label><select id="review-category-${window.escapeHtml(item.id)}" class="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white">${window.reviewCategoryOptions(website.mainCategory, website.subCategory)}</select></div>` : ''}
+            ${actionable ? `<div class="mt-4 flex flex-wrap gap-2">
+                ${candidate.title && !possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Approve</button>` : ''}
+                ${possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','reprocess_as_new')" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg">Treat as New</button><button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','duplicate_confirmed')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Confirm Duplicate</button>` : ''}
+                <button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','held')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg">Hold</button>
+            </div>` : ''}
+        </article>`;
+    }).join('');
+    lucide.createIcons();
+};
+
+window.decideIngestionReview = async function(id, decision) {
+    const item = (window.ingestionReviewQueue || []).find(row => row.id === id);
+    if (!item || !window.db) return;
+    const update = {decision, updatedAt: Date.now()};
+    if (decision === "approved") update.queueStatus = "approved_waiting_apply";
+    else if (decision === "duplicate_confirmed") update.queueStatus = "duplicate_waiting_apply";
+    else if (decision === "reprocess_as_new") update.queueStatus = "reprocess_waiting_apply";
+    else update.queueStatus = "held";
+    if (item.candidate && decision === "approved") {
+        const selection = document.getElementById(`review-category-${id}`)?.value || "";
+        const [mainCategory, subCategory] = selection.split("|||");
+        update.candidate = {...item.candidate, mainCategory, subCategory, manualOverride: true,
+            website: {...(item.candidate.website || {}), mainCategory, subCategory, manualOverride: true}};
+    }
+    try {
+        await updateDoc(doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'ingestionReviewQueue', id), update);
+        window.showToast("Review decision saved. Run Apply Admin Decisions in the importer when ready.", "success");
+    } catch (error) {
+        console.error("Review decision failed:", error);
+        window.showToast("The review decision could not be saved.", "warning");
+    }
+};
+
 window.setAdminTab = function(tab) {
     window.activeAdminTab = tab;
     const singleBtn = document.getElementById("adminTabSingle");
     const bulkBtn = document.getElementById("adminTabBulk");
+    const reviewBtn = document.getElementById("adminTabReview");
     const singleView = document.getElementById("adminSingleView");
     const bulkView = document.getElementById("adminBulkView");
+    const reviewView = document.getElementById("adminReviewView");
+    [singleBtn, bulkBtn, reviewBtn].forEach(button => button.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-300 hover:text-white transition-all focus:outline-none cursor-pointer");
+    singleView.classList.add("hidden"); bulkView.classList.add("hidden"); reviewView.classList.add("hidden");
     
     if (tab === 'bulk') {
         singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
@@ -1287,6 +1382,10 @@ window.setAdminTab = function(tab) {
         singleView.classList.add("hidden");
         bulkView.classList.remove("hidden");
         window.renderSpreadsheetWorkspace();
+    } else if (tab === 'review') {
+        reviewBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
+        reviewView.classList.remove("hidden");
+        window.renderIngestionReviewQueue();
     } else {
         singleBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md bg-white text-[#00205B] shadow transition-all focus:outline-none cursor-pointer";
         bulkBtn.className = "text-xs font-bold px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-800 transition-all focus:outline-none cursor-pointer";
