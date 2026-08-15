@@ -148,8 +148,15 @@ exports.askAtriGuide = onCall({
     `Use only the supplied public evidence cards for factual claims. Conversation history provides intent only; ` +
     `it is not evidence. If the cards do not support an answer, say so clearly. Do not invent claims or IDs. ` +
     `Recognize practical clinical scenarios, time pressure, objections, and the answer format the user needs. ` +
-    `For requests such as a 30-second discussion, return answerMode quick_pitch, a direct headline, a brief ` +
-    `spoken-style synthesis, up to three supporting talkingPoints, and one honest caveat. For ordinary questions ` +
+    `Answer in one compact paragraph of roughly 3-5 sentences. Lead with the direct answer, then immediately give ` +
+    `the strongest available numerical proof: exact patient population, sample size when available, treatment versus ` +
+    `comparison results, absolute percentages, hazard or odds ratios with confidence intervals or p-values, and ` +
+    `follow-up duration. Prefer numbers over adjectives and never replace an available number with vague wording such ` +
+    `as "better outcomes." State plainly when the supplied cards do not contain the requested numerical proof. ` +
+    `Do not add an introduction, restate the question, explain your process, or repeat the same fact. Put any ` +
+    `material limitation into one short final clause in the same paragraph; do not create a separate context section. ` +
+    `Return an empty talkingPoints array and empty caveat because all useful content belongs in the synthesis. ` +
+    `For requests such as a 30-second discussion, return answerMode quick_pitch. For ordinary questions ` +
     `use answerMode standard. If a missing distinction would materially change the evidence, use clarification ` +
     `and state what must be clarified. Never present catheter-ablation evidence as proof for surgical ablation, ` +
     `or vice versa; label indirect evidence plainly. Never generalize a narrow population (for example, ` +
@@ -163,7 +170,8 @@ exports.askAtriGuide = onCall({
     `Prefer wording such as "supports considering" or "was associated with" and name the studied population. ` +
     `For every central point, include a source mapping using only a supplied card ID and the zero-based ` +
     `evidenceIndex of the supplied evidence claim that supports it. Never invent a page or locator. If a card ` +
-    `has no suitable evidence claim, omit that source mapping. Return exactly two short follow-up questions ` +
+    `has no suitable evidence claim, omit that source mapping. Use each card ID at most once; select its strongest ` +
+    `supporting evidence claim rather than repeating the same paper. Return exactly two short follow-up questions ` +
     `that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
@@ -171,7 +179,7 @@ exports.askAtriGuide = onCall({
     contents: prompt,
     config: {
       temperature: 0.1,
-      maxOutputTokens: 1800,
+      maxOutputTokens: 900,
       responseMimeType: "application/json",
       thinkingConfig: {thinkingBudget: 0},
       responseJsonSchema: {
@@ -226,12 +234,13 @@ exports.askAtriGuide = onCall({
   return {
     answerMode: ["quick_pitch", "standard", "clarification"].includes(parsed.answerMode) ? parsed.answerMode : "standard",
     headline: String(parsed.headline || "Evidence summary").slice(0, 180),
-    synthesis: String(parsed.synthesis || "").slice(0, 1800),
+    synthesis: String(parsed.synthesis || "").slice(0, 1200),
     talkingPoints: Array.isArray(parsed.talkingPoints) ? parsed.talkingPoints.map((value) => String(value).slice(0, 500)).slice(0, 3) : [],
     caveat: String(parsed.caveat || "").slice(0, 700),
     matchedIds: Array.isArray(parsed.matchedIds) ? parsed.matchedIds.filter((id) => allowedIds.has(id)).slice(0, 8) : [],
     sources: Array.isArray(parsed.sources) ? parsed.sources
       .filter((source) => allowedIds.has(source?.id))
+      .filter((source, index, rows) => rows.findIndex((row) => row?.id === source?.id) === index)
       .map((source) => {
         const card = candidateById.get(source.id);
         const evidenceIndex = Number.isInteger(source.evidenceIndex) ? source.evidenceIndex : -1;
@@ -247,7 +256,7 @@ exports.askAtriGuide = onCall({
         };
       })
       .filter(Boolean)
-      .slice(0, 6) : [],
+      .slice(0, 4) : [],
     suggestedFollowUps,
   };
 });
