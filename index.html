@@ -262,6 +262,10 @@
                                     <i data-lucide="layout-grid" class="w-3.5 h-3.5 shrink-0"></i>
                                     <span>Spreadsheet View</span>
                                 </button>
+                                <button onclick="setAdminTab('review')" id="adminTabReview" class="text-xs font-bold px-3 py-1.5 rounded-md text-slate-300 hover:text-white transition-all focus:outline-none flex items-center gap-1 cursor-pointer">
+                                    <i data-lucide="clipboard-check" class="w-3.5 h-3.5 shrink-0"></i>
+                                    <span>Ingestion Review</span><span id="reviewQueueCount" class="bg-orange-500 text-white rounded-full px-1.5">0</span>
+                                </button>
                             </div>
                             <button onclick="exportDatabaseAsJSON()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all flex items-center space-x-1.5 cursor-pointer" title="Download database backup to update offline code file">
                                 <i data-lucide="download" class="w-4 h-4"></i>
@@ -341,6 +345,25 @@
                                     <p class="text-center text-slate-400 text-xs py-8">Synchronizing build data streams...</p>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div id="adminReviewView" class="hidden bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden w-full">
+                        <div class="bg-slate-50 border-b border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3">
+                            <div class="text-left">
+                                <h3 class="font-bold text-slate-800 text-sm">Real Document Review Queue</h3>
+                                <p class="text-[11px] text-slate-500">Approve new evidence cards, confirm duplicates, or hold documents for later. The Python importer applies your decisions and archives completed PDFs.</p>
+                            </div>
+                            <select id="reviewQueueFilter" onchange="renderIngestionReviewQueue()" class="text-xs border border-slate-200 rounded-lg p-2 bg-white font-semibold">
+                                <option value="open">Open items</option>
+                                <option value="all">All items</option>
+                                <option value="pending_review">New candidates</option>
+                                <option value="possible_duplicate">Possible duplicates</option>
+                                <option value="needs_review">Needs review</option>
+                            </select>
+                        </div>
+                        <div id="ingestionReviewQueueList" class="p-4 space-y-4">
+                            <p class="text-center text-slate-400 text-xs py-8">Synchronizing real ingestion records...</p>
                         </div>
                     </div>
 

@@ -418,6 +418,9 @@ def firestore_path(db: Any, app_id: str, shadow: bool = False):
     collection_name = "clinicalResources_ingestionTest" if shadow else "clinicalResources"
     return db.collection("artifacts").document(app_id).collection("public").document("data").collection(collection_name)
 
+def review_queue_path(db: Any, app_id: str):
+    return db.collection("artifacts").document(app_id).collection("public").document("data").collection("ingestionReviewQueue")
+
 def shadow_writes_allowed(apply: bool, shadow: bool) -> bool:
     """Require a separate acknowledgement so a shadow test cannot enable production."""
     return bool(apply and shadow and os.getenv("ATRIGUIDE_ENABLE_SHADOW_WRITES") == "YES")
@@ -526,7 +529,7 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
     generation_config = {
         "responseMimeType": "application/json",
         "temperature": 0.1,
-        "maxOutputTokens": 4096 if evidence_only else MAX_AI_OUTPUT_TOKENS,
+        "maxOutputTokens": 4096 if evidence_only else 3072,
         "thinkingConfig": {"thinkingBudget": 0},
     }
     if evidence_only:
@@ -550,6 +553,42 @@ def enrich_with_ai(record: dict[str, Any], selected_text: str, model_name: str,
                 },
             },
             "required": ["evidence"],
+            "additionalProperties": False,
+        }
+    else:
+        evidence_schema = {
+            "type": "array", "maxItems": 8,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "claim": {"type": "string", "maxLength": 500},
+                    "page": {"type": "integer", "minimum": 1},
+                    "locator": {"type": "string", "maxLength": 80},
+                    "kind": {"type": "string", "maxLength": 40},
+                    "excerpt": {"type": "string", "maxLength": 500},
+                },
+                "required": ["claim", "page", "locator", "kind", "excerpt"],
+                "additionalProperties": False,
+            },
+        }
+        generation_config["responseJsonSchema"] = {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "maxLength": 240},
+                "citation": {"type": "string", "maxLength": 500},
+                "year": {"type": "integer"},
+                "summary": {"type": "string", "maxLength": 1200},
+                "cardBullets": {"type": "array", "maxItems": 5, "items": {"type": "string", "maxLength": 400}},
+                "clinicalTags": {"type": "array", "maxItems": 12, "items": {"type": "string", "maxLength": 80}},
+                "searchTerms": {"type": "array", "maxItems": 12, "items": {"type": "string", "maxLength": 80}},
+                "evidence": evidence_schema,
+                "details": {
+                    "type": "object",
+                    "properties": {"typeSpecificFields": {"type": "string", "maxLength": 1000}},
+                    "additionalProperties": False,
+                },
+            },
+            "required": ["title", "citation", "summary", "cardBullets", "clinicalTags", "searchTerms", "evidence", "details"],
             "additionalProperties": False,
         }
     request_body = json.dumps({
@@ -591,19 +630,45 @@ def validate_publishable(record: dict[str, Any]) -> None:
 
 def scan_drive(args: argparse.Namespace) -> int:
     drive = load_drive_client(args.credentials)
-    db = firestore_module = collection = None
-    existing_records = []
     write_enabled = shadow_writes_allowed(args.apply, args.shadow) or production_writes_allowed(args.apply, args.shadow)
-    if write_enabled:
-        db, firestore_module = load_firestore_client(args.credentials)
-        collection = firestore_path(db, args.app_id, shadow=args.shadow)
-        # One bounded collection read supports legacy records that predate
-        # content hashes/DOIs, without repeating the read for every PDF.
-        existing_records = load_existing_records(collection)
+    # Preview mode must compare candidates with the existing library too.
+    # This is a read-only collection load; Firestore writes remain guarded by
+    # both --apply and the explicit environment acknowledgement below.
+    db, firestore_module = load_firestore_client(args.credentials)
+    collection = firestore_path(db, args.app_id, shadow=args.shadow)
+    # One bounded collection read supports legacy records that predate
+    # content hashes/DOIs, without repeating the read for every PDF.
+    existing_records = load_existing_records(collection)
     files = list_pdfs(drive, args.pending_folder)
+    if args.file_ids_file:
+        requested_ids = set(json.loads(Path(args.file_ids_file).read_text(encoding="utf-8")))
+        files = [item for item in files if item["id"] in requested_ids]
+    selected_files = files[:args.limit] if args.limit else files
+    print(f"Found {len(files)} PDF(s) in Pending; processing {len(selected_files)}.", flush=True)
+    if not selected_files:
+        print("Pending is empty. Nothing to preview or publish.", flush=True)
     previews, seen_hashes = [], {}
-    for item in files[:args.limit] if args.limit else files:
+    existing_ids = {record_id for record_id, _ in existing_records}
+    # Legacy records often have random Firestore document IDs, while retaining
+    # the original Drive URL/ID in their source fields. Treat that Drive ID as
+    # the authoritative already-imported match before downloading or using AI.
+    for _, existing in existing_records:
+        existing_drive_id = drive_file_id_from_record(existing)
+        if existing_drive_id:
+            existing_ids.add(stable_id(existing_drive_id))
+    for index, item in enumerate(selected_files, start=1):
         try:
+            candidate_id = stable_id(item["id"])
+            if candidate_id in existing_ids and not args.reprocess_existing:
+                print(f"[{index}/{len(selected_files)}] Already in library: {item['name']}", flush=True)
+                previews.append({
+                    "file": item["name"], "fileId": item["id"],
+                    "status": "already_imported", "existingRecordId": candidate_id,
+                    "action": "skipped_no_ai_no_write_no_move",
+                })
+                Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
+                continue
+            print(f"[{index}/{len(selected_files)}] Downloading: {item['name']}", flush=True)
             raw = download_pdf(drive, item["id"])
             content_hash = hashlib.sha256(raw).hexdigest()
             if content_hash in seen_hashes:
@@ -612,12 +677,12 @@ def scan_drive(args: argparse.Namespace) -> int:
                 ))
                 continue
             seen_hashes[content_hash] = item["id"]
-            candidate_id = stable_id(item["id"])
             text = extract_pdf_text(raw)
             record = build_skeleton(item["id"], item["name"], f"https://drive.google.com/file/d/{item['id']}/view", text, item.get("folderHint", ""))
             record["source"]["contentHash"] = content_hash
             validate_record(record)
             if collection:
+                print("  Checking the existing library for duplicates...", flush=True)
                 duplicate_match = find_content_duplicate(existing_records, record)
                 if duplicate_match:
                     if duplicate_match.definite:
@@ -630,6 +695,7 @@ def scan_drive(args: argparse.Namespace) -> int:
                         previews.append({
                             "file": item["name"], "fileId": item["id"],
                             "status": "possible_duplicate_needs_review",
+                            "record": record,
                             "duplicateOf": duplicate_match.record_id,
                             "duplicateReason": duplicate_match.reason,
                             "duplicateConfidence": duplicate_match.confidence,
@@ -638,9 +704,21 @@ def scan_drive(args: argparse.Namespace) -> int:
                     continue
             selected = record.pop("_selectedText")
             if args.use_ai:
+                print("  AI scrubbing and building page-linked evidence...", flush=True)
                 enrich_with_ai(record, selected, args.model)
-            previews.append({"file": item["name"], "status": "preview", "record": record,
-                             "modelInputPreview": selected, "estimatedInputCharacters": len(selected)})
+                record["evidence"], rejected = filter_grounded_evidence(record.get("evidence") or [], text)
+                record["ingestion"]["rejectedCitationCount"] = rejected
+                if not record["evidence"]:
+                    raise ValueError("No AI evidence claims passed page verification")
+                print(f"  Finished: {len(record['evidence'])} verified claim(s); {rejected} rejected.", flush=True)
+            status = "preview" if args.use_ai else "new_candidate"
+            preview = {"file": item["name"], "fileId": item["id"], "status": status,
+                       "record": record, "estimatedInputCharacters": len(selected)}
+            if args.use_ai:
+                preview["modelInputPreview"] = selected
+            else:
+                preview["action"] = "ready_for_ai_preview_no_write_no_move"
+            previews.append(preview)
             if write_enabled:
                 validate_publishable(record)
                 existing_snap = collection.document(record["id"]).get()
@@ -652,7 +730,8 @@ def scan_drive(args: argparse.Namespace) -> int:
                 if not args.shadow:
                     move_to_archive(drive, item["id"], item.get("parents") or [], args.archive_folder)
         except Exception as exc:
-            previews.append({"file": item.get("name"), "status": "needs_review", "error": str(exc)})
+            previews.append({"file": item.get("name"), "fileId": item.get("id"),
+                             "status": "needs_review", "error": str(exc)})
         # Preserve partial work and error details after every document.
         Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
     Path(args.output).write_text(json.dumps(previews, indent=2), encoding="utf-8")
@@ -725,6 +804,102 @@ def backfill_citations(args: argparse.Namespace) -> int:
     print(f"{mode}: {len(previews)} citation-backfill results written to {args.output}")
     return 0
 
+def load_json_rows(paths: list[str]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        value = json.loads(Path(path).read_text(encoding="utf-8"))
+        rows.extend(value if isinstance(value, list) else [value])
+    return rows
+
+def sync_review_queue(args: argparse.Namespace) -> int:
+    db, firestore_module = load_firestore_client(args.credentials)
+    queue = review_queue_path(db, args.app_id)
+    written = 0
+    for row in load_json_rows(args.queue_input):
+        status = row.get("status")
+        if status not in {"preview", "possible_duplicate_needs_review", "needs_review"}:
+            continue
+        file_id = row.get("fileId") or row.get("record", {}).get("source", {}).get("driveFileId")
+        if not file_id:
+            continue
+        queue_status = {"preview": "pending_review", "possible_duplicate_needs_review": "possible_duplicate", "needs_review": "needs_review"}[status]
+        queue_ref = queue.document(stable_id(file_id))
+        existing_queue = queue_ref.get()
+        payload = {
+            "fileId": file_id, "fileName": row.get("file", ""),
+            "candidate": row.get("record"), "duplicateOf": row.get("duplicateOf"),
+            "duplicateReason": row.get("duplicateReason"), "duplicateConfidence": row.get("duplicateConfidence"),
+            "error": row.get("error"), "updatedAt": firestore_module.SERVER_TIMESTAMP,
+        }
+        if not existing_queue.exists:
+            payload.update({"queueStatus": queue_status, "decision": "pending", "createdAt": firestore_module.SERVER_TIMESTAMP})
+        queue_ref.set(payload, merge=True)
+        written += 1
+    print(f"REVIEW QUEUE: {written} real document(s) synchronized; no library records or Drive files changed.")
+    return 0
+
+def cleanup_inventory(args: argparse.Namespace) -> int:
+    drive = load_drive_client(args.credentials)
+    safe_statuses = {"already_imported", "duplicate_existing", "duplicate_in_batch"}
+    receipts = []
+    for row in load_json_rows([args.cleanup_inventory]):
+        if row.get("status") not in safe_statuses or not row.get("fileId"):
+            continue
+        try:
+            metadata = drive.files().get(fileId=row["fileId"], fields="id,name,parents").execute()
+            move_to_archive(drive, row["fileId"], metadata.get("parents") or [], args.archive_folder)
+            receipts.append({"fileId": row["fileId"], "file": metadata.get("name"), "status": "archived_existing"})
+            print(f"Archived existing/duplicate: {metadata.get('name')}", flush=True)
+        except Exception as exc:
+            receipts.append({"fileId": row.get("fileId"), "file": row.get("file"), "status": "needs_review", "error": str(exc)})
+        Path(args.output).write_text(json.dumps(receipts, indent=2), encoding="utf-8")
+    print(f"CLEANUP: {sum(1 for item in receipts if item['status'] == 'archived_existing')} file(s) moved to Archive.")
+    return 0
+
+def apply_review_decisions(args: argparse.Namespace) -> int:
+    drive = load_drive_client(args.credentials)
+    db, firestore_module = load_firestore_client(args.credentials)
+    queue = review_queue_path(db, args.app_id)
+    collection = firestore_path(db, args.app_id)
+    receipts = []
+    for snapshot in queue.stream():
+        item = snapshot.to_dict() or {}
+        decision = item.get("decision")
+        if decision not in {"approved", "duplicate_confirmed", "reprocess_as_new"} or item.get("decisionApplied") is True:
+            continue
+        try:
+            file_id = item["fileId"]
+            metadata = drive.files().get(fileId=file_id, fields="id,name,parents").execute()
+            if decision == "approved":
+                record = item.get("candidate") or {}
+                validate_publishable(record)
+                publish_record(collection, record, firestore_module)
+                final_status = "published_and_archived"
+            elif decision == "reprocess_as_new":
+                raw = download_pdf(drive, file_id)
+                text = extract_pdf_text(raw)
+                record = build_skeleton(file_id, metadata.get("name", item.get("fileName", "")),
+                                        f"https://drive.google.com/file/d/{file_id}/view", text)
+                selected = record.pop("_selectedText")
+                enrich_with_ai(record, selected, args.model)
+                record["evidence"], rejected = filter_grounded_evidence(record.get("evidence") or [], text)
+                record["ingestion"]["rejectedCitationCount"] = rejected
+                validate_publishable(record)
+                publish_record(collection, record, firestore_module)
+                final_status = "published_and_archived"
+            else:
+                final_status = "duplicate_archived"
+            move_to_archive(drive, file_id, metadata.get("parents") or [], args.archive_folder)
+            snapshot.reference.update({"queueStatus": final_status, "decisionApplied": True, "appliedAt": firestore_module.SERVER_TIMESTAMP})
+            receipts.append({"queueId": snapshot.id, "file": metadata.get("name"), "status": final_status})
+            print(f"Applied {decision}: {metadata.get('name')}", flush=True)
+        except Exception as exc:
+            snapshot.reference.update({"queueStatus": "apply_failed", "applyError": str(exc), "updatedAt": firestore_module.SERVER_TIMESTAMP})
+            receipts.append({"queueId": snapshot.id, "file": item.get("fileName"), "status": "apply_failed", "error": str(exc)})
+        Path(args.output).write_text(json.dumps(receipts, indent=2), encoding="utf-8")
+    print(f"DECISIONS: {len(receipts)} decision(s) processed.")
+    return 0
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("input_json", nargs="?", help="local JSON containing fileId, name, url and extractedText")
@@ -733,22 +908,40 @@ def main() -> int:
     p.add_argument("--shadow", action="store_true", help="write only to the isolated ingestion-test collection; never move Drive files")
     p.add_argument("--scan-drive", action="store_true", help="scan the configured Pending folder")
     p.add_argument("--backfill-citations", action="store_true", help="enrich existing records in place with page-linked evidence")
+    p.add_argument("--sync-review-queue", action="store_true", help="write real preview/held records to the Admin review queue")
+    p.add_argument("--queue-input", action="append", default=[], help="preview or inventory JSON to synchronize")
+    p.add_argument("--cleanup-inventory", help="inventory JSON whose already-imported and definite-duplicate files should be archived")
+    p.add_argument("--apply-review-decisions", action="store_true", help="publish/archive decisions made in the Admin Portal")
     p.add_argument("--credentials", default=os.getenv("ATRIGUIDE_CREDENTIALS", "credentials.json"))
     p.add_argument("--app-id", default=os.getenv("ATRIGUIDE_APP_ID", "atricure-clinical-hub"))
     p.add_argument("--pending-folder", default=os.getenv("ATRIGUIDE_PENDING_FOLDER_ID", "1BOC7ooYHACcEmsVcfJJ3pZOFV-rQueBk"))
     p.add_argument("--archive-folder", default=os.getenv("ATRIGUIDE_ARCHIVE_FOLDER_ID", "1wl-qyPmjlr9eBBUFhhvD8diVk9mJp8ZH"))
     p.add_argument("--limit", type=int, default=0, help="maximum PDFs for a controlled test; 0 means all")
+    p.add_argument("--file-ids-file", help="JSON list of Drive file IDs to process")
+    p.add_argument("--reprocess-existing", action="store_true", help="intentionally process a Drive file already represented by the same library record")
     p.add_argument("--use-ai", action="store_true", help="perform one bounded extraction call per unique PDF")
     p.add_argument("--model", default=os.getenv("ATRIGUIDE_INGESTION_MODEL", "gemini-2.5-flash"))
     args = p.parse_args()
+    # The command option is also the Vertex AI credential source. This keeps
+    # the plain-English launcher self-contained without requiring users to
+    # configure a separate environment variable.
+    os.environ.setdefault("ATRIGUIDE_CREDENTIALS", args.credentials)
     if args.shadow and not args.apply:
         raise SystemExit("BLOCKED: --shadow also requires --apply")
     if args.apply and args.shadow and not shadow_writes_allowed(args.apply, args.shadow):
         raise SystemExit("BLOCKED: shadow apply also requires ATRIGUIDE_ENABLE_SHADOW_WRITES=YES")
     if args.apply and not args.shadow and not production_writes_allowed(args.apply, args.shadow):
         raise SystemExit("BLOCKED: production apply also requires ATRIGUIDE_ENABLE_PRODUCTION_WRITES=YES")
-    if args.apply and not args.use_ai:
+    operational_apply = args.sync_review_queue or bool(args.cleanup_inventory) or args.apply_review_decisions
+    if args.apply and not args.use_ai and not operational_apply:
         raise SystemExit("BLOCKED: --apply requires --use-ai so incomplete records cannot be published")
+    if operational_apply and not args.apply:
+        raise SystemExit("BLOCKED: review/cleanup operations require --apply and production acknowledgement")
+    if args.sync_review_queue:
+        if not args.queue_input: raise SystemExit("BLOCKED: --sync-review-queue requires --queue-input")
+        return sync_review_queue(args)
+    if args.cleanup_inventory: return cleanup_inventory(args)
+    if args.apply_review_decisions: return apply_review_decisions(args)
     if args.backfill_citations: return backfill_citations(args)
     if args.scan_drive: return scan_drive(args)
     if not args.input_json: p.error("provide input_json, --scan-drive, or --backfill-citations")
