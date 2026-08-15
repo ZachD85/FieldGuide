@@ -1321,7 +1321,7 @@ window.renderIngestionReviewQueue = function() {
         const evidenceCount = Array.isArray(candidate.evidence) ? candidate.evidence.length : 0;
         const sourceUrl = candidate.source?.driveUrl || (item.fileId ? `https://drive.google.com/file/d/${item.fileId}/view` : "");
         const possibleDuplicate = item.queueStatus === "possible_duplicate" || item.decision === "reprocess_as_new" || item.decision === "duplicate_confirmed";
-        const actionable = !["published_and_archived", "duplicate_archived"].includes(item.queueStatus);
+        const actionable = !["published_and_archived", "duplicate_archived", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply"].includes(item.queueStatus);
         return `<article class="border border-slate-200 rounded-xl p-4 text-left" data-review-id="${window.escapeHtml(item.id)}">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0 flex-1"><h4 class="font-bold text-sm text-slate-800">${window.escapeHtml(title)}</h4>
