@@ -441,31 +441,13 @@ window.renderStructuredSSS = function(result) {
         badge.textContent = "30-second evidence brief";
         root.appendChild(badge);
     }
-    const headline = document.createElement("div");
-    headline.className = "text-sm md:text-base font-extrabold text-slate-900 mb-2";
-    headline.textContent = result.headline || "Evidence summary";
-    root.appendChild(headline);
     const synthesis = document.createElement("div");
-    synthesis.className = "text-xs md:text-sm font-medium leading-relaxed text-slate-700";
+    synthesis.className = "text-sm md:text-base font-semibold leading-relaxed text-slate-800";
     synthesis.textContent = result.synthesis || "No directly supported answer is available.";
     root.appendChild(synthesis);
-    if (Array.isArray(result.talkingPoints) && result.talkingPoints.length) {
-        const list = document.createElement("ul");
-        list.className = "mt-3 space-y-1.5 list-disc pl-5 text-xs md:text-sm text-slate-700";
-        result.talkingPoints.slice(0, 3).forEach(point => {
-            const item = document.createElement("li");
-            item.textContent = point;
-            list.appendChild(item);
-        });
-        root.appendChild(list);
-    }
-    if (result.caveat) {
-        const caveat = document.createElement("div");
-        caveat.className = "mt-3 border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900";
-        caveat.textContent = `Important context: ${result.caveat}`;
-        root.appendChild(caveat);
-    }
-    const validSources = (result.sources || []).map(source => ({
+    const validSources = (result.sources || []).filter((source, index, rows) =>
+        rows.findIndex(row => row.id === source.id) === index
+    ).map(source => ({
         ...source,
         card: window.clinicalDatabase.find(item => item.id === source.id)
     })).filter(source => source.card);
@@ -476,7 +458,7 @@ window.renderStructuredSSS = function(result) {
         label.className = "text-[10px] font-extrabold uppercase tracking-wider text-slate-500";
         label.textContent = "Evidence used";
         sourceBox.appendChild(label);
-        validSources.slice(0, 6).forEach(source => {
+        validSources.slice(0, 4).forEach(source => {
             const row = document.createElement(source.card.url ? "a" : "div");
             row.className = "block text-xs bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700";
             if (source.card.url) {
@@ -493,12 +475,6 @@ window.renderStructuredSSS = function(result) {
                 locator.className = "inline-flex mt-1 mb-1 mr-2 text-[10px] font-extrabold uppercase tracking-wider text-orange-800 bg-orange-100 rounded-full px-2 py-0.5";
                 locator.textContent = source.page ? `Page ${source.page}` : source.locator;
                 row.appendChild(locator);
-            }
-            if (source.supports) {
-                const support = document.createElement("span");
-                support.className = "block";
-                support.textContent = source.supports;
-                row.appendChild(support);
             }
             sourceBox.appendChild(row);
         });
