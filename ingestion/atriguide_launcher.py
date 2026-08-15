@@ -99,32 +99,35 @@ def make_report(source_json: Path | None = None) -> None:
     PREVIEW_HTML.write_text(page, encoding="utf-8")
 
 
-def run_inventory() -> None:
+def process_pending() -> None:
     if not ensure_ready():
         pause()
         return
-    print("\nChecking all Pending PDFs against the current library.")
-    print("This inventory uses no AI and publishes or moves nothing...")
+    print("\nProcessing everything in Pending.")
+    print("New documents will be prepared for Admin review.")
+    print("Obvious duplicates will be moved to Drive trash; nothing new publishes without your approval.")
     command = [
-        sys.executable, str(PIPELINE), "--scan-drive",
-        "--credentials", str(CREDENTIALS), "--output", str(INVENTORY_JSON),
+        sys.executable, str(PIPELINE), "--scan-drive", "--use-ai",
+        "--credentials", str(CREDENTIALS), "--output", str(PREVIEW_JSON),
     ]
     result = subprocess.run(command, cwd=HERE, env=os.environ.copy())
-    candidate_ids = []
-    if result.returncode == 0 and INVENTORY_JSON.exists():
-        rows = json.loads(INVENTORY_JSON.read_text(encoding="utf-8"))
-        candidate_ids = [row["fileId"] for row in rows if row.get("status") == "new_candidate"]
-        CANDIDATE_IDS_JSON.write_text(json.dumps(candidate_ids, indent=2), encoding="utf-8")
+    if result.returncode == 0 and PREVIEW_JSON.exists():
+        rows = json.loads(PREVIEW_JSON.read_text(encoding="utf-8"))
         counts = {}
         for row in rows:
             counts[row.get("status", "unknown")] = counts.get(row.get("status", "unknown"), 0) + 1
-        print("\nInventory complete:")
-        print(f"  Already imported: {counts.get('already_imported', 0)}")
-        print(f"  Definite duplicates: {counts.get('duplicate_existing', 0)}")
+        sync_queue([PREVIEW_JSON])
+        env = os.environ.copy()
+        env["ATRIGUIDE_ENABLE_PRODUCTION_WRITES"] = "YES"
+        subprocess.run([
+            sys.executable, str(PIPELINE), "--cleanup-inventory", str(PREVIEW_JSON), "--apply",
+            "--credentials", str(CREDENTIALS), "--output", str(HERE / "duplicate_cleanup_receipt.json")
+        ], cwd=HERE, env=env)
+        print("\nProcessing complete:")
+        print(f"  Obvious duplicates removed: {counts.get('already_imported', 0) + counts.get('duplicate_existing', 0) + counts.get('duplicate_in_batch', 0)}")
         print(f"  Possible duplicates needing review: {counts.get('possible_duplicate_needs_review', 0)}")
-        print(f"  New candidates: {len(candidate_ids)}")
-        sync_queue([INVENTORY_JSON])
-    make_report(INVENTORY_JSON)
+        print(f"  New documents ready for review: {counts.get('preview', 0)}")
+    make_report(PREVIEW_JSON)
     if PREVIEW_HTML.exists():
         webbrowser.open(PREVIEW_HTML.as_uri())
     pause()
@@ -187,29 +190,26 @@ def main() -> int:
         print("=" * 58)
         print("              AtriGuide Article Importer")
         print("=" * 58)
-        print("1. Inventory Pending PDFs (free - no AI, no publishing)")
-        print("2. AI-preview only new candidates")
-        print("3. Open the latest report")
-        print("4. Apply decisions from the Admin Portal")
-        print("5. Exit")
-        choice = input("\nChoose 1, 2, 3, 4, or 5: ").strip()
+        print("1. Process Pending PDFs")
+        print("2. Open the latest report")
+        print("3. Finish any 'Treat as New' decisions")
+        print("4. Exit")
+        choice = input("\nChoose 1, 2, 3, or 4: ").strip()
         if choice == "1":
-            run_inventory()
+            process_pending()
         elif choice == "2":
-            run_ai_preview()
-        elif choice == "3":
             make_report()
             if PREVIEW_HTML.exists():
                 webbrowser.open(PREVIEW_HTML.as_uri())
             else:
                 print("No preview exists yet. Choose option 1 first.")
                 pause()
-        elif choice == "4":
+        elif choice == "3":
             apply_admin_decisions()
-        elif choice == "5":
+        elif choice == "4":
             return 0
         else:
-            print("Please choose 1, 2, 3, 4, or 5.")
+            print("Please choose 1, 2, 3, or 4.")
             pause()
 
 

@@ -1321,7 +1321,7 @@ window.renderIngestionReviewQueue = function() {
         const evidenceCount = Array.isArray(candidate.evidence) ? candidate.evidence.length : 0;
         const sourceUrl = candidate.source?.driveUrl || (item.fileId ? `https://drive.google.com/file/d/${item.fileId}/view` : "");
         const possibleDuplicate = item.queueStatus === "possible_duplicate" || item.decision === "reprocess_as_new" || item.decision === "duplicate_confirmed";
-        const actionable = !["published_and_archived", "duplicate_archived", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply"].includes(item.queueStatus);
+        const actionable = !["published_and_archived", "duplicate_archived", "duplicate_trashed", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply"].includes(item.queueStatus);
         return `<article class="border border-slate-200 rounded-xl p-4 text-left" data-review-id="${window.escapeHtml(item.id)}">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0 flex-1"><h4 class="font-bold text-sm text-slate-800">${window.escapeHtml(title)}</h4>
@@ -1331,7 +1331,15 @@ window.renderIngestionReviewQueue = function() {
             <p class="text-xs text-slate-600 mt-3">${window.escapeHtml(summary)}</p>
             ${item.duplicateReason ? `<div class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900"><strong>Possible duplicate:</strong> ${window.escapeHtml(item.duplicateReason)} (${Math.round(Number(item.duplicateConfidence || 0) * 100)}% match)</div>` : ''}
             <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-500"><span>${evidenceCount} verified evidence claim(s)</span>${sourceUrl ? `<a class="font-bold text-blue-700 hover:underline" target="_blank" href="${window.escapeHtml(sourceUrl)}">Open PDF</a>` : ''}</div>
-            ${candidate.title && actionable ? `<div class="mt-3"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Website placement</label><select id="review-category-${window.escapeHtml(item.id)}" class="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white">${window.reviewCategoryOptions(website.mainCategory, website.subCategory)}</select></div>` : ''}
+            ${candidate.title && actionable && !possibleDuplicate ? `<div class="mt-3 grid gap-3">
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Title</label><input id="review-title-${window.escapeHtml(item.id)}" value="${window.escapeHtml(candidate.title || '')}" class="w-full text-xs border border-slate-200 rounded-lg p-2"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Citation</label><input id="review-citation-${window.escapeHtml(item.id)}" value="${window.escapeHtml(candidate.citation || '')}" class="w-full text-xs border border-slate-200 rounded-lg p-2"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Summary</label><textarea id="review-summary-${window.escapeHtml(item.id)}" rows="4" class="w-full text-xs border border-slate-200 rounded-lg p-2">${window.escapeHtml(candidate.summary || '')}</textarea></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Card bullets (one per line)</label><textarea id="review-bullets-${window.escapeHtml(item.id)}" rows="4" class="w-full text-xs border border-slate-200 rounded-lg p-2">${window.escapeHtml((candidate.cardBullets || []).join('\n'))}</textarea></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Clinical tags (comma separated)</label><input id="review-tags-${window.escapeHtml(item.id)}" value="${window.escapeHtml((candidate.clinicalTags || []).join(', '))}" class="w-full text-xs border border-slate-200 rounded-lg p-2"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Search terms (comma separated)</label><input id="review-search-${window.escapeHtml(item.id)}" value="${window.escapeHtml((candidate.searchTerms || []).join(', '))}" class="w-full text-xs border border-slate-200 rounded-lg p-2"></div>
+                <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Website placement</label><select id="review-category-${window.escapeHtml(item.id)}" class="w-full text-xs border border-slate-200 rounded-lg p-2 bg-white">${window.reviewCategoryOptions(website.mainCategory, website.subCategory)}</select></div>
+            </div>` : ''}
             ${actionable ? `<div class="mt-4 flex flex-wrap gap-2">
                 ${candidate.title && !possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Approve</button>` : ''}
                 ${possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','reprocess_as_new')" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg">Treat as New</button><button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','duplicate_confirmed')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Confirm Duplicate</button>` : ''}
@@ -1353,12 +1361,28 @@ window.decideIngestionReview = async function(id, decision) {
     if (item.candidate && decision === "approved") {
         const selection = document.getElementById(`review-category-${id}`)?.value || "";
         const [mainCategory, subCategory] = selection.split("|||");
-        update.candidate = {...item.candidate, mainCategory, subCategory, manualOverride: true,
+        const lines = (field) => (document.getElementById(field)?.value || "").split("\n").map(value => value.trim()).filter(Boolean);
+        const commas = (field) => (document.getElementById(field)?.value || "").split(",").map(value => value.trim()).filter(Boolean);
+        update.candidate = {...item.candidate,
+            title: document.getElementById(`review-title-${id}`)?.value.trim() || "",
+            citation: document.getElementById(`review-citation-${id}`)?.value.trim() || "",
+            summary: document.getElementById(`review-summary-${id}`)?.value.trim() || "",
+            cardBullets: lines(`review-bullets-${id}`),
+            clinicalTags: commas(`review-tags-${id}`),
+            searchTerms: commas(`review-search-${id}`),
+            mainCategory, subCategory, manualOverride: true,
             website: {...(item.candidate.website || {}), mainCategory, subCategory, manualOverride: true}};
     }
     try {
+        if (["approved", "duplicate_confirmed"].includes(decision)) {
+            window.showToast(decision === "approved" ? "Publishing and archiving…" : "Removing duplicate…", "info");
+            const applyReview = httpsCallable(window.secureFunctions, "applyIngestionReview");
+            await applyReview({queueId: id, decision, candidate: update.candidate || item.candidate || null});
+            window.showToast(decision === "approved" ? "Published and archived." : "Duplicate removed.", "success");
+            return;
+        }
         await updateDoc(doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'ingestionReviewQueue', id), update);
-        window.showToast("Review decision saved. Run Apply Admin Decisions in the importer when ready.", "success");
+        window.showToast("Saved. Run option 3 in the importer to process it as a new document.", "success");
     } catch (error) {
         console.error("Review decision failed:", error);
         window.showToast("The review decision could not be saved.", "warning");
