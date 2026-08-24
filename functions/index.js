@@ -106,6 +106,7 @@ function cleanCandidates(value) {
       id: String(item.id || "").slice(0, 80),
       title: String(item.title || "").slice(0, 300),
       author: String(item.author || "").slice(0, 300),
+      documentType: String(item.documentType || "").slice(0, 40),
       category: String(item.category || "").slice(0, 120),
       summary: String(item.summary || "").slice(0, 1100),
       keywords: String(item.keywords || "").slice(0, 400),
@@ -132,7 +133,10 @@ exports.askAtriGuide = onCall({
   const auth = requireSignedIn(request);
   await enforceRateLimit(auth.uid);
   const query = String(request.data?.query || "").trim().slice(0, 500);
-  const candidates = cleanCandidates(request.data?.candidates);
+  const deviceIntent = /\b(ifu|instructions? for use|operator'?s? manual|user manual|troubleshoot(?:ing)?|error code|fault code|how (?:do i|to)|change (?:the )?(?:default|setting)|setup|set up|operate|operation|program(?:ming)?|warning|precaution|contraindication|acm|asu|asb)\b/i.test(query);
+  const candidates = cleanCandidates(request.data?.candidates).filter((candidate) =>
+    deviceIntent || (!['ifu', 'brochure_other'].includes(candidate.documentType.toLowerCase()) &&
+      !candidate.category.toLowerCase().startsWith('device resources')));
   const history = cleanHistory(request.data?.history);
   if (!query) throw new HttpsError("invalid-argument", "A question is required.");
   if (!candidates.length) return {synthesis: "No matching evidence cards were found.", matchedIds: []};

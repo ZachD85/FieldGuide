@@ -348,10 +348,22 @@ window.callGeminiAPI = async function(query, candidates, history = []) {
 };
 
 window.getAICandidates = function(query, pinnedIds = []) {
+    const normalizedQuery = String(query || '').toLowerCase();
+    const wantsDeviceInstructions = /\b(ifu|instructions? for use|operator'?s? manual|user manual|troubleshoot(?:ing)?|error code|fault code|how (?:do i|to)|change (?:the )?(?:default|setting)|setup|set up|operate|operation|program(?:ming)?|warning|precaution|contraindication|acm|asu|asb)\b/.test(normalizedQuery);
+    const isClinicalEvidenceCard = item => {
+        const documentType = String(item.documentType || '').toLowerCase();
+        const mainCategory = String(item.mainCategory || item.website?.mainCategory || '').toLowerCase();
+        const subCategory = String(item.subCategory || item.website?.subCategory || '').toLowerCase();
+        const isDeviceMaterial = ['ifu', 'brochure_other'].includes(documentType)
+            || mainCategory === 'device resources'
+            || subCategory === 'ifus'
+            || subCategory === 'product brochures';
+        return wantsDeviceInstructions || !isDeviceMaterial;
+    };
     const stopWords = new Set(['what','show','me','is','are','the','a','an','and','or','for','with','to','in','on','at','of','by','this','that','about','results','studies','study','papers','paper','data','evidence','find','search','how','we','have']);
     const words = query.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/)
         .filter(word => word.length > 1 && !stopWords.has(word));
-    const scored = window.clinicalDatabase.map(item => {
+    const scored = window.clinicalDatabase.filter(isClinicalEvidenceCard).map(item => {
         const title = String(item.title || '').toLowerCase();
         const author = String(item.author || '').toLowerCase();
         const summary = String(item.summary || '').toLowerCase();
@@ -367,7 +379,8 @@ window.getAICandidates = function(query, pinnedIds = []) {
         });
         return {item, score};
     }).filter(entry => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
-    const pinned = pinnedIds.map(id => window.clinicalDatabase.find(item => item.id === id)).filter(Boolean);
+    const pinned = pinnedIds.map(id => window.clinicalDatabase.find(item => item.id === id))
+        .filter(item => item && isClinicalEvidenceCard(item));
     const combined = [...pinned, ...scored.map(({item}) => item)]
         .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
         .slice(0, 12);
@@ -375,6 +388,7 @@ window.getAICandidates = function(query, pinnedIds = []) {
         id: item.id,
         title: item.title,
         author: item.author,
+        documentType: item.documentType || '',
         category: `${item.mainCategory || ''} > ${item.subCategory || ''}`,
         summary: item.summary,
         keywords: item.searchProfile || '',
