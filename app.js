@@ -1730,6 +1730,22 @@ window.toggleBroadcastAccordion = function() {
     window.renderLiveBroadcastTimeline();
 };
 
+window.beginnerGuideLinkHtml = function() {
+    return `
+        <button onclick="window.routeToBeginnerGuide()" class="w-full bg-gradient-to-r from-orange-50 to-white border border-orange-200 hover:border-orange-400 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-all text-left group cursor-pointer">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="p-2 bg-[#FF6B00] text-white rounded-lg shrink-0"><i data-lucide="map" class="w-4 h-4"></i></div>
+                    <div class="min-w-0">
+                        <p class="text-xs font-black text-[#00205B]">New here? Here is what the hell AtriGuide is.</p>
+                        <p class="text-[10px] text-slate-500 font-semibold mt-0.5">The two-minute, plain-English version</p>
+                    </div>
+                </div>
+                <i data-lucide="arrow-right" class="w-4 h-4 text-orange-500 group-hover:translate-x-1 transition-transform shrink-0"></i>
+            </div>
+        </button>`;
+};
+
 // Interface Paint Routine: Home Accordion Container Box
 window.renderLiveBroadcastTimeline = function() {
     const target = document.getElementById("dynamicSystemBroadcastWrapper");
@@ -1737,10 +1753,11 @@ window.renderLiveBroadcastTimeline = function() {
 
     const items = window.activeBroadcastLogs || [];
     if (items.length === 0) {
-        target.innerHTML = `
+        target.innerHTML = window.beginnerGuideLinkHtml() + `
             <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 text-center text-slate-500 text-xs font-semibold select-none">
                 📢 AtriGuide Cloud Registry Active: Multi-file core modular framework successfully mapped.
             </div>`;
+        lucide.createIcons();
         return;
     }
 
@@ -1757,7 +1774,7 @@ window.renderLiveBroadcastTimeline = function() {
         </div>
     `).join('<div class="h-2.5"></div>');
 
-    target.innerHTML = `
+    target.innerHTML = window.beginnerGuideLinkHtml() + `
         <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
             <div class="absolute right-0 top-0 translate-x-3 -translate-y-3 opacity-[0.03] text-slate-900 pointer-events-none select-none">
                 <i data-lucide="megaphone" class="w-24 h-24"></i>
@@ -1793,6 +1810,148 @@ window.renderLiveBroadcastTimeline = function() {
                 </div>
             </div>
         </div>`;
+    lucide.createIcons();
+};
+
+window.routeToBeginnerGuide = function() {
+    window.currentMainCategory = null;
+    window.currentSubCategory = null;
+    window.isStarredFilterActive = false;
+    document.querySelectorAll(".subcat-btn").forEach(btn => btn.classList.remove("bg-slate-100", "text-[#00205B]", "font-bold"));
+    document.getElementById("categorySearchContainer").classList.add("hidden");
+    const bannerWrapper = document.getElementById("dynamicSystemBroadcastWrapper");
+    if (bannerWrapper) bannerWrapper.classList.add("hidden");
+    const container = document.getElementById("userDashboardView");
+    if (!container) return;
+
+    container.innerHTML = `
+        <article class="max-w-3xl mx-auto pb-16 animate-fade-in">
+            <button onclick="window.navigateToHome()" class="mb-5 inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-orange-500 transition-colors cursor-pointer">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i><span>Back to AtriGuide</span>
+            </button>
+
+            <div class="bg-[#00205B] text-white rounded-2xl p-6 md:p-8 border-l-[6px] border-[#FF6B00] shadow-lg mb-6">
+                <p class="text-[10px] text-orange-400 font-black uppercase tracking-[0.2em] mb-2">The two-minute tour</p>
+                <h1 class="text-2xl md:text-3xl font-black tracking-tight">What is AtriGuide?</h1>
+                <p class="mt-4 text-base md:text-lg font-bold leading-relaxed">The simple answer: AtriGuide turns our clinical research library into something you can actually talk to.</p>
+                <p class="mt-4 text-sm text-slate-200 leading-relaxed">I have been working on this behind the scenes for almost two years. It has gone through more than 100 versions, redesigns, broken features, and ideas that sounded much better in my head than they worked in real life.</p>
+                <p class="mt-3 text-sm font-bold text-orange-300">Version 1.0 is finally ready for people to use.</p>
+            </div>
+
+            <div class="space-y-6 text-sm text-slate-700 leading-relaxed">
+                <section class="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-sm">
+                    <h2 class="text-xl font-black text-[#00205B] mb-3">Why I built it</h2>
+                    <div class="space-y-3">
+                        <p>We have a lot of great clinical information. The problem is finding it when you actually need it.</p>
+                        <p>AtriHub is our current evidence “database,” but in reality it has become a large pile of important files. The information is there, but you need to know exactly what you are looking for, where it lives, and which PDF contains the answer.</p>
+                        <p>That is not very helpful when you are preparing for a case or standing in front of someone who wants an answer right now.</p>
+                        <p class="font-black text-[#00205B]">AtriGuide is a massive upgrade from that.</p>
+                    </div>
+                </section>
+
+                <section class="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-sm">
+                    <h2 class="text-xl font-black text-[#00205B] mb-3">What it actually does</h2>
+                    <p class="font-bold text-slate-900">You can talk to AtriGuide like you would talk to another person.</p>
+                    <p class="mt-2">You do not need to know the study name, author, publication year, or the perfect medical search terms. Just ask the actual question you are trying to answer.</p>
+                    <div class="mt-4 space-y-2">
+                        <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">For example</p>
+                        <blockquote class="border-l-4 border-orange-400 bg-orange-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">I only have 30 seconds to convince a surgeon to ablate a patient with low EF. What evidence supports doing it?</blockquote>
+                        <blockquote class="border-l-4 border-orange-400 bg-orange-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">What evidence shows a survival benefit from concomitant surgical ablation?</blockquote>
+                        <blockquote class="border-l-4 border-orange-400 bg-orange-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">I need the IFU for the Flex Mini.</blockquote>
+                    </div>
+                    <p class="mt-4">AtriGuide searches the curated research library and pulls together the studies related to your specific question.</p>
+                    <p class="mt-3">This is an important difference between AtriGuide and asking a general AI tool. It is not supposed to roam the internet, guess, or pull information from whatever it happens to find. It is restricted to a clinical evidence library that I have assembled and organized by hand using the research and resources most relevant to what we do.</p>
+                    <h3 class="font-black text-slate-900 mt-5 mb-2">For every related article, AtriGuide can show you:</h3>
+                    <ul class="grid sm:grid-cols-2 gap-2">
+                        <li class="guide-check">The study title and authors</li>
+                        <li class="guide-check">A quick explanation of what was studied</li>
+                        <li class="guide-check">Important findings and clinical takeaways</li>
+                        <li class="guide-check">The actual numbers and results</li>
+                        <li class="guide-check">A link to the original PDF</li>
+                        <li class="guide-check">A generated QR code so someone else can open the article immediately <span class="text-slate-400">(do not even get me started on how annoying this one was)</span></li>
+                    </ul>
+                    <p class="mt-4 font-bold text-[#00205B]">Instead of giving you a list of files and making you figure everything out, it does the digging for you.</p>
+                </section>
+
+                <section class="bg-gradient-to-br from-orange-50 to-white border border-orange-200 rounded-2xl p-5 md:p-7 shadow-sm">
+                    <div class="flex items-center gap-3 mb-3"><span class="text-2xl">🧽</span><h2 class="text-xl font-black text-[#00205B]">The Scrub Sink Summary</h2></div>
+                    <p class="font-bold text-slate-900">The best part is at the top of the results.</p>
+                    <p class="mt-2">The Scrub Sink Summary, or SSS, answers the question you actually asked. It pulls the most relevant findings from the related studies and turns them into a short, useful answer built around the proof.</p>
+                    <h3 class="font-black text-slate-900 mt-5 mb-2">The goal is to give you something you can use quickly:</h3>
+                    <ul class="grid sm:grid-cols-2 gap-2">
+                        <li class="guide-check">What the evidence shows</li>
+                        <li class="guide-check">Who was studied</li>
+                        <li class="guide-check">How many patients were included</li>
+                        <li class="guide-check">The important results and numbers</li>
+                        <li class="guide-check">How long the patients were followed</li>
+                        <li class="guide-check">Any limitations worth knowing</li>
+                        <li class="guide-check">Which articles support the answer</li>
+                    </ul>
+                    <p class="mt-4">You can then click one of the suggested follow-up questions or type your own and continue the conversation.</p>
+                    <p class="mt-3">It is designed for those moments when you do not have 30 minutes to open and read six different papers. You ask the question, get the short answer, see the proof, and open the supporting research if you need more detail.</p>
+                    <p class="mt-3 text-xs text-slate-500">Because AI is still AI, it can make mistakes. That is why the source articles and supporting evidence are included. AtriGuide helps you get to the answer much faster, but you can always check exactly where the information came from.</p>
+                </section>
+
+                <section class="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-sm">
+                    <h2 class="text-xl font-black text-[#00205B] mb-3">You can also ignore the AI completely</h2>
+                    <p>If talking to AI is not your thing, or you just want to stick it to the man, the full library can still be browsed normally.</p>
+                    <p class="mt-3">The menu is divided into broad clinical topics, such as MAZE, LAA, and Device Resources. Each topic is then divided into more specific categories.</p>
+                    <p class="mt-3">For example, you can move from MAZE into rhythm outcomes or survival benefits. The LAA section separates stroke reduction, outcomes and safety, prophylactic data, and other relevant areas.</p>
+                    <p class="mt-3">This works well when you are not looking for one exact answer and just want to see what information is available. You can also use the regular search bar. Type an author, procedure, outcome, device, study name, or topic, and AtriGuide will narrow the library for you.</p>
+                    <div class="mt-5 grid gap-3">
+                        <div class="guide-step"><span>1</span><p><strong>Ask a full question.</strong> Let AtriGuide build an evidence-based answer.</p></div>
+                        <div class="guide-step"><span>2</span><p><strong>Search directly.</strong> Look for a topic, author, study, device, or keyword.</p></div>
+                        <div class="guide-step"><span>3</span><p><strong>Browse the menus.</strong> Explore the categories yourself.</p></div>
+                    </div>
+                </section>
+
+                <section class="bg-slate-900 text-white rounded-2xl p-5 md:p-7 shadow-sm">
+                    <h2 class="text-xl font-black mb-3">Please try to break it</h2>
+                    <p class="text-slate-200">This is version 1.0, and there is still a huge amount of data to add.</p>
+                    <p class="mt-3 text-slate-200">Some articles may be missing. Something may be placed in the wrong category. A summary may need improvement. The AI may misunderstand a question. You may find a broken link, incorrect number, or feature that does not work correctly.</p>
+                    <p class="mt-3 text-slate-200">If you find anything wrong, confusing, missing, or broken, please let me know. I actually want to hear about it. That is how this becomes genuinely useful.</p>
+                    <a href="mailto:zdavidson@atricure.com?subject=AtriGuide Feedback" class="mt-5 inline-flex items-center gap-2 bg-[#FF6B00] hover:bg-orange-600 text-white px-4 py-2.5 rounded-lg font-black text-xs transition-colors"><i data-lucide="mail" class="w-4 h-4"></i><span>Report a screw-up or suggestion</span></a>
+                    <p class="mt-4 text-xs text-slate-400">For anything important, always check the original research before using the information externally.</p>
+                </section>
+
+                <section class="bg-white border border-slate-200 rounded-2xl p-5 md:p-7 shadow-sm">
+                    <h2 class="text-xl font-black text-[#00205B] mb-3">What is coming next?</h2>
+                    <p>What is available today is really the foundation.</p>
+                    <ul class="grid sm:grid-cols-2 gap-2 mt-4">
+                        <li class="guide-check">Much larger POAF and EnCompass sections</li>
+                        <li class="guide-check">More clinical research and internal resources</li>
+                        <li class="guide-check">Videos and other useful media</li>
+                        <li class="guide-check">An employee section for frequently needed documents</li>
+                        <li class="guide-check">A searchable training-course catalog</li>
+                        <li class="guide-check">Course recommendations based on someone’s role or needs</li>
+                        <li class="guide-check">Direct registration links and QR codes</li>
+                        <li class="guide-check">A healthcare provider version with approved evidence and resources</li>
+                    </ul>
+                    <p class="mt-5 text-[10px] font-black uppercase tracking-wider text-slate-400">Eventually, someone could ask</p>
+                    <blockquote class="mt-2 border-l-4 border-orange-400 bg-orange-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">Which training course would be best for this APP?</blockquote>
+                    <p class="mt-3">AtriGuide could recommend the appropriate course, explain why it fits, provide the important information, and display a QR code to register.</p>
+                    <h3 class="font-black text-slate-900 mt-6 mb-2">Real-time equipment help</h3>
+                    <p>I also want to add our training and equipment documentation. The goal is to make AtriGuide useful when someone needs help in real time, not just when they are looking for clinical research.</p>
+                    <div class="mt-3 space-y-2">
+                        <blockquote class="border-l-4 border-blue-300 bg-blue-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">How do I change the default time on the ACM?</blockquote>
+                        <blockquote class="border-l-4 border-blue-300 bg-blue-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">I am getting this error code on the ASU/ASB. What does it mean?</blockquote>
+                        <blockquote class="border-l-4 border-blue-300 bg-blue-50 px-4 py-3 rounded-r-lg font-semibold text-slate-700">What steps should I follow to troubleshoot this equipment?</blockquote>
+                    </div>
+                    <p class="mt-4">AtriGuide could search our approved training materials, explain the steps, show exactly where the answer came from, and provide the relevant document, video, or training resource.</p>
+                    <p class="mt-3">Eventually, it could become one place to find clinical evidence, training courses, equipment instructions, troubleshooting help, and frequently needed employee information.</p>
+                    <p class="mt-4 font-bold text-[#00205B]">The long-term idea is to create one place for evidence, training, resources, and answers without needing to know where everything is stored before you begin.</p>
+                </section>
+
+                <section class="text-center bg-orange-50 border border-orange-200 rounded-2xl p-6 md:p-8">
+                    <h2 class="text-xl font-black text-[#00205B]">Give it a try</h2>
+                    <p class="mt-2">Ask it a real question. Try to stump it. Browse around. Find something useful. Find something broken.</p>
+                    <p class="mt-3 text-xs text-slate-500">This has been a long-running personal project, and it is still a work in progress. Version 1.0 is simply the first version I am comfortable letting everyone else mess with.</p>
+                    <button onclick="window.navigateToHome()" class="mt-5 bg-[#00205B] hover:bg-orange-600 text-white px-5 py-3 rounded-xl text-sm font-black transition-colors cursor-pointer">Go ask AtriGuide something</button>
+                </section>
+            </div>
+        </article>`;
+    document.getElementById("breadcrumbMain").innerText = "AtriGuide 1.0";
+    document.getElementById("breadcrumbSub").innerText = "Beginner's Guide";
     lucide.createIcons();
 };
 

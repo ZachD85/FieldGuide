@@ -22,3 +22,46 @@
     max-width: 100%;
     height: auto;
 }
+.guide-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.625rem;
+    padding: 0.65rem 0.75rem;
+    background: rgb(248 250 252);
+    font-size: 0.75rem;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+.guide-check::before {
+    content: "✓";
+    color: #FF6B00;
+    font-weight: 900;
+    flex: none;
+}
+
+.guide-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    background: rgb(248 250 252);
+    font-size: 0.75rem;
+}
+
+.guide-step > span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    background: #00205B;
+    color: white;
+    font-weight: 900;
+    flex: none;
+}
