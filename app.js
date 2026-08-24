@@ -459,41 +459,6 @@ window.renderStructuredSSS = function(result) {
     synthesis.className = "text-sm md:text-base font-semibold leading-relaxed text-slate-800";
     synthesis.textContent = result.synthesis || "No directly supported answer is available.";
     root.appendChild(synthesis);
-    const validSources = (result.sources || []).filter((source, index, rows) =>
-        rows.findIndex(row => row.id === source.id) === index
-    ).map(source => ({
-        ...source,
-        card: window.clinicalDatabase.find(item => item.id === source.id)
-    })).filter(source => source.card);
-    if (validSources.length) {
-        const sourceBox = document.createElement("div");
-        sourceBox.className = "mt-3 pt-3 border-t border-orange-100 space-y-2";
-        const label = document.createElement("div");
-        label.className = "text-[10px] font-extrabold uppercase tracking-wider text-slate-500";
-        label.textContent = "Evidence used";
-        sourceBox.appendChild(label);
-        validSources.slice(0, 4).forEach(source => {
-            const row = document.createElement(source.card.url ? "a" : "div");
-            row.className = "block text-xs bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700";
-            if (source.card.url) {
-                row.href = source.card.url;
-                row.target = "_blank";
-                row.rel = "noopener noreferrer";
-            }
-            const sourceTitle = document.createElement("strong");
-            sourceTitle.className = "block text-[#00205B]";
-            sourceTitle.textContent = source.card.title;
-            row.appendChild(sourceTitle);
-            if (source.page || source.locator) {
-                const locator = document.createElement("span");
-                locator.className = "inline-flex mt-1 mb-1 mr-2 text-[10px] font-extrabold uppercase tracking-wider text-orange-800 bg-orange-100 rounded-full px-2 py-0.5";
-                locator.textContent = source.page ? `Page ${source.page}` : source.locator;
-                row.appendChild(locator);
-            }
-            sourceBox.appendChild(row);
-        });
-        root.appendChild(sourceBox);
-    }
 };
 
 window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
