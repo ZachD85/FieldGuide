@@ -63,6 +63,17 @@ def has_page_citations(record: dict[str, Any]) -> bool:
     evidence = normalize_evidence(record.get("evidence"))
     return bool(evidence) and all(item.get("page") for item in evidence)
 
+def has_trustworthy_page_citations(record: dict[str, Any]) -> bool:
+    """Treat legacy all-page-one evidence as suspicious until it is reverified."""
+    evidence = normalize_evidence(record.get("evidence"))
+    if not evidence or not all(item.get("page") for item in evidence):
+        return False
+    pages = {item["page"] for item in evidence}
+    ingestion = record.get("ingestion") or {}
+    if len(evidence) > 1 and pages == {1} and not ingestion.get("citationBackfilledAt"):
+        return False
+    return True
+
 def drive_file_id_from_record(record: dict[str, Any]) -> str:
     """Read v3 source identity or recover it from a legacy Google Drive URL."""
     source = record.get("source") or {}
@@ -757,7 +768,7 @@ def backfill_citations(args: argparse.Namespace) -> int:
     for record_id, existing in records:
         enrichment = None
         try:
-            if has_page_citations(existing):
+            if has_trustworthy_page_citations(existing):
                 continue
             source = existing.get("source") or {}
             file_id = drive_file_id_from_record(existing)
