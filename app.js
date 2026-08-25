@@ -1276,7 +1276,7 @@ window.renderIngestionReviewQueue = function() {
         const evidenceCount = Array.isArray(candidate.evidence) ? candidate.evidence.length : 0;
         const sourceUrl = candidate.source?.driveUrl || (item.fileId ? `https://drive.google.com/file/d/${item.fileId}/view` : "");
         const possibleDuplicate = item.queueStatus === "possible_duplicate" || item.decision === "reprocess_as_new" || item.decision === "duplicate_confirmed";
-        const actionable = !["published_and_archived", "duplicate_archived", "duplicate_trashed", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply"].includes(item.queueStatus);
+        const actionable = !["published_and_archived", "duplicate_archived", "duplicate_trashed", "rejected_trashed", "approved_waiting_apply", "duplicate_waiting_apply", "reprocess_waiting_apply"].includes(item.queueStatus);
         return `<article class="border border-slate-200 rounded-xl p-4 text-left" data-review-id="${window.escapeHtml(item.id)}">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0 flex-1"><h4 class="font-bold text-sm text-slate-800">${window.escapeHtml(title)}</h4>
@@ -1299,6 +1299,7 @@ window.renderIngestionReviewQueue = function() {
                 ${candidate.title && !possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Approve</button>` : ''}
                 ${possibleDuplicate ? `<button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','reprocess_as_new')" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-2 rounded-lg">Treat as New</button><button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','duplicate_confirmed')" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-lg">Confirm Duplicate</button>` : ''}
                 <button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','held')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg">Hold</button>
+                <button onclick="decideIngestionReview('${window.escapeHtml(item.id)}','rejected')" class="bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-xs font-bold px-3 py-2 rounded-lg">Reject / Remove Test File</button>
             </div>` : ''}
         </article>`;
     }).join('');
@@ -1308,6 +1309,7 @@ window.renderIngestionReviewQueue = function() {
 window.decideIngestionReview = async function(id, decision) {
     const item = (window.ingestionReviewQueue || []).find(row => row.id === id);
     if (!item || !window.db) return;
+    if (decision === "rejected" && !window.confirm("Remove this PDF from Pending without publishing it? This will not blacklist the study if it is uploaded again later.")) return;
     const update = {decision, updatedAt: Date.now()};
     if (decision === "approved") update.queueStatus = "approved_waiting_apply";
     else if (decision === "duplicate_confirmed") update.queueStatus = "duplicate_waiting_apply";
@@ -1329,11 +1331,13 @@ window.decideIngestionReview = async function(id, decision) {
             website: {...(item.candidate.website || {}), mainCategory, subCategory, manualOverride: true}};
     }
     try {
-        if (["approved", "duplicate_confirmed"].includes(decision)) {
-            window.showToast(decision === "approved" ? "Publishing and archiving…" : "Removing duplicate…", "info");
+        if (["approved", "duplicate_confirmed", "rejected"].includes(decision)) {
+            const workingMessage = decision === "approved" ? "Publishing and archiving…" : decision === "duplicate_confirmed" ? "Removing duplicate…" : "Removing test file…";
+            window.showToast(workingMessage, "info");
             const applyReview = httpsCallable(window.secureFunctions, "applyIngestionReview");
             await applyReview({queueId: id, decision, candidate: update.candidate || item.candidate || null});
-            window.showToast(decision === "approved" ? "Published and archived." : "Duplicate removed.", "success");
+            const successMessage = decision === "approved" ? "Published and archived." : decision === "duplicate_confirmed" ? "Duplicate removed." : "Test file removed. It was not added to the library or blacklist.";
+            window.showToast(successMessage, "success");
             return;
         }
         await updateDoc(doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'ingestionReviewQueue', id), update);

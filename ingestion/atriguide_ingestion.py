@@ -644,11 +644,19 @@ def scan_drive(args: argparse.Namespace) -> int:
     # content hashes/DOIs, without repeating the read for every PDF.
     existing_records = load_existing_records(collection)
     files = list_pdfs(drive, args.pending_folder)
+    held_file_ids = set()
+    if not args.shadow:
+        for held_snapshot in review_queue_path(db, args.app_id).where("queueStatus", "==", "held").stream():
+            held_file_id = str((held_snapshot.to_dict() or {}).get("fileId") or "").strip()
+            if held_file_id:
+                held_file_ids.add(held_file_id)
+    held_count = sum(1 for item in files if item["id"] in held_file_ids)
+    files = [item for item in files if item["id"] not in held_file_ids]
     if args.file_ids_file:
         requested_ids = set(json.loads(Path(args.file_ids_file).read_text(encoding="utf-8")))
         files = [item for item in files if item["id"] in requested_ids]
     selected_files = files[:args.limit] if args.limit else files
-    print(f"Found {len(files)} PDF(s) in Pending; processing {len(selected_files)}.", flush=True)
+    print(f"Found {len(files) + held_count} PDF(s) in Pending; skipped {held_count} held; processing {len(selected_files)}.", flush=True)
     if not selected_files:
         print("Pending is empty. Nothing to preview or publish.", flush=True)
     previews, seen_hashes = [], {}

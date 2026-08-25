@@ -292,7 +292,7 @@ exports.applyIngestionReview = onCall({
   requireAdmin(request);
   const queueId = String(request.data?.queueId || "").trim();
   const decision = String(request.data?.decision || "");
-  if (!queueId || !["approved", "duplicate_confirmed"].includes(decision)) {
+  if (!queueId || !["approved", "duplicate_confirmed", "rejected"].includes(decision)) {
     throw new HttpsError("invalid-argument", "A valid review decision is required.");
   }
   const queueRef = db.doc(`artifacts/atricure-clinical-hub/public/data/ingestionReviewQueue/${queueId}`);
@@ -318,7 +318,7 @@ exports.applyIngestionReview = onCall({
 
   try {
     const file = await driveRequest(fileId, "GET", {fields: "id,name,parents,trashed", supportsAllDrives: true});
-    if (decision === "duplicate_confirmed") {
+    if (["duplicate_confirmed", "rejected"].includes(decision)) {
       if (!file.trashed) await driveRequest(fileId, "PATCH", {fields: "id,trashed", supportsAllDrives: true}, {trashed: true});
     } else {
       const parents = file.parents || [];
@@ -331,11 +331,17 @@ exports.applyIngestionReview = onCall({
     }
   } catch (error) {
     console.error("Drive finalization failed", {queueId, decision, message: error?.message});
-    await queueRef.set({queueStatus: "apply_failed", applyError: "The database was updated, but the PDF could not be moved.", updatedAt: Date.now()}, {merge: true});
-    throw new HttpsError("internal", "The card was saved, but the PDF could not be moved. It is safe to retry.");
+    const applyError = decision === "approved" ?
+      "The database was updated, but the PDF could not be moved." :
+      "The PDF could not be removed from Pending.";
+    await queueRef.set({queueStatus: "apply_failed", applyError, updatedAt: Date.now()}, {merge: true});
+    throw new HttpsError("internal", decision === "approved" ?
+      "The card was saved, but the PDF could not be moved. It is safe to retry." :
+      "The PDF could not be removed. It is safe to retry.");
   }
 
-  const finalStatus = decision === "approved" ? "published_and_archived" : "duplicate_trashed";
+  const finalStatus = decision === "approved" ? "published_and_archived" :
+    decision === "duplicate_confirmed" ? "duplicate_trashed" : "rejected_trashed";
   await queueRef.set({
     candidate: candidate || item.candidate || null,
     decision,
