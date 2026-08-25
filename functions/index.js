@@ -284,6 +284,10 @@ exports.applyIngestionReview = onCall({
   timeoutSeconds: 60,
   memory: "256MiB",
   maxInstances: 2,
+  // This is the Drive-enabled service account used by the desktop importer.
+  // The default Cloud Functions runtime account can read shared PDFs but
+  // cannot move them between the Pending and Archive folders.
+  serviceAccount: "firebase-adminsdk-fbsvc@atricure-app.iam.gserviceaccount.com",
 }, async (request) => {
   requireAdmin(request);
   const queueId = String(request.data?.queueId || "").trim();
