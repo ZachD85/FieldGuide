@@ -59,10 +59,10 @@ function validateReviewCandidate(value) {
   return candidate;
 }
 
-async function driveRequest(fileId, method = "GET", query = {}, body = null) {
+async function driveApiRequest(path, method = "GET", query = {}, body = null) {
   const auth = new GoogleAuth({scopes: ["https://www.googleapis.com/auth/drive"]});
   const client = await auth.getClient();
-  const url = new URL(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}`);
+  const url = new URL(`https://www.googleapis.com/drive/v3/${path}`);
   Object.entries(query).forEach(([key, value]) => {
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   });
@@ -71,6 +71,51 @@ async function driveRequest(fileId, method = "GET", query = {}, body = null) {
   const response = await fetch(url, {method, headers, body: body ? JSON.stringify(body) : undefined});
   if (!response.ok) throw new Error(`Drive API ${response.status}: ${(await response.text()).slice(0, 300)}`);
   return response.json();
+}
+
+async function driveRequest(fileId, method = "GET", query = {}, body = null) {
+  return driveApiRequest(`files/${encodeURIComponent(fileId)}`, method, query, body);
+}
+
+const archiveFolderId = "1wl-qyPmjlr9eBBUFhhvD8diVk9mJp8ZH";
+
+async function getRejectedFolderId() {
+  const escapedName = "AtriGuide Rejected (Not Published)";
+  const query = `'${archiveFolderId}' in parents and name = '${escapedName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+  const found = await driveApiRequest("files", "GET", {
+    q: query,
+    fields: "files(id,name)",
+    pageSize: 1,
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+  });
+  if (found.files?.[0]?.id) return found.files[0].id;
+  const created = await driveApiRequest("files", "POST", {fields: "id", supportsAllDrives: true}, {
+    name: escapedName,
+    mimeType: "application/vnd.google-apps.folder",
+    parents: [archiveFolderId],
+  });
+  return created.id;
+}
+
+async function removeRejectedFile(fileId, file) {
+  if (file.trashed) return "trashed";
+  try {
+    await driveRequest(fileId, "PATCH", {fields: "id,trashed", supportsAllDrives: true}, {trashed: true});
+    return "trashed";
+  } catch (trashError) {
+    // Drive may allow a shared file to be moved but reserve trashing for its owner.
+    // Quarantine it outside Pending so it cannot be imported or published again.
+    const rejectedFolderId = await getRejectedFolderId();
+    await driveRequest(fileId, "PATCH", {
+      addParents: rejectedFolderId,
+      removeParents: (file.parents || []).join(","),
+      fields: "id,parents",
+      supportsAllDrives: true,
+    }, {});
+    console.warn("Drive trash refused; file quarantined", {fileId, message: trashError?.message});
+    return "quarantined";
+  }
 }
 
 async function enforceRateLimit(uid) {
@@ -316,14 +361,15 @@ exports.applyIngestionReview = onCall({
     await db.doc(`artifacts/atricure-clinical-hub/public/data/clinicalResources/${candidate.id}`).set(clean, {merge: true});
   }
 
+  let removalResult = null;
   try {
     const file = await driveRequest(fileId, "GET", {fields: "id,name,parents,trashed", supportsAllDrives: true});
     if (["duplicate_confirmed", "rejected"].includes(decision)) {
-      if (!file.trashed) await driveRequest(fileId, "PATCH", {fields: "id,trashed", supportsAllDrives: true}, {trashed: true});
+      removalResult = await removeRejectedFile(fileId, file);
     } else {
       const parents = file.parents || [];
       await driveRequest(fileId, "PATCH", {
-        addParents: "1wl-qyPmjlr9eBBUFhhvD8diVk9mJp8ZH",
+        addParents: archiveFolderId,
         removeParents: parents.join(","),
         fields: "id,parents",
         supportsAllDrives: true,
@@ -341,7 +387,7 @@ exports.applyIngestionReview = onCall({
   }
 
   const finalStatus = decision === "approved" ? "published_and_archived" :
-    decision === "duplicate_confirmed" ? "duplicate_trashed" : "rejected_trashed";
+    decision === "duplicate_confirmed" ? `duplicate_${removalResult}` : `rejected_${removalResult}`;
   await queueRef.set({
     candidate: candidate || item.candidate || null,
     decision,
