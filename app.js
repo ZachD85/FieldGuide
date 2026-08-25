@@ -1341,7 +1341,9 @@ window.decideIngestionReview = async function(id, decision) {
             return;
         }
         await updateDoc(doc(window.db, 'artifacts', 'atricure-clinical-hub', 'public', 'data', 'ingestionReviewQueue', id), update);
-        window.showToast("Saved. Run option 3 in the importer to process it as a new document.", "success");
+        window.showToast(decision === "held" ?
+            "Held. Future importer runs will skip this PDF until you make another decision." :
+            "Saved. Run option 3 in the importer to process it as a new document.", "success");
     } catch (error) {
         console.error("Review decision failed:", error);
         window.showToast("The review decision could not be saved.", "warning");
