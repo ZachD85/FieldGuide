@@ -222,7 +222,8 @@ exports.askAtriGuide = onCall({
     `For every central point, include a source mapping using only a supplied card ID and the zero-based ` +
     `evidenceIndex of the supplied evidence claim that supports it. Never invent a page or locator. If a card ` +
     `has no suitable evidence claim, omit that source mapping. Use each card ID at most once; select its strongest ` +
-    `supporting evidence claim rather than repeating the same paper. Return exactly two short follow-up questions ` +
+    `supporting evidence claim rather than repeating the same paper. Use no more than 6 source mappings, and keep each ` +
+    `supports description under 12 words. Return exactly two short follow-up questions ` +
     `that can be answered from the cards.\n` +
     `Conversation history: ${JSON.stringify(history)}\nCurrent question: ${query}\nEvidence cards: ${catalog}`;
   const result = await ai.models.generateContent({
@@ -230,7 +231,7 @@ exports.askAtriGuide = onCall({
     contents: prompt,
     config: {
       temperature: 0.1,
-      maxOutputTokens: 900,
+      maxOutputTokens: 1600,
       responseMimeType: "application/json",
       thinkingConfig: {thinkingBudget: 0},
       responseJsonSchema: {

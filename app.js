@@ -360,7 +360,7 @@ window.callGeminiAPI = async function(query, candidates, history = []) {
         const result = await askSecurely({query, candidates, history});
         return JSON.stringify(result.data);
     } catch (error) {
-        const retryable = new Set(["functions/internal", "functions/unavailable", "functions/deadline-exceeded"]);
+        const retryable = new Set(["functions/unavailable", "functions/deadline-exceeded"]);
         if (!retryable.has(String(error?.code || ""))) throw error;
         await new Promise(resolve => setTimeout(resolve, 350));
         const retry = await askSecurely({query, candidates, history});
