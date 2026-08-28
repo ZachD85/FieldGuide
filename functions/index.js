@@ -194,6 +194,8 @@ exports.askAtriGuide = onCall({
     location: "us-central1",
   });
   const prompt = `You are AtriGuide, an evidence-grounded clinical evidence assistant. ` +
+    `In this curated library, treat EnCompass, NASA (non-atriotomy surgical ablation), non-atriotomy/without-atriotomy ` +
+    `ablation, and the EnCompass box-lesion approach as linked search concepts while preserving each study's exact terminology. ` +
     `Use only the supplied public evidence cards for factual claims. Conversation history provides intent only; ` +
     `it is not evidence. If the cards do not support an answer, say so clearly. Do not invent claims or IDs. ` +
     `Recognize practical clinical scenarios, time pressure, objections, and the answer format the user needs. ` +

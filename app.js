@@ -134,12 +134,14 @@ window.normalizeDocument = function(doc) {
     let sCatLower = sCat.toLowerCase();
     const encompassText = `${doc.title || ""} ${doc.summary || ""}`.toLowerCase();
     const encompassMentions = (encompassText.match(/\bencompass(?:ed)?\b/g) || []).length;
-    const isEncompassFocused = String(doc.title || "").toLowerCase().includes("encompass") ||
+    const titleLower = String(doc.title || "").toLowerCase();
+    const hasEncompassApproachTitle = /\bencompass\b|\bnasa\b|non[- ]atriotomy|without atriotomy|box lesion/.test(titleLower);
+    const isEncompassFocused = hasEncompassApproachTitle ||
         (encompassMentions >= 2 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
     const documentType = String(doc.documentType || "").toLowerCase();
     const protectedDeviceMaterial = documentType.includes("ifu") || documentType.includes("brochure") ||
         ["ifus", "product brochures"].includes(sCatLower) ||
-        /instructions for use|product brochure/.test(String(doc.title || "").toLowerCase());
+        /instructions for use|product brochure/.test(titleLower);
     if (isEncompassFocused && !protectedDeviceMaterial) normalizedMain = "MAZE";
 
     if (normalizedMain === "MAZE") {
@@ -368,7 +370,8 @@ window.callGeminiAPI = async function(query, candidates, history = []) {
 
 window.getAICandidates = function(query, pinnedIds = []) {
     const normalizedQuery = String(query || '').toLowerCase();
-    const targetsEncompass = /\bencompass\b/.test(normalizedQuery);
+    const targetsEncompass = /\bencompass\b|\bnasa\b|non[- ]atriotomy|without atriotomy|box lesion|posterior wall isolation/.test(normalizedQuery);
+    const encompassAliases = ["encompass", "nasa", "non-atriotomy", "non atriotomy", "without atriotomy", "box lesion", "posterior wall isolation"];
     const wantsDeviceInstructions = /\b(ifu|instructions? for use|operator'?s? manual|user manual|troubleshoot(?:ing)?|error code|fault code|how (?:do i|to)|change (?:the )?(?:default|setting)|setup|set up|operate|operation|program(?:ming)?|warning|precaution|contraindication|acm|asu|asb)\b/.test(normalizedQuery);
     const isClinicalEvidenceCard = item => {
         const documentType = String(item.documentType || '').toLowerCase();
@@ -397,7 +400,14 @@ window.getAICandidates = function(query, pinnedIds = []) {
             if (summary.includes(word)) score += 6;
             if (category.includes(word)) score += 3;
         });
-        if (targetsEncompass && category.includes("encompass data")) score += 25;
+        if (targetsEncompass) {
+            if (category.includes("encompass data")) score += 25;
+            encompassAliases.forEach(alias => {
+                if (title.includes(alias)) score += 30;
+                if (summary.includes(alias)) score += 12;
+                if (profile.includes(alias)) score += 6;
+            });
+        }
         return {item, score};
     }).filter(entry => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
     const pinned = pinnedIds.map(id => window.clinicalDatabase.find(item => item.id === id))

@@ -186,8 +186,9 @@ def classify(name: str, text: str, doc_type: str, folder_hint: str = "") -> Plac
     # incidental LAA/stroke mentions in an ablation article's body or references.
     primary = f"{normalized_name} {normalized_folder}"
     encompass_mentions = len(re.findall(r"\bencompass(?:ed)?\b", s))
-    if "encompass" in primary or (encompass_mentions >= 4 and any(x in s for x in ("bipolar", "clamp", "posterior wall", "box lesion"))):
-        return Placement("MAZE", "EnCompass Data", .96, "EnCompass is the primary device/data topic")
+    encompass_primary_terms = ("encompass", " nasa ", "non atriotomy", "without atriotomy", "box lesion")
+    if any(term in f" {primary} " for term in encompass_primary_terms) or (encompass_mentions >= 4 and any(x in s for x in ("bipolar", "clamp", "posterior wall", "box lesion"))):
+        return Placement("MAZE", "EnCompass Data", .96, "EnCompass/NASA non-atriotomy approach is the primary topic")
     if any(x in primary for x in ("surgical ablation", "ablation pattern", "cox maze", "maze procedure")):
         if any(x in primary for x in ("survival", "mortality", "death")) or (doc_type == "research_paper" and any(x in s for x in ("survival", "mortality", "death"))):
             return Placement("MAZE", "Survival Benefits", .93, "primary surgical-ablation topic plus survival outcome")

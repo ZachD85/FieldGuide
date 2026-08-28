@@ -33,15 +33,21 @@ class PipelineTests(unittest.TestCase):
         r = build_skeleton("2a", "Concomitant_Surgical_Ablation_article_summary.pdf", "u", "stroke mentioned in body")
         self.assertEqual(r["documentType"], "article_summary")
         self.assertEqual(r["website"]["mainCategory"], "MAZE")
-    def test_ablation_title_beats_incidental_laa(self):
+    def test_non_atriotomy_title_beats_incidental_laa(self):
         r = build_skeleton("2b", "Performing the left atrial ablation pattern without atriotomy.pdf", "u", "appendage stroke")
-        self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "Rhythm Outcomes"))
+        self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "EnCompass Data"))
     def test_encompass_primary_topic_gets_dedicated_category(self):
         r = build_skeleton("2c", "EnCompass posterior wall study.pdf", "u", "A bipolar clamp created a box lesion")
         self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "EnCompass Data"))
     def test_incidental_encompass_mention_does_not_override_outcome_category(self):
         r = build_skeleton("2d", "Five-year survival after surgical ablation.pdf", "u", "EnCompass was listed among available devices. Mortality and survival were the outcomes.")
         self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "Survival Benefits"))
+    def test_nasa_non_atriotomy_routes_to_encompass(self):
+        r = build_skeleton("2e", "Non-Atriotomy Surgical Ablation NASA outcomes.pdf", "u", "Posterior wall isolation with a box lesion")
+        self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "EnCompass Data"))
+    def test_without_atriotomy_routes_to_encompass(self):
+        r = build_skeleton("2f", "Performing the left atrial ablation pattern without atriotomy.pdf", "u", "Box lesion technique")
+        self.assertEqual((r["website"]["mainCategory"], r["website"]["subCategory"]), ("MAZE", "EnCompass Data"))
     def test_override_survives(self):
         new = build_skeleton("3", "x.pdf", "u", "research")
         old = {"website":{"mainCategory":"LAA","subCategory":"Outcomes and Safety","manualOverride":True}}
