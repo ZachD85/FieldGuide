@@ -526,7 +526,14 @@ window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
     
     cardsContainer.innerHTML = `<div class="flex items-center space-x-2 text-slate-400 text-xs font-semibold py-8 justify-center"><span class="w-2 h-2 bg-orange-500 rounded-full animate-ping"></span><span>Locating target trial logs...</span></div>`;
 
-    const aiCandidates = window.getAICandidates(query, window.aiConversationEvidenceIds);
+    const allAiCandidates = window.getAICandidates(query, window.aiConversationEvidenceIds);
+    const isEncompassConcept = /\bencompass\b|\bnasa\b|non[- ]atriotomy|without atriotomy|box lesion|posterior wall isolation/i.test(query);
+    // Broad EnCompass questions can match many overlapping cards. Give Gemini
+    // the four strongest studies so its structured JSON finishes within the
+    // active function's response ceiling, while retaining every match for display.
+    const aiCandidates = isEncompassConcept
+        ? allAiCandidates.slice(0, 4).map(candidate => ({...candidate, evidence: candidate.evidence.slice(0, 3)}))
+        : allAiCandidates;
 
     try {
         const apiRawResult = await window.callGeminiAPI(query, aiCandidates, window.aiConversationTurns);
@@ -547,7 +554,10 @@ window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
         window.renderSuggestedFollowUps(parsedResult.suggestedFollowUps || []);
         document.getElementById("aiFollowUpInput").value = "";
 
-        const matches = clinicalDatabase.filter(d => (parsedResult.matchedIds || []).includes(d.id));
+        const resultIds = isEncompassConcept
+            ? [...new Set([...(parsedResult.matchedIds || []), ...allAiCandidates.map(candidate => candidate.id)])]
+            : (parsedResult.matchedIds || []);
+        const matches = resultIds.map(id => clinicalDatabase.find(d => d.id === id)).filter(Boolean);
         
         if (matches.length > 0) {
             cardsContainer.innerHTML = matches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
@@ -561,7 +571,7 @@ window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
         
         document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>The AI summary is temporarily unavailable.</strong><br>Showing the best matching evidence cards while the summary service reconnects.`;
 
-        const finalLocalMatches = aiCandidates.map(candidate =>
+        const finalLocalMatches = allAiCandidates.map(candidate =>
             clinicalDatabase.find(doc => doc.id === candidate.id)
         ).filter(Boolean).slice(0, 8);
 
