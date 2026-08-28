@@ -135,9 +135,10 @@ window.normalizeDocument = function(doc) {
     const encompassText = `${doc.title || ""} ${doc.summary || ""}`.toLowerCase();
     const encompassMentions = (encompassText.match(/\bencompass(?:ed)?\b/g) || []).length;
     const isEncompassFocused = String(doc.title || "").toLowerCase().includes("encompass") ||
-        (encompassMentions >= 4 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
+        (encompassMentions >= 2 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
     const documentType = String(doc.documentType || "").toLowerCase();
     const protectedDeviceMaterial = documentType.includes("ifu") || documentType.includes("brochure") ||
+        ["ifus", "product brochures"].includes(sCatLower) ||
         /instructions for use|product brochure/.test(String(doc.title || "").toLowerCase());
     if (isEncompassFocused && !protectedDeviceMaterial) normalizedMain = "MAZE";
 
