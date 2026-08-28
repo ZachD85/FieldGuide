@@ -132,10 +132,14 @@ window.normalizeDocument = function(doc) {
 
     let normalizedSub = "General"; 
     let sCatLower = sCat.toLowerCase();
-    const encompassText = `${doc.title || ""} ${doc.summary || ""} ${doc.searchProfile || ""}`.toLowerCase();
+    const encompassText = `${doc.title || ""} ${doc.summary || ""}`.toLowerCase();
     const encompassMentions = (encompassText.match(/\bencompass(?:ed)?\b/g) || []).length;
     const isEncompassFocused = String(doc.title || "").toLowerCase().includes("encompass") ||
-        (encompassMentions >= 2 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
+        (encompassMentions >= 4 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
+    const documentType = String(doc.documentType || "").toLowerCase();
+    const protectedDeviceMaterial = documentType.includes("ifu") || documentType.includes("brochure") ||
+        /instructions for use|product brochure/.test(String(doc.title || "").toLowerCase());
+    if (isEncompassFocused && !protectedDeviceMaterial) normalizedMain = "MAZE";
 
     if (normalizedMain === "MAZE") {
         if (sCatLower.includes("encompass") || isEncompassFocused) {
