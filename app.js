@@ -354,12 +354,21 @@ window.cleanAndParseJSON = function(rawStr) {
 window.callGeminiAPI = async function(query, candidates, history = []) {
     if (!window.secureFunctions || !window.activeUser) throw new Error("Secure AI service is not connected.");
     const askSecurely = httpsCallable(window.secureFunctions, "askAtriGuide");
-    const result = await askSecurely({query, candidates, history});
-    return JSON.stringify(result.data);
+    try {
+        const result = await askSecurely({query, candidates, history});
+        return JSON.stringify(result.data);
+    } catch (error) {
+        const retryable = new Set(["functions/internal", "functions/unavailable", "functions/deadline-exceeded"]);
+        if (!retryable.has(String(error?.code || ""))) throw error;
+        await new Promise(resolve => setTimeout(resolve, 350));
+        const retry = await askSecurely({query, candidates, history});
+        return JSON.stringify(retry.data);
+    }
 };
 
 window.getAICandidates = function(query, pinnedIds = []) {
     const normalizedQuery = String(query || '').toLowerCase();
+    const targetsEncompass = /\bencompass\b/.test(normalizedQuery);
     const wantsDeviceInstructions = /\b(ifu|instructions? for use|operator'?s? manual|user manual|troubleshoot(?:ing)?|error code|fault code|how (?:do i|to)|change (?:the )?(?:default|setting)|setup|set up|operate|operation|program(?:ming)?|warning|precaution|contraindication|acm|asu|asb)\b/.test(normalizedQuery);
     const isClinicalEvidenceCard = item => {
         const documentType = String(item.documentType || '').toLowerCase();
@@ -388,12 +397,17 @@ window.getAICandidates = function(query, pinnedIds = []) {
             if (summary.includes(word)) score += 6;
             if (category.includes(word)) score += 3;
         });
+        if (targetsEncompass && category.includes("encompass data")) score += 25;
         return {item, score};
     }).filter(entry => entry.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
     const pinned = pinnedIds.map(id => window.clinicalDatabase.find(item => item.id === id))
         .filter(item => item && isClinicalEvidenceCard(item));
+    const studyKey = item => String(item.title || "").toLowerCase()
+        .replace(/\b(?:pdf|full text|abstract|article summary|printed article|publication)\b/g, " ")
+        .replace(/[^a-z0-9]+/g, " ").trim();
     const combined = [...pinned, ...scored.map(({item}) => item)]
         .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
+        .filter((item, index, all) => all.findIndex(other => studyKey(other) === studyKey(item)) === index)
         .slice(0, 12);
     return combined.map((item) => ({
         id: item.id,
@@ -535,49 +549,19 @@ window.askAtriGuide = async function(queryOverride = "", isFollowUp = false) {
         console.error("AI routing matrix connection anomaly, using local multi-word keyword fallback loop:", err);
         document.getElementById("aiFollowUpArea").classList.add("hidden");
         
-        document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>Offline / Standalone Search Active</strong><br>Displaying the best matched clinical papers from the local database index based on keyword matching relevance.`;
+        document.getElementById("aiSynthesisText").innerHTML = `⚠️ <strong>The AI summary is temporarily unavailable.</strong><br>Showing the best matching evidence cards while the summary service reconnects.`;
 
-        const stopWords = ['what', 'show', 'me', 'is', 'are', 'the', 'a', 'an', 'and', 'or', 'for', 'with', 'to', 'in', 'on', 'at', 'of', 'by', 'this', 'that', 'about', 'results', 'studies', 'study', 'papers', 'paper', 'data', 'evidence', 'find', 'search', 'how', 'we', 'have'];
-        const searchWords = query.toLowerCase()
-            .replace(/[^\w\s]/g, ' ')
-            .split(/\s+/)
-            .filter(word => word.length > 1 && !stopWords.includes(word));
-
-        let scoredMatches = [];
-        if (searchWords.length > 0 && clinicalDatabase.length > 0) {
-            clinicalDatabase.forEach(doc => {
-                let score = 0;
-                const titleLower = String(doc.title || "").toLowerCase();
-                const authorLower = String(doc.author || "").toLowerCase();
-                const summaryLower = String(doc.summary || "").toLowerCase();
-                const mCatLower = String(doc.mainCategory || "").toLowerCase();
-                const sCatLower = String(doc.subCategory || "").toLowerCase();
-                const profileLower = String(doc.searchProfile || "").toLowerCase();
-
-                searchWords.forEach(word => {
-                    if (titleLower.includes(word)) score += 15;
-                    if (authorLower.includes(word)) score += 15; 
-                    if (profileLower.includes(word)) score += 10; 
-                    if (summaryLower.includes(word)) score += 6;
-                    if (mCatLower.includes(word) || sCatLower.includes(word)) score += 3;
-                });
-
-                if (score > 0) {
-                    scoredMatches.push({ doc, score });
-                }
-            });
-            scoredMatches.sort((a, b) => b.score - a.score);
-        }
-
-        const finalLocalMatches = scoredMatches.map(sm => sm.doc);
+        const finalLocalMatches = aiCandidates.map(candidate =>
+            clinicalDatabase.find(doc => doc.id === candidate.id)
+        ).filter(Boolean).slice(0, 8);
 
         if (finalLocalMatches.length > 0) {
             cardsContainer.innerHTML = finalLocalMatches.map((c, idx) => window.renderAtriGuideCard(c, idx + 1)).join('');
-            window.showToast("Local engine retrieved " + finalLocalMatches.length + " matching papers.", "success");
+            window.showToast("Showing " + finalLocalMatches.length + " matching evidence cards.", "success");
         } else {
             cardsContainer.innerHTML = `
                 <div class="text-slate-400 font-semibold p-8 text-center text-xs">
-                    No matching items found for "${window.escapeHtml(query)}" offline.<br>
+                    No matching evidence cards were found for "${window.escapeHtml(query)}".<br>
                     <span class="text-slate-350 block mt-1 font-normal">Try searching with simplified terms like "Whitlock", "Damiano", "EnCompass", or "LAAOS".</span>
                 </div>`;
         }
