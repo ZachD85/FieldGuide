@@ -34,7 +34,7 @@ function validateReviewCandidate(value) {
   if (!value || typeof value !== "object") throw new HttpsError("invalid-argument", "The review card is missing.");
   const candidate = JSON.parse(JSON.stringify(value));
   const allowedCategories = {
-    MAZE: ["Rhythm Outcomes", "Survival Benefits", "Other"],
+    MAZE: ["Rhythm Outcomes", "Survival Benefits", "EnCompass Data", "Other"],
     LAA: ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"],
     "Device Resources": ["IFUs", "Product Brochures", "Other Media"],
     MISC: ["Other Research", "Helpful Documents"],

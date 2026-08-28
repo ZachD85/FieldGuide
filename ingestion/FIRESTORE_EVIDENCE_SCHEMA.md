@@ -40,7 +40,7 @@ One Firestore document per source PDF, keyed by a stable hash of the Drive file 
 
 Allowed website placements are fixed:
 
-- MAZE: Rhythm Outcomes, Survival Benefits, Other
+- MAZE: Rhythm Outcomes, Survival Benefits, EnCompass Data, Other
 - LAA: Outcomes and Safety, Stroke Reduction, Prophylactic Data
 - Device Resources: IFUs, Product Brochures, Other Media
 - MISC: Other Research, Helpful Documents

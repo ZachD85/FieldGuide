@@ -75,6 +75,13 @@
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-survival">0</span>
                             </button>
+                            <button onclick="selectSubCategory('MAZE', 'EnCompass Data')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-EnCompass Data">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="scan-line" class="w-4 h-4 text-slate-500"></i>
+                                    <span>EnCompass Data</span>
+                                </span>
+                                <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-maze-encompass">0</span>
+                            </button>
                             <button onclick="selectSubCategory('MAZE', 'Other')" class="w-full text-left px-3 py-2 text-sm rounded font-medium text-slate-600 hover:bg-slate-50 hover:text-[#00205B] flex items-center justify-between subcat-btn" data-subcat="MAZE-Other">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="help-circle" class="w-4 h-4 text-slate-500"></i>
@@ -115,6 +122,24 @@
                                 </span>
                                 <span class="bg-slate-100 text-slate-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="count-laa-prophylactic">0</span>
                             </button>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-100 rounded-lg overflow-hidden bg-slate-50/50">
+                        <button class="w-full flex items-center justify-between p-3 font-semibold text-slate-700 hover:bg-slate-100 hover:text-[#00205B] transition-colors group cursor-pointer" onclick="toggleCategory('cnbMenu')">
+                            <div class="flex items-center space-x-2.5">
+                                <i data-lucide="snowflake" class="w-4 h-4 text-[#FF6B00]"></i>
+                                <span>CNB Topics</span>
+                            </div>
+                            <i data-lucide="chevron-down" id="cnbMenuArrow" class="w-4 h-4 text-slate-400 transition-transform duration-200 transform"></i>
+                        </button>
+                        <div id="cnbMenu" class="hidden bg-white border-t border-slate-100/80 px-2 py-1.5">
+                            <div class="w-full px-3 py-2 text-sm rounded font-medium text-slate-400 bg-slate-50 flex items-center justify-between cursor-not-allowed" aria-disabled="true">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="clock-3" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Coming Soon</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -481,6 +506,7 @@
                                     <select id="bulkCategoryMoveSelect" class="text-xs border border-slate-200 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-orange-500 font-semibold text-slate-700">
                                         <option value="MAZE:Rhythm Outcomes">MAZE &gt; Rhythm Outcomes</option>
                                         <option value="MAZE:Survival Benefits">MAZE &gt; Survival Benefits</option>
+                                        <option value="MAZE:EnCompass Data">MAZE &gt; EnCompass Data</option>
                                         <option value="MAZE:Other">MAZE &gt; Other</option>
                                         <option value="LAA:Outcomes and Safety">LAA &gt; Outcomes & Safety</option>
                                         <option value="LAA:Stroke Reduction">LAA &gt; Stroke Reduction</option>

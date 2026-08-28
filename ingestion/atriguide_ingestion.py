@@ -17,7 +17,7 @@ MAX_AI_INPUT_CHARACTERS = 48000
 MAX_AI_OUTPUT_TOKENS = 2048
 MAX_AI_RESPONSE_BYTES = 262144
 CATEGORIES = {
-    "MAZE": {"Rhythm Outcomes", "Survival Benefits", "Other"},
+    "MAZE": {"Rhythm Outcomes", "Survival Benefits", "EnCompass Data", "Other"},
     "LAA": {"Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"},
     "Device Resources": {"IFUs", "Product Brochures", "Other Media"},
     "MISC": {"Other Research", "Helpful Documents"},
@@ -185,6 +185,9 @@ def classify(name: str, text: str, doc_type: str, folder_hint: str = "") -> Plac
     # Strong title/folder signals describe the paper's primary topic better than
     # incidental LAA/stroke mentions in an ablation article's body or references.
     primary = f"{normalized_name} {normalized_folder}"
+    encompass_mentions = len(re.findall(r"\bencompass(?:ed)?\b", s))
+    if "encompass" in primary or (encompass_mentions >= 2 and any(x in s for x in ("bipolar", "clamp", "posterior wall", "box lesion"))):
+        return Placement("MAZE", "EnCompass Data", .96, "EnCompass is the primary device/data topic")
     if any(x in primary for x in ("surgical ablation", "ablation pattern", "cox maze", "maze procedure")):
         if any(x in primary for x in ("survival", "mortality", "death")) or (doc_type == "research_paper" and any(x in s for x in ("survival", "mortality", "death"))):
             return Placement("MAZE", "Survival Benefits", .93, "primary surgical-ablation topic plus survival outcome")

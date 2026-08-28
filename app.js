@@ -132,9 +132,15 @@ window.normalizeDocument = function(doc) {
 
     let normalizedSub = "General"; 
     let sCatLower = sCat.toLowerCase();
+    const encompassText = `${doc.title || ""} ${doc.summary || ""} ${doc.searchProfile || ""}`.toLowerCase();
+    const encompassMentions = (encompassText.match(/\bencompass(?:ed)?\b/g) || []).length;
+    const isEncompassFocused = String(doc.title || "").toLowerCase().includes("encompass") ||
+        (encompassMentions >= 2 && /(bipolar|clamp|posterior wall|box lesion)/.test(encompassText));
 
     if (normalizedMain === "MAZE") {
-        if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
+        if (sCatLower.includes("encompass") || isEncompassFocused) {
+            normalizedSub = "EnCompass Data";
+        } else if (sCatLower.includes("survival") || sCatLower.includes("benefit") || sCatLower.includes("mortality") || sCatLower.includes("cost")) {
             normalizedSub = "Survival Benefits";
         } else if (sCatLower.includes("encompass") || sCatLower.includes("clamp") || sCatLower.includes("prophylactic") || sCatLower.includes("prevent") || sCatLower.includes("other") || sCatLower.includes("technique") || sCatLower.includes("how")) {
             normalizedSub = "Other";
@@ -741,7 +747,7 @@ window.toggleStarItem = function(id) {
 
 window.updateSidebarActiveStates = function() {
     const counts = {
-        "maze-rhythm": 0, "maze-survival": 0, "maze-other": 0,
+        "maze-rhythm": 0, "maze-survival": 0, "maze-encompass": 0, "maze-other": 0,
         "laa-outcomes": 0, "laa-stroke": 0, "laa-prophylactic": 0,
         "dev-ifus": 0, "dev-brochures": 0, "dev-media": 0, 
         "misc-research": 0, "misc-helpful": 0
@@ -751,6 +757,7 @@ window.updateSidebarActiveStates = function() {
         const sCat = d.subCategory ? String(d.subCategory).toLowerCase() : "";
         if (mCat === "maze") {
             if (sCat === "survival benefits") counts["maze-survival"]++;
+            else if (sCat === "encompass data") counts["maze-encompass"]++;
             else if (sCat === "other") counts["maze-other"]++;
             else counts["maze-rhythm"]++;
         } else if (mCat === "laa") {
@@ -1209,7 +1216,7 @@ window.updateFormSubCategories = function() {
     let options = [];
     
     if (mainCat === "MAZE") {
-        options = ["Rhythm Outcomes", "Survival Benefits", "Other"];
+        options = ["Rhythm Outcomes", "Survival Benefits", "EnCompass Data", "Other"];
     } else if (mainCat === "LAA") {
         options = ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"];
     } else if (mainCat === "Device Resources") {
@@ -1242,7 +1249,7 @@ window.showToast = function(message, type = "info") {
 
 window.reviewCategoryOptions = function(selectedMain, selectedSub) {
     const categories = {
-        "MAZE": ["Rhythm Outcomes", "Survival Benefits", "Other"],
+        "MAZE": ["Rhythm Outcomes", "Survival Benefits", "EnCompass Data", "Other"],
         "LAA": ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"],
         "Device Resources": ["IFUs", "Product Brochures", "Other Media"],
         "MISC": ["Other Research", "Helpful Documents"]
@@ -1419,7 +1426,7 @@ window.renderSpreadsheetWorkspace = function() {
         const miscSelected = mainCat === "MISC" ? "selected" : "";
 
         let subOptions = [];
-        if (mainCat === "MAZE") subOptions = ["Rhythm Outcomes", "Survival Benefits", "Other"];
+        if (mainCat === "MAZE") subOptions = ["Rhythm Outcomes", "Survival Benefits", "EnCompass Data", "Other"];
         else if (mainCat === "LAA") subOptions = ["Outcomes and Safety", "Stroke Reduction", "Prophylactic Data"];
         else if (mainCat === "Device Resources") subOptions = ["IFUs", "Product Brochures", "Other Media"];
         else if (mainCat === "MISC") subOptions = ["Other Research", "Helpful Documents"];
